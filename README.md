@@ -1,6 +1,6 @@
 # WiLabV2Xsim
 
-We are uploading the simulator...some supporting documents are not yet updated...
+We are uploading the simulator...some supporting documents have not yet been updated...
 
 
 WiLabV2Xsim is a dynamic simulator, written in MATLAB, overhauling LTEV2Vsim (see https://github.com/alessandrobazzi/LTEV2Vsim) to support sidelink 5G-V2X. 
