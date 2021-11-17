@@ -1,9 +1,26 @@
 # WiLabV2Xsim
 
-Simulator overhauling LTEV2Vsim (see https://github.com/alessandrobazzi/LTEV2Vsim) to support sidelink 5G-V2X.
+We are uploading the simulator...some supporting documents are not yet updated...
 
-We are uploading the simulator...
 
+WiLabV2Xsim is a dynamic simulator, written in MATLAB, overhauling LTEV2Vsim (see https://github.com/alessandrobazzi/LTEV2Vsim) to support sidelink 5G-V2X. 
+It is designed for the investigation of resource allocation in networks based on sidelink C-V2X, with focus on the cooperative awareness service, but it also allows to simulate IEEE 802.11p/ITS-G5.
+
+The simulator is shared under the GNU GPLv3. The software has been developed and shared by University of Bologna, CNR, and WiLab/CNIT - Italy. 
+
+The first release of this simulator is version 6.1 to remark the continuity with LTEV2Xsim, which last shared version was 5.4.
+
+NOTICE: at least MATLAB R2016b is required.
+
+The main reference for the simulator is 
+
+V. Todisco, S. Bartoletti, C. Campolo, A. Molinaro, A. O. Berthet, andA.  Bazzi,  “Performance  analysis  of  sidelink  5G-V2X  mode  2  throughan  open-source  simulator,” IEEE Access,  2021.
+
+The main references for the previous versions of the simulator are 
+
+G. Cecchini, A. Bazzi, B. M. Masini, A. Zanella, “LTEV2Vsim: An LTE-V2V Simulator for the Investigation of Resource Allocation for Cooperative Awareness”, 5th IEEE International Conference on Models and Technologies for Intelligent Transportation Systems (MT-ITS 2017), Naples (Italy), 26-28 June 2017. Accepted version here. (Results obtained with version 1.0)
+
+A. Bazzi, G. Cecchini, M. Menarini, B. M. Masini, A. Zanella, “Survey and Perspectives of Vehicular Wi-Fi Versus Sidelink Cellular-V2X in the 5G Era,” invited paper in Future Internet, 29 May 2019, 11(6), 122. DOI: 10.3390/fi11060122 Open access here. (Results obtained with version 3.5)
 
 *****
 List of main current contributors (those to whom you can ask)
