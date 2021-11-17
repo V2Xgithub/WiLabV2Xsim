@@ -8,7 +8,7 @@ It is designed for the investigation of resource allocation in networks based on
 
 The simulator is shared under the GNU GPLv3. The software has been developed and shared by University of Bologna, CNR, and WiLab/CNIT - Italy. 
 
-The first release of this simulator is version 6.1 to remark the continuity with LTEV2Xsim, which last shared version was 5.4.
+The first release of this simulator is version 6.1 to remark the continuity with LTEV2Xsim, of which the last shared version was 5.4.
 
 NOTICE: at least MATLAB R2016b is required.
 
