@@ -61,7 +61,7 @@ for i = 1:length(vehiclesToConsider)
     
     % Managing issues with rounding of doubles
     % Granularity set to 1/1e4
-    CBRvalue(i) = round( CBRvalue(i)*1e4 )/1e4;
+    CBRvalue(i) = round(CBRvalue(i), 4);
     
     if (CBRvalue(i)<0 || CBRvalue(i)>1) && ~cbrNull
         % In the first superframe with desynch error, it might happen that
@@ -92,8 +92,9 @@ if simParams.dcc_active && timeManagement.timeNow >= simParams.cbrSensingInterva
     % Toff = Ton x ( 4000 x (CBR-0.62)/CBR - 1)
     % Tinterval = Toff + Ton = ...
     timeManagement.dcc_minInterval(vehiclesToConsider) = min(1,phyParams.tPck11p * 1e3 * 4 * (CBRvalue-0.62)./(CBRvalue));
-    if timeManagement.dcc_minInterval(vehiclesToConsider)>timeManagement.generationIntervalDeterministicPart(vehiclesToConsider)
-        stationManagement.dcc11pTriggered(stationManagement.vehicleChannel(vehiclesToConsider)) = true;
-    end
+
+    vehiclesToConsiderIndex = timeManagement.dcc_minInterval(vehiclesToConsider) > ...
+        timeManagement.generationIntervalDeterministicPart(vehiclesToConsider);
+    stationManagement.dcc11pTriggered(stationManagement.vehicleChannel(vehiclesToConsider(vehiclesToConsiderIndex))) = true;
 end
 

@@ -269,7 +269,7 @@ if simParams.dcc_active
     %(Vittorio 5.5.3)
     % timeManagement.dcc_minInterval(vehiclesToConsider) = stationManagement.cv2xNumberOfReplicas(vehiclesToConsider) .* (phyParams.NsubchannelsBeacon)/(phyParams.NsubchannelsFrequency) * phyParams.Tsf ./ CRlimit;          
 	timeManagement.dcc_minInterval(vehiclesToConsider) = stationManagement.cv2xNumberOfReplicas(vehiclesToConsider) .* (phyParams.NsubchannelsBeacon)/(phyParams.NsubchannelsFrequency) * phyParams.TTI ./ CRlimit;          
-    if timeManagement.dcc_minInterval(vehiclesToConsider)>timeManagement.generationIntervalDeterministicPart(vehiclesToConsider)
-        stationManagement.dccLteTriggered(stationManagement.vehicleChannel(vehiclesToConsider)) = true;
-    end
+
+    vehiclesToConsiderIndex = timeManagement.dcc_minInterval(vehiclesToConsider)>timeManagement.generationIntervalDeterministicPart(vehiclesToConsider);
+    stationManagement.dccLteTriggered(stationManagement.vehicleChannel(vehiclesToConsider(vehiclesToConsiderIndex))) = true;
 end
