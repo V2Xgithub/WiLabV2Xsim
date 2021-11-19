@@ -8,40 +8,10 @@ function [appParams,simParams,varargin] = initiateApplicationParameters(simParam
 
 fprintf('Application settings\n');
 
-if simParams.technology ~= 2 % not only 11p
-    if simParams.technology==5  %5G
-        % [mode5G]
-        % set 5G mode
-        [appParams,varargin] = addNewParam([],'mode5G',1,'4/5G mode','integer',fileCfg,varargin{1});
-    else %LTE or LTE cohexistence
-        % [mode5G]
-        % set 4G mode
-        [appParams,varargin] = addNewParam([],'mode5G',0,'4/5G mode','integer',fileCfg,varargin{1});
-    end
-    if (appParams.mode5G ~=0 && appParams.mode5G ~= 1)
-        error('Error: "appParams.mode5G" cannot be different from 0 or 1');
-    end
-    
-    % [resourceSelection5G]
-    % sets the modality for resource selection in C-V2X
-    if appParams.mode5G==0
-        % sets mode4 for 4G
-        [appParams,varargin] = addNewParam(appParams,'resourceSelection5G',0,'Modality for resource selection 4/5G','integer',fileCfg,varargin{1});
-    elseif appParams.mode5G==1
-        % sets mode2 for 5G
-        [appParams,varargin] = addNewParam(appParams,'resourceSelection5G',1,'Modality for resource selection 4/5G','integer',fileCfg,varargin{1});
-    end
-    if (appParams.resourceSelection5G ~=0 && appParams.resourceSelection5G ~= 1)
-        error('Error: "appParams.resourceSelection5G" cannot be different from 0 or 1');
-        % value 0 is 4G -> sensing average + L2
-        % value 1 is 5G -> no average + no L2
-    end
-end
-
 % [allocationPeriod]
 % Beacon period in seconds.
 % TODO: add and test the possibility to have RRI=20,50 ms
-[appParams,varargin] = addNewParam(appParams,'allocationPeriod',0.1,'Resource allocation period (s)','double',fileCfg,varargin{1});
+[appParams,varargin] = addNewParam([],'allocationPeriod',0.1,'Resource allocation period (s)','double',fileCfg,varargin{1});
 if(isempty(find(0.1:0.1:1==appParams.allocationPeriod, 1)))
     error('Error: "appParams.allocationPeriod" cannot be <= 0 or different from 0.1:0.1:1');
 end
@@ -110,6 +80,37 @@ end
 %     end
 % end
 
+
+if simParams.technology ~= 2 % not only 11p
+    if simParams.technology==5  %5G
+        % [mode5G]
+        % set 5G mode
+        [appParams,varargin] = addNewParam(appParams,'mode5G',1,'4/5G mode','integer',fileCfg,varargin{1});
+    else %LTE or LTE cohexistence
+        % [mode5G]
+        % set 4G mode
+        [appParams,varargin] = addNewParam(appParams,'mode5G',0,'4/5G mode','integer',fileCfg,varargin{1});
+    end
+    if (appParams.mode5G ~=0 && appParams.mode5G ~= 1)
+        error('Error: "appParams.mode5G" cannot be different from 0 or 1');
+    end
+    
+    % [resourceSelection5G]
+    % sets the modality for resource selection in C-V2X
+    if appParams.mode5G==0
+        % sets mode4 for 4G
+        [appParams,varargin] = addNewParam(appParams,'resourceSelection5G',0,'Modality for resource selection 4/5G','integer',fileCfg,varargin{1});
+    elseif appParams.mode5G==1
+        % sets mode2 for 5G
+        [appParams,varargin] = addNewParam(appParams,'resourceSelection5G',1,'Modality for resource selection 4/5G','integer',fileCfg,varargin{1});
+    end
+    if (appParams.resourceSelection5G ~=0 && appParams.resourceSelection5G ~= 1)
+        error('Error: "appParams.resourceSelection5G" cannot be different from 0 or 1');
+        % value 0 is 4G -> sensing average + L2
+        % value 1 is 5G -> no average + no L2
+    end
+end
+
 % [beaconSizeBytes]
 % Beacon size (Bytes)
 [appParams,varargin]= addNewParam(appParams,'beaconSizeBytes',190,'Beacon size (Bytes)','integer',fileCfg,varargin{1});
@@ -124,8 +125,7 @@ if simParams.technology ~= 2 % not only 11p
     if appParams.resourcesV2V<=0 || appParams.resourcesV2V>100
         error('Error in the setting of "appParams.resourcesV2V". Not within 1-100%.');
     end
-end
-if simParams.technology == 2 % only 11p . variable size is not supported otherwise
+else % only 11p . variable size is not supported otherwise
     % [variableBeaconSize]
     % Enable to use variable beacon size
     [appParams,varargin]= addNewParam(appParams,'variableBeaconSize',false,'Varibale beacon size','bool',fileCfg,varargin{1});
