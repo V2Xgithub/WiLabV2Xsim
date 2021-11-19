@@ -41,10 +41,10 @@ for i = 1:length(vehiclesToConsider)
         % In Method A, a portion of the superframe is reserved to LTE
         % Should be removed - considering that the LTE slot is sensed as
         % busy - 
-         if mod(simParams.cbrSensingInterval/simParams.coex_superFlength, 1) == 0
+         if mod(simParams.cbrSensingInterval, simParams.coex_superFlength) == 0
              portionOfLTE = simParams.coex_knownEndOfLTE(idCBR)/simParams.coex_superFlength;
              CBRvalue(i) = (CBRvalue(i) - portionOfLTE) / (1-portionOfLTE);
-         elseif mod(simParams.coex_superFlength/simParams.cbrSensingInterval, 1) == 0
+         elseif mod(simParams.coex_superFlength, simParams.cbrSensingInterval) == 0
              % If this is the end of an interval within the LTE slot I must
              % set -1
              % one microsecond of margin is used to cope with floating
