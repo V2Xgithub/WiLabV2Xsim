@@ -12,8 +12,9 @@ end
 % They are those that:
 % 1) are currently receiving
 % 2) do not have the 'idFromWhichRx' currently transmitting
-ifReceivingFromThis = logical( (stationManagement.vehicleState(activeIDs)==9) .* ...
-    (stationManagement.vehicleState(sinrManagement.idFromWhichRx11p(activeIDs))~=3) );
+% ifReceivingFromThis = logical( (stationManagement.vehicleState(activeIDs)==9) .* ...
+%     (stationManagement.vehicleState(sinrManagement.idFromWhichRx11p(activeIDs))~=3) );
+ifReceivingFromThis = logical( (stationManagement.vehicleState(activeIDs)==9));
 
 sinrManagement.idFromWhichRx11p(activeIDs(ifReceivingFromThis)) = activeIDs(ifReceivingFromThis);
 % Then, those that also sense the medium as idle will exit from state 9
