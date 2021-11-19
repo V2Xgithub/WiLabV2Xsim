@@ -71,7 +71,7 @@ while timeManagement.timeNow < simParams.simulationTime
     
     % If the time instant exceeds or is equal to the duration of the
     % simulation, the simulation is ended
-    if round(timeManagement.timeNow*1e10)/1e10>=round(simParams.simulationTime*1e10)/1e10
+    if round(timeManagement.timeNow, 10) >= round(simParams.simulationTime, 10)
         break;
     end
 

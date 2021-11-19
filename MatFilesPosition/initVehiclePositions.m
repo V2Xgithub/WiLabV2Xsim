@@ -192,7 +192,7 @@ else
     [simValues,simParams] = interpolateTrace(dataLoaded,simParams,appParams.allocationPeriod);
     
     % Round time column (representation format)
-    simValues.dataTrace(:,1) = round(simValues.dataTrace(:,1)*100)/100;
+    simValues.dataTrace(:,1) = round(simValues.dataTrace(:,1), 2);
     
     % Find trace details (Xmin,Xmax,Ymin,Ymax,maxID)
     positionManagement.Xmin = min(simValues.dataTrace(:,3));     % Min X coordinate Trace
