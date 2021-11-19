@@ -140,7 +140,7 @@ if simParams.probResKeep>0
     updateCounter_MAC = keepCheck_MAC(keepRand < simParams.probResKeep);
 end
 % Update the RC for those UEs that do not perform reselection due to pkeep
-stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = stationManagement.resReselectionCounterCV2X(updateCounter_MAC) + (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(updateCounter_MAC))';
+stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = stationManagement.resReselectionCounterCV2X(updateCounter_MAC) + (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1, length(updateCounter_MAC), 1);
 % stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(updateCounter_MAC));
 
 

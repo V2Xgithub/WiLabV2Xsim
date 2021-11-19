@@ -36,9 +36,10 @@ else % coexistence
     stationManagement.vehicleState = 100 * ones(simValues.maxID,1);
     %Then use simParams.numVehiclesLTE and simParams.numVehicles11p to
     %initialize
-    for i11p = 1:simParams.numVehicles11p
-        stationManagement.vehicleState(simParams.numVehiclesLTE+i11p:simParams.numVehiclesLTE+simParams.numVehicles11p:end) = 1;
-    end
+    %for i11p = 1:simParams.numVehicles11p
+    %    stationManagement.vehicleState(simParams.numVehiclesLTE+i11p:simParams.numVehiclesLTE+simParams.numVehicles11p:end) = 1;
+    %end
+    stationManagement.vehicleState(simParams.numVehiclesLTE+1:end) = 1;
         
 %     % POSSIBLE OPTION FOR DEBUG PURPOSES
 %     % First half 11p, Second half LTE
