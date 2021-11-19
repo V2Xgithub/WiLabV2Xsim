@@ -48,9 +48,11 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
         % Find total received power using IBE
         % Including possible interference from 11p (note: the
         % interfering power is already calculated per BR)
-        for BRFi = 1:NbeaconsF           
-            sensedPower_MHz(BRFi,indexSensingV) = phyParams.IBEmatrixData(BRFi,:)*rxPsums_MHz; 
-        end
+%         for BRFi = 1:NbeaconsF           
+%             sensedPower_MHz(BRFi,indexSensingV) = phyParams.IBEmatrixData(BRFi,:)*rxPsums_MHz; 
+%         end
+        sensedPower_MHz(1:NbeaconsF, indexSensingV) = phyParams.IBEmatrixData * rxPsums_MHz;
+
     %         if IDvehicle(iV)==59
     %             fid = fopen('Temp.xls','a');
     %             fprintf(fid,'%d\t%d\t%d\t%e\t',elapsedTime_subframes,currentT,BRids_currentSF(BRFi),sensingMatrix(1,BRids_currentSF(BRFi)));
