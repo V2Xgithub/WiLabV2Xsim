@@ -12,7 +12,6 @@ fprintf('Output settings\n');
 % Folder where the output files are recorded
 % If the folder is not present, the simulator creates it
 [outParams,varargin]= addNewParam([],'outputFolder','Output','Folder for the output files','string',fileCfg,varargin{1});
-outParams.outputFolder = sprintf('%s/%s',pwd,outParams.outputFolder);
 fprintf('Full path of the output folder = %s\n',outParams.outputFolder);
 if exist(outParams.outputFolder,'dir')~=7
     mkdir(outParams.outputFolder);
