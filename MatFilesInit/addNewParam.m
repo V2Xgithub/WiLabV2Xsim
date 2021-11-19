@@ -10,7 +10,7 @@ if ~isnan(valueInCfg)
 end
 for i=1:(length(varargin{1}))/2
     if strcmpi(char(varargin{1,1}(2*i-1)),field)
-        value = cell2mat(varargin{1,1}(2*i));
+        value = varargin{1,1}{2*i};
         sourceForValue = 2; % 2: command line
         % I remove this parameter and value from varargin
         % This allows to check that all parameters are correctly given in
@@ -35,7 +35,7 @@ elseif strcmpi(paramType,'double')
     end
     fprintf('%f ',value);
 elseif strcmpi(paramType,'string')
-    if ~ischar(value)
+    if ~isstring(value) && ~ischar(value)
         error('Error: parameter %s must be a string.',field);
     end
     fprintf('%s ',value);
