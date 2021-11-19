@@ -252,11 +252,12 @@ end
 
 %4 Phy settings
 fprintf(fileMainID,'%.1f,',phyParams.BwMHz);
-if appParams.mode5G==0 && outputValues.AvgNvehiclesCV2X>0
-%if simParams.technology ~= 2 % not only 11p
-    fprintf(fileMainID,'%.0f',phyParams.MCS_LTE);
-elseif appParams.mode5G==1
-    fprintf(fileMainID,'%.0f',phyParams.MCS_NR);
+if simParams.technology ~= 2 % not only 11p
+    if appParams.mode5G==0 && outputValues.AvgNvehiclesCV2X>0
+        fprintf(fileMainID,'%.0f',phyParams.MCS_LTE);
+    elseif appParams.mode5G==1
+        fprintf(fileMainID,'%.0f',phyParams.MCS_NR);
+    end
 end
 if outputValues.AvgNvehiclesCV2X>0 && outputValues.AvgNvehicles11p>0
 %if simParams.technology > 2 % coexistence

@@ -100,7 +100,7 @@ if simParams.technology ~= 2 % not only 11p
     if appParams.mode5G==0
         % sets mode4 for 4G
         [appParams,varargin] = addNewParam(appParams,'resourceSelection5G',0,'Modality for resource selection 4/5G','integer',fileCfg,varargin{1});
-    elseif appParams.mode5G==1
+    else    % appParams.mode5G==1
         % sets mode2 for 5G
         [appParams,varargin] = addNewParam(appParams,'resourceSelection5G',1,'Modality for resource selection 4/5G','integer',fileCfg,varargin{1});
     end

@@ -92,7 +92,7 @@ if simParams.dcc_active
     % Toff = Ton x ( 4000 x (CBR-0.62)/CBR - 1)
     % Tinterval = Toff + Ton = ...
     timeManagement.dcc_minInterval(vehiclesToConsider) = min(1,phyParams.tPck11p * 1e3 * 4 * (CBRvalue-0.62)./(CBRvalue));
-    if timeManagement.dcc_minInterval(vehiclesToConsider)>timeManagement.generationInterval(vehiclesToConsider)
+    if timeManagement.dcc_minInterval(vehiclesToConsider)>timeManagement.generationIntervalDeterministicPart(vehiclesToConsider)
         stationManagement.dcc11pTriggered(stationManagement.vehicleChannel(vehiclesToConsider)) = true;
     end
 end
