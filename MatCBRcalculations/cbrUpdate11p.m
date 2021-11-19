@@ -88,7 +88,7 @@ for i = 1:length(vehiclesToConsider)
     stationManagement.channelSensedBusyMatrix11p(1,idCBR) = 0;
 end
 
-if simParams.dcc_active
+if simParams.dcc_active && timeManagement.timeNow >= simParams.cbrSensingInterval
     % Toff = Ton x ( 4000 x (CBR-0.62)/CBR - 1)
     % Tinterval = Toff + Ton = ...
     timeManagement.dcc_minInterval(vehiclesToConsider) = min(1,phyParams.tPck11p * 1e3 * 4 * (CBRvalue-0.62)./(CBRvalue));
