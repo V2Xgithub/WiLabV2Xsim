@@ -59,14 +59,15 @@ simVersion = 'v6.1';
 fprintf('WiLabV2Xsim %s\n\n',simVersion);
 
 % The path of the directory of the simulator is saved in 'fullPath'
-fullPath = which('WiLabV2Xsim');
-[~,fullPathUnix] = strtok(fliplr(fullPath), '/');
-[~,fullPathWindows] = strtok(fliplr(fullPath), '\');
-if isempty(fullPathUnix)
-    fullPath = fliplr(fullPathWindows);
-else
-    fullPath = fliplr(fullPathUnix);
-end
+% fullPath = which('WiLabV2Xsim');
+% [~,fullPathUnix] = strtok(fliplr(fullPath), '/');
+% [~,fullPathWindows] = strtok(fliplr(fullPath), '\');
+% if isempty(fullPathUnix)
+%     fullPath = fliplr(fullPathWindows);
+% else
+%     fullPath = fliplr(fullPathUnix);
+% end
+fullPath = fileparts(mfilename('fullpath'));
 addpath(genpath(fullPath));
 chdir(fullPath);
 

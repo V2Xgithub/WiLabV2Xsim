@@ -19,7 +19,7 @@ threshCBR_perMHz = (threshCBR_perSubchannel/phyParams.sizeSubchannel) * (1e6/phy
 sensingMatrix = stationManagement.sensingMatrixCV2X;
 % nAllocationPeriodsCBR counts the number of allocation periods used for the
 % sensing
-nAllocationPeriodsCBR = min(ceil(simParams.cbrSensingInterval/appParams.allocationPeriod),length(sensingMatrix(:,1,1)));
+nAllocationPeriodsCBR = min(ceil(simParams.cbrSensingInterval/appParams.allocationPeriod),size(sensingMatrix,1));
 
 % MAYBE NOT USED ANYMORE
 %subframeLastPacket = mod(ceil(timeManagement.timeLastPacket/phyParams.Tsf)-1,(appParams.NbeaconsT))+1;
@@ -39,8 +39,7 @@ if ~isempty(vehiclesToConsider) && timeManagement.elapsedTime_TTIs > nAllocation
     %end
    
     % Cycle over the nodes to be updated
-    for indexV = 1:length(vehiclesToConsider)
-        iV = vehiclesToConsider(indexV);
+    for iV = vehiclesToConsider'
         % sensingMatrix(-,-,-) > T returns a matrix (recall: comparisons
         % are considering the power per resource block)
         % then reshape converts into a vector and sum sums up
