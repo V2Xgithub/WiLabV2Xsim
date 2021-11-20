@@ -202,7 +202,7 @@ while timeManagement.timeNow < simParams.simulationTime
     % CASE A: new packet is generated
     elseif timeEvent == timeManagement.timeNextPacket(idEvent)
         
-        printDebugReallocation(timeEvent,idEvent,positionManagement.XvehicleReal(indexEvent),'gen',-1,outParams);
+        % printDebugReallocation(timeEvent,idEvent,positionManagement.XvehicleReal(indexEvent),'gen',-1,outParams);
 
         if stationManagement.vehicleState(idEvent)==100 % is LTE
             % DEBUG EVENTS
@@ -232,18 +232,32 @@ while timeManagement.timeNow < simParams.simulationTime
    
             % DEBUG TX-RX
             %printDebugTxRx(timeManagement.timeNow,'11p tx started',stationManagement,sinrManagement);
-            printDebugBackoff11p(timeManagement.timeNow,'11p backoff started',idEvent,stationManagement,outParams)
+            %printDebugBackoff11p(timeManagement.timeNow,'11p backoff started',idEvent,stationManagement,outParams)
 
             % DEBUG IMAGE
             %printDebugImage('New packet 11p',timeManagement,stationManagement,positionManagement,simParams,simValues);
         end
 
-        printDebugGeneration(timeManagement,idEvent,positionManagement,outParams);
+        % printDebugGeneration(timeManagement,idEvent,positionManagement,outParams);
         
         % from version 5.6.2 the 3GPP aperiodic generation is also supported. The generation interval is now composed of a
         % deterministic part and a random part. The random component is active only when enabled.
-%         timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + max(timeManagement.generationInterval(idEvent),timeManagement.dcc_minInterval(idEvent));
-        timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + max(timeManagement.generationIntervalDeterministicPart(idEvent)+exprnd(appParams.generationIntervalAverageRandomPart),timeManagement.dcc_minInterval(idEvent));
+        % the random part should be logged first, and then used for
+        % comparation or if-statement
+        timeManagement.generationInter(idEvent) = timeManagement.generationIntervalDeterministicPart(idEvent)+exprnd(appParams.generationIntervalAverageRandomPart);
+        if timeManagement.generationInter(idEvent) >= timeManagement.dcc_minInterval(idEvent)
+            timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + timeManagement.generationInter(idEvent);
+        else
+            timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + timeManagement.dcc_minInterval(idEvent);
+            % mark as dcc is actived
+            if ismember(idEvent,stationManagement.activeIDs11p)
+                stationManagement.dcc11pTriggered(stationManagement.vehicleChannel(idEvent)) = true;
+            elseif ismember(idEvent, stationManagement.activeIDsCV2X)
+                stationManagement.dccLteTriggered(stationManagement.vehicleChannel(idEvent)) = true;
+            end
+        end
+        
+%         timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + max(timeManagement.generationIntervalDeterministicPart(idEvent)+exprnd(appParams.generationIntervalAverageRandomPart),timeManagement.dcc_minInterval(idEvent));
         timeManagement.timeLastPacket(idEvent) = timeManagement.timeNow-timeManagement.addedToGenerationTime(idEvent);
         
         if simParams.technology==4 && simParams.coexMethod==1 && simParams.coexA_improvements>0
