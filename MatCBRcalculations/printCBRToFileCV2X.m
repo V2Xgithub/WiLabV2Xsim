@@ -14,13 +14,13 @@ for iChannel=1:phyParams.nChannels
     end
     
     if phyParams.nChannels==1
-        if simParams.technology==1 %LTE
+        if simParams.technology==1 || simParams.technology==3 %LTE
             cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_LTE.xls',outParams.outputFolder,outParams.simID);
         elseif simParams.technology==5 %5G
             cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_5G.xls',outParams.outputFolder,outParams.simID);
         end
     else
-        if simParams.technology==1 %LTE
+        if simParams.technology==1 || simParams.technology==3 %LTE
             cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_LTE_C%d.xls',outParams.outputFolder,outParams.simID,iChannel);
         elseif simParams.technology==5 %5G
             cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_5G_C%d.xls',outParams.outputFolder,outParams.simID,iChannel);
