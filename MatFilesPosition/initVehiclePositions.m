@@ -223,12 +223,11 @@ if appParams.nRSUs>0
 end
 
 
-% NEW TEST MODALITY asyncronous transmitters (Vittorio)
-% not only 11p
+% NEW TEST MODALITY for C-V2X: asyncronous transmitters TODO (Vittorio)
 % if active takes a %x of vehicles at random and create a separate
 % vector with theirs IDs ->> these transmitters transmit
 % asyncronously
-if simParams.technology ~= 2 && simParams.BRAlgorithm==18 && simParams.asynMode == 1       
+if simParams.technology==1 && simParams.BRAlgorithm==18 && simParams.asynMode == 1       
    % find number of asyn vehicles
    NasynVehicles=ceil(Nvehicles*simParams.percAsynUser);
    % create permutation vector of the overall vehicles

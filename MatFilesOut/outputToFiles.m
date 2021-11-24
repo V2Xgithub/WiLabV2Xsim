@@ -46,10 +46,10 @@ end
 
 %1 Main settings
 fprintf(fileMainID,'%.0f\t%s\t%s\t%.0f\t%f\t%f\t',outParams.simID,simVersion,datestr(now),simParams.seed,simParams.simulationTime,outputValues.computationTime);
-if simParams.technology==1 || simParams.technology==5 || outputValues.AvgNvehicles11p==0
-    if appParams.mode5G==0
+if simParams.technology==1 || outputValues.AvgNvehicles11p==0
+    if simParams.mode5G==0
         fprintf(fileMainID,'LTE-V2X\t');
-    elseif appParams.mode5G==1
+    elseif simParams.mode5G==1
         fprintf(fileMainID,'5G-V2X\t');
     end
 elseif simParams.technology==2 || outputValues.AvgNvehiclesCV2X==0
@@ -127,10 +127,10 @@ else
     fprintf(fileMainID,'UNKNOWN\t');
 end
 
-if simParams.technology==1 || simParams.technology==5 || outputValues.AvgNvehicles11p==0
-    if appParams.mode5G==0
+if simParams.technology==1 || outputValues.AvgNvehicles11p==0
+    if simParams.mode5G==0
         fprintf(fileMainID,'15\t');
-    elseif appParams.mode5G==1
+    elseif simParams.mode5G==1
         fprintf(fileMainID,'%d\t',phyParams.SCS_NR);
     end
 else
@@ -235,14 +235,14 @@ else
 end
 if outputValues.AvgNvehiclesCV2X>0
 %if simParams.technology~=2 % not only 11p
-    if appParams.mode5G==0
+    if simParams.mode5G==0
         fprintf(fileMainID,'%.0f,%.1f,%.0fx%.0f,',appParams.Nbeacons,appParams.RBsBeacon/2,phyParams.NsubchannelsBeacon,phyParams.sizeSubchannel);
         if phyParams.ifAdjacent == true
         fprintf(fileMainID,'true\t');
         else
         fprintf(fileMainID,'false\t');
         end
-    elseif appParams.mode5G==1
+    elseif simParams.mode5G==1
         fprintf(fileMainID,'%.0f,%.1f,%.0fx%.0f,',appParams.Nbeacons,appParams.RBsBeacon,phyParams.NsubchannelsBeacon,phyParams.sizeSubchannel);
         fprintf(fileMainID,'-\t');
     end
@@ -252,12 +252,11 @@ end
 
 %4 Phy settings
 fprintf(fileMainID,'%.1f,',phyParams.BwMHz);
-if simParams.technology ~= 2 % not only 11p
-    if appParams.mode5G==0 && outputValues.AvgNvehiclesCV2X>0
-        fprintf(fileMainID,'%.0f',phyParams.MCS_LTE);
-    elseif appParams.mode5G==1
-        fprintf(fileMainID,'%.0f',phyParams.MCS_NR);
-    end
+if outputValues.AvgNvehiclesCV2X>0 && simParams.mode5G==0
+%if simParams.technology ~= 2 % not only 11p
+    fprintf(fileMainID,'%.0f',phyParams.MCS_LTE);
+elseif outputValues.AvgNvehiclesCV2X>0 && simParams.mode5G==1
+    fprintf(fileMainID,'%.0f',phyParams.MCS_NR);
 end
 if outputValues.AvgNvehiclesCV2X>0 && outputValues.AvgNvehicles11p>0
 %if simParams.technology > 2 % coexistence
@@ -386,7 +385,7 @@ if phyParams.channelModel==0 %phyParams.winnerModel
     if simParams.technology > 2 % coexistence
         fprintf(fileMainID,'/');
     end
-    if simParams.technology~=1 && simParams.technology~=5 % not only C-V2X
+    if simParams.technology~=1 % not only C-V2X
         fprintf(fileMainID,'%.0f',phyParams.RawMaxNLOS11p);
     end
 else

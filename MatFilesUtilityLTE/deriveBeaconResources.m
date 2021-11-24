@@ -1,7 +1,7 @@
-function [appParams,phyParams,varargin] = deriveBeaconResources(appParams,phyParams,fileCfg,varargin)
+function [appParams,phyParams,varargin] = deriveBeaconResources(simParams,appParams,phyParams,fileCfg,varargin)
 % Function used to derive the beacon resources
 
-if appParams.mode5G==0    % Calculation for 4G case
+if simParams.mode5G==0    % Calculation for 4G case
     
     % Call function to find the total number of RBs in the frequency domain per Tslot
     phyParams.RBsFrequency = RBtable(phyParams.BwMHz);
@@ -19,7 +19,7 @@ if appParams.mode5G==0    % Calculation for 4G case
     appParams.beaconSizeBits = appParams.beaconSizeBytes*8;
     [appParams.RBsBeacon, phyParams.sinrThresholdCV2X_LOS_dB,phyParams.NbitsHz,phyParams.R,phyParams.Qm] = findRBsBeaconSINRmin(phyParams.MCS_LTE,appParams.beaconSizeBits);
 
-elseif appParams.mode5G==1  % Calculation for 5G case
+elseif simParams.mode5G==1  % Calculation for 5G case
     
     % Call function to find the total number of RBs in the frequency domain per Tslot in 5G
     phyParams.RBsFrequency = RBtable_5G(phyParams.BwMHz,phyParams.SCS_NR);
@@ -107,7 +107,7 @@ phyParams.sinrThresholdCV2X_NLOS=10.^(phyParams.sinrThresholdCV2X_NLOS_dB/10);
 phyParams.sinrVectorCV2X_NLOS = 10.^(phyParams.sinrVectorCV2X_NLOS_dB/10);
 
 %% Check on subchannels for 4G
-if appParams.mode5G==0
+if simParams.mode5G==0
     % Check whether the beacon size (appParams.RBsBeacon) + SCI (2x 2 RBs) exceeds the number of available RBs per subframe
     appParams.RBsSubframeV2V = appParams.RBsFrequencyV2V*(phyParams.Tsf/phyParams.Tslot);
     %if ~phyParams.BLERcurveLTE
@@ -124,7 +124,7 @@ if appParams.mode5G==0
 end
 
 %% Calculation of NB in frequency and time
-if appParams.mode5G==0
+if simParams.mode5G==0
     % Find NbeaconsF, subchannel sizes or multiples for LTE
     [appParams,phyParams] = calculateNB(appParams,phyParams);
 else
@@ -136,7 +136,7 @@ end
 %phyParams.PtxERP_RB = phyParams.PtxERP/(appParams.RBsBeacon/2);
 %phyParams.PtxERP_RB_dBm = 10*log10(phyParams.PtxERP_RB)+30;
 
-if appParams.mode5G==0
+if simParams.mode5G==0
     %
     % Compute BW of a BR
     phyParams.BwMHz_cv2xBR = (phyParams.RBbandwidth*1e-6) * (appParams.RBsBeacon/2) ;
@@ -153,6 +153,7 @@ if appParams.mode5G==0
 else
     
     % Compute BW of a BR in NR
+    % maybe same as mode5G==0, BW of a BR is calculated on subchannels
     phyParams.BwMHz_cv2xBR = (phyParams.RBbandwidth*1e-6) * (appParams.RBsBeacon) ;
     % Compute BW of the SCI-1 in NR
     phyParams.BwMHz_SCI = (phyParams.RBbandwidth*1e-6) * (phyParams.nRB_SCI) ;
@@ -169,7 +170,7 @@ end
 % Compute In-Band Emission Matrix 
 % (following 3GPP TS 36.101 v15.0.0) for LTE
 % and 38.101-1 V17.0.0 (2020-12) for 5G
-[phyParams.IBEmatrixData,phyParams.IBEmatrixControl] = IBEcalculation(phyParams,appParams);
+[phyParams.IBEmatrixData,phyParams.IBEmatrixControl] = IBEcalculation(simParams,phyParams,appParams);
 
 % Check how many BRs to exploit in the frequency domain
 if phyParams.NumBeaconsFrequency~=-1

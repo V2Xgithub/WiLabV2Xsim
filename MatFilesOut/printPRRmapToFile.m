@@ -57,14 +57,10 @@ PRRmapLTE = real(((1-sqrt(1-PRRvaluesLTE.^2))).*(1-noneighborsLTE)-1.*noneighbor
 
 if simParams.technology ~= 2 % not only 11p
     % Print PRRMap to file
-    if simParams.technology==1  %LTE
-        filename = sprintf('%s/PRRmap_%.0f_%s.png',outParams.outputFolder,outParams.simID,'LTE');
-    elseif simParams.technology==5 %5G
-        filename = sprintf('%s/PRRmap_%.0f_%s.png',outParams.outputFolder,outParams.simID,'5G');
-    end
+    filename = sprintf('%s/PRRmap_%.0f_%s.png',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
     createMap(positionManagement.GridMap,PRRmapLTE,filename);
 end
-if simParams.technology~=1 && simParams.technology~=5 % not only C-V2X
+if simParams.technology~=1 % not only C-V2X
     % Print PRRMap to file
     filename = sprintf('%s/PRRmap_%.0f_%s.png',outParams.outputFolder,outParams.simID,'11p');
     createMap(positionManagement.GridMap,PRRmap11p,filename);

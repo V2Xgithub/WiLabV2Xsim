@@ -89,7 +89,7 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
         % Detects if the transmission is a "first transmission" or retransmission
         hasFirstResourceThisTbeacon = ceil(stationManagement.BRid(idVtx,1)/appParams.NbeaconsF)==currentT;
                               
-        if phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && appParams.mode5G
+        if phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && simParams.mode5G
             % BR of the next reserved resource (blind retransmission)
             BRnextReservedTransmission=stationManagement.BRid(idVtx,2);
         else
@@ -124,7 +124,7 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
                end
 
 %                % if HARQ is active in 5G -> reserve the next retransmission
-               if phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && BRnextReservedTransmission~=-1 && appParams.mode5G
+               if phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && BRnextReservedTransmission~=-1 && simParams.mode5G
                     % BR of the next reserved resource (blind retransmission)
                     stationManagement.knownUsedMatrixCV2X(BRnextReservedTransmission,idVrx) = 1;
                end
@@ -150,7 +150,7 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
 %                % If overlap of beacon resources is allowed, the SCI
 %                % information is used to update partially overlapping beacon
 %                % resources when reserving resources for retransmissions
-               if phyParams.BRoverlapAllowed && phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && BRnextReservedTransmission~=-1 && appParams.mode5G
+               if phyParams.BRoverlapAllowed && phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && BRnextReservedTransmission~=-1 && simParams.mode5G
 %                    % identify subframe of BR
 %                    % Array of BRids in the slot of the retransmission
 %                    % Slot at which the retransmission occurs

@@ -19,11 +19,7 @@ if outParams.printUpdateDelay
                     outputValues.updateDelayCounterCV2X(iChannel,pckType,:,iPhyRaw) = outputValues.updateDelayCounterCV2X(iChannel,pckType,:,iPhyRaw)-outputValues.updateDelayCounterCV2X(iChannel,pckType,:,iPhyRaw-1);
                 end
                 % Now the values can be print
-                if simParams.technology==1
-                    filename_part1 = sprintf('%s/update_delay_%.0f_%s',outParams.outputFolder,outParams.simID,'LTE');
-                elseif simParams.technology==5
-                    filename_part1 = sprintf('%s/update_delay_%.0f_%s',outParams.outputFolder,outParams.simID,'5G');
-                end
+                filename_part1 = sprintf('%s/update_delay_%.0f_%s',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
                 if pckType==1
                     filename_part2 = '';
                 elseif pckType==2
@@ -124,11 +120,7 @@ if outParams.printUpdateDelay
         
         % If there are events LTE
         if (outputValues.wirelessBlindSpotCounterCV2X(1,length(phyParams.Raw),2)+outputValues.wirelessBlindSpotCounterCV2X(1,length(phyParams.Raw),3))>0            
-            if simParams.technology==1 %LTE
-                filename = sprintf('%s/wireless_blind_spot_%.0f_LTE.xls',outParams.outputFolder,outParams.simID);
-            elseif simParams.technology==5 %5G
-                filename = sprintf('%s/wireless_blind_spot_%.0f_5G.xls',outParams.outputFolder,outParams.simID);
-            end
+            filename = sprintf('%s/wireless_blind_spot_%.0f_%s.xls',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
             fileID = fopen(filename,'at');
             for i = 1:length(outputValues.wirelessBlindSpotCounterCV2X)
                 fprintf(fileID,'%.3f',outputValues.wirelessBlindSpotCounterCV2X(i,1,1));
@@ -174,11 +166,7 @@ if outParams.printDataAge
                     outputValues.dataAgeCounterCV2X(iChannel,pckType,:,iPhyRaw) = outputValues.dataAgeCounterCV2X(iChannel,pckType,:,iPhyRaw)-outputValues.dataAgeCounterCV2X(iChannel,pckType,:,iPhyRaw-1);
                 end
                 % Now the values can be print
-                if simParams.technology==1
-                    filename_part1 = sprintf('%s/data_age_%.0f_%s',outParams.outputFolder,outParams.simID,'LTE');
-                elseif simParams.technology==5
-                    filename_part1 = sprintf('%s/data_age_%.0f_%s',outParams.outputFolder,outParams.simID,'5G');
-                end
+                filename_part1 = sprintf('%s/data_age_%.0f_%s',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
                 if pckType==1
                     filename_part2 = '';
                 elseif pckType==2
@@ -290,11 +278,7 @@ if outParams.printPacketDelay
                     outputValues.packetDelayCounterCV2X(iChannel,pckType,:,iPhyRaw) = outputValues.packetDelayCounterCV2X(iChannel,pckType,:,iPhyRaw)-outputValues.packetDelayCounterCV2X(iChannel,pckType,:,iPhyRaw-1);
                 end
                 % Now the values can be print
-                if simParams.technology==1
-                    filename_part1 = sprintf('%s/packet_delay_%.0f_%s',outParams.outputFolder,outParams.simID,'LTE');
-                elseif simParams.technology==5
-                    filename_part1 = sprintf('%s/packet_delay_%.0f_%s',outParams.outputFolder,outParams.simID,'5G');
-                end
+                filename_part1 = sprintf('%s/packet_delay_%.0f_%s',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
                 if pckType==1
                     filename_part2 = '';
                 elseif pckType==2

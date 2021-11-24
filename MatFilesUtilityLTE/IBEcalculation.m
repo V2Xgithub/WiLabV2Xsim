@@ -1,4 +1,4 @@
-function [IBEmatrixData, IBEmatrixControl] = IBEcalculation(phyParams,appParams)
+function [IBEmatrixData, IBEmatrixControl] = IBEcalculation(simParams,phyParams,appParams)
 % This function computes the In-Band Emission Matrix, following 
 % the model reported in 3GPP TS 36.101 V15.0.0 for LTE and 
 % the model reported in 3GPP TS 38.101-1 V17.0.0 (2020-12) for 5G
@@ -18,9 +18,9 @@ function [IBEmatrixData, IBEmatrixControl] = IBEcalculation(phyParams,appParams)
 %% Inizialization of variables from phyParams and appParams
 %
 % N_RB_tot is the total bandwidth in terms of RBs
-if appParams.mode5G==0
+if simParams.mode5G==0
     N_RB_tot = phyParams.RBsSubframe/2;
-elseif appParams.mode5G==1
+elseif simParams.mode5G==1
     N_RB_tot = phyParams.RBsSubframe/(phyParams.Tsf/phyParams.Tslot_NR);
 else
     error("wrong selection of mode5G")
@@ -39,7 +39,7 @@ nBeaconPerSubframe = appParams.NbeaconsF;
 % Number of subchannles, adopted MCS, adjacent/non-adjacent
 % allocation
 nSubchannels = phyParams.NsubchannelsFrequency;
-if appParams.mode5G==0
+if simParams.mode5G==0
     MCS = phyParams.MCS_LTE;
     ifAdjacent = phyParams.ifAdjacent;
 else	%5G, local variables for easier reading
@@ -51,7 +51,7 @@ end
 %%
 % Setting of the parameters
 % Parameters W,X,Y,Z
-if appParams.mode5G==0
+if simParams.mode5G==0
     % Parameters W,X,Y,Z
 	W = 3;
 	X = 6;
@@ -116,7 +116,7 @@ stopRB = -1*ones(1,nBeaconPerSubframe);
 %     hold on
 % end
 %%%% END PLOT1
-if appParams.mode5G==0
+if simParams.mode5G==0
     startRB(1) = nSubchannels*2*(1-(ifAdjacent))+2*(ifAdjacent)+1;
     %stopRB(1) = nSubchannels*2*(1-(ifAdjacent))+2*(ifAdjacent)+N_RB_beacon;
     stopRB(1) = startRB(1)+(phyParams.NsubchannelsBeacon*phyParams.sizeSubchannel)-(2*ifAdjacent)-1;
@@ -133,13 +133,13 @@ for i=2:nBeaconPerSubframe
     if phyParams.BRoverlapAllowed
         startRB(i) = startRB(i-1)+phyParams.sizeSubchannel;
     else
-        if appParams.mode5G==0
+        if simParams.mode5G==0
                 startRB(i) = stopRB(i-1)+(2*ifAdjacent)+1;
         else %5g
             startRB(i) = stopRB(i-1) +1;
         end
     end
-    if appParams.mode5G==0
+    if simParams.mode5G==0
 	    stopRB(i) = startRB(i)+(phyParams.NsubchannelsBeacon*phyParams.sizeSubchannel)-(2*ifAdjacent)-1;
     else %5G
 	    stopRB(i) = startRB(i)+(phyParams.NsubchannelsBeacon*phyParams.sizeSubchannel) -1;
@@ -188,7 +188,7 @@ for iBeacon1 = 1:nBeaconPerSubframe
                     % P_RB_dBm is fixed to the maximum, -30 dB, as per the
                     % NOTE 1 of 3GPP 36.101 (Table 6.5.2A.3.1-1)
                     P_RB_dBm = 0;
-                    if appParams.mode5G == 0
+                    if simParams.mode5G == 0
                         interferenceG_dB = max(max( -25-10*log10(N_RB_tot/L_CRB)-X,20*log10(EVM)-3-5*(abs(Delta_RB)-1)/L_CRB-W),(-57/180e3-P_RB_dBm-X)-30);
                     else %5G
                         interferenceG_dB = max(max( -25-10*log10(N_RB_tot/L_CRB)-X,20*log10(EVM)-3-5*(abs(Delta_RB)-1)/L_CRB-W),(-57+10*log10(SCS/15)-P_RB_dBm)-30);
@@ -251,7 +251,7 @@ end
 % end
 %%%% STOP PLOT1
 
-if appParams.mode5G == 1
+if simParams.mode5G == 1
     % The IBE for the control of 5G is approximated with the one for Data
 	IBEmatrixControl = IBEmatrixData;
 	return;

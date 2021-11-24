@@ -1,7 +1,7 @@
 function [phyParams] = deriveRanges(phyParams,simParams)
 % Derive maximum awareness range and other ranges according to the selected algorithm
 
-if simParams.technology~=1 && simParams.technology~=5 % not only C-V2X (lte or 5g) 
+if simParams.technology~=1 % not only C-V2X (lte or 5g) 
     phyParams.RawMaxLOS11p = ((phyParams.P_ERP_MHz_11p*phyParams.Gr)/(phyParams.sinrThreshold11p_LOS*phyParams.L0_far*phyParams.Pnoise_MHz))^(1/phyParams.b_far);
     phyParams.RawMaxNLOS11p = ((phyParams.P_ERP_MHz_11p*phyParams.Gr)/(phyParams.sinrThreshold11p_NLOS*phyParams.L0_NLOS*phyParams.Pnoise_MHz))^(1/phyParams.b_NLOS);
     % Compute maximum range with 2 times standard deviation of shadowing in LOS (m)

@@ -146,7 +146,7 @@ stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = stationManageme
 
 % Sensed power by transmitting nodes in their BR
 if phyParams.Ksi < Inf && phyParams.testSelfIRemove < Inf
-    [stationManagement] = FDaidedReselection(stationManagement,phyParams);
+    [stationManagement] = FDaidedReselection(stationManagement,phyParams,appParams,currentT);
 end
 
 % Detects the UEs that need to perform reselection
@@ -187,12 +187,12 @@ for indexSensingV = 1:Nscheduled
     %    STOPHERE = 0;
     %end
 
-    if appParams.resourceSelection5G == 0% 4G procedure
+    if simParams.mode5G==0 % 4G procedure
         % Select the sensing matrix only for those vehicles that perform reallocation
         % and calculate the average of the measured power over the sensing window
         sensingMatrixScheduled = sum(stationManagement.sensingMatrixCV2X(:,:,scheduledID(indexSensingV)),1)/length(stationManagement.sensingMatrixCV2X(:,1,1));
         % "sensingMatrixScheduled" is a '1 x NbeaconIntervals' vector
-    elseif appParams.resourceSelection5G == 1
+    else%if simParams.mode5G==1
         % Select the sensing matrix only for those vehicles that perform reallocation
         % Selects only the first row, which includes the slots relative to
         % the last 'averageTbeacon'
@@ -293,7 +293,7 @@ for indexSensingV = 1:Nscheduled
     % 5G procedure mode2 which admits all resources that are not HD or
     % reserved with an RSRP level above threshold
     % L2 is removed in mode2
-    if appParams.resourceSelection5G == 1 
+    if simParams.mode5G==1
         % Find number of remaining resources
         %
         %testMBest_5G is left to test the possibility to reintroduce L2 
@@ -345,10 +345,10 @@ for indexSensingV = 1:Nscheduled
         % remove resources before Now+T1
         bestBR(bestSubframe<currentT+simParams.T1autonomousModeTTIs) = -1;
 % plot(bestBR,'*r')  
-        if appParams.resourceSelection5G == 0
+        if simParams.mode5G==0
             % remove resources before x-15
             bestBR(bestSubframe<subframe_BR-15) = -1;
-        elseif appParams.resourceSelection5G == 1
+        else%if simParams.mode5G==1
             % remove resources before x-31
             bestBR(bestSubframe<subframe_BR-31) = -1;
         end
@@ -356,10 +356,10 @@ for indexSensingV = 1:Nscheduled
         % remove resources after Now+T2
         bestBR(bestSubframe>currentT+simParams.T2autonomousModeTTIs) = -1;
 % plot(bestBR,'pr')  
-        if appParams.resourceSelection5G == 0
+        if simParams.mode5G==0
             % remove resources after x+15
             bestBR(bestSubframe>subframe_BR+15) = -1;
-        elseif appParams.resourceSelection5G == 1
+        else% if simParams.mode5G==1
             % remove resources after x+31
             bestBR(bestSubframe>subframe_BR+31) = -1;
         end
