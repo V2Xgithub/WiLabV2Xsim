@@ -183,7 +183,7 @@ end
 
 if outParams.printPacketReceptionRatio
     % If simulating variable beacon size (currently 802.11p only)
-    if simParams.technology~=1 && simParams.technology~=5 % not only C-V2X 
+    if simParams.technology~=1 % not only C-V2X 
         if simParams.technology==2 && appParams.variableBeaconSize
             % Initialize 9 columns in distanceDetailsCounter (for smaller beacons)
             % The matrix becomes:
@@ -351,12 +351,7 @@ end
 % Print details for distances up to the maximum awareness range (if enabled)
 if outParams.printPacketReceptionRatio
     if sum(stationManagement.vehicleState==100)>0
-    %if simParams.technology~=2 % LTE or coexistence, not 11p
-    if simParams.technology==1
-        printPacketReceptionRatio('LTE',outputValues.distanceDetailsCounterCV2X,outParams,appParams,simParams,phyParams);
-    elseif simParams.technology==5
-        printPacketReceptionRatio('5G',outputValues.distanceDetailsCounterCV2X,outParams,appParams,simParams,phyParams);
-    end
+        printPacketReceptionRatio(simParams.stringCV2X,outputValues.distanceDetailsCounterCV2X,outParams,appParams,simParams,phyParams);
     end
     if sum(stationManagement.vehicleState~=100)>0
     %if simParams.technology~=1 % 11p or coexistence, not LTE
