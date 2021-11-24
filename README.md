@@ -31,7 +31,7 @@ Alessandro Bazzi (alessandro.bazzi@unibo.it)
 
 Stefania Bartoletti (stefania.bartoletti@ieiit.cnr.it)
 
-Vittorio Todisco (vittorio.todisco@unibo.it, (vittorio.todisco@ieiit.cnr.it)
+Vittorio Todisco (vittorio.todisco@unibo.it, vittorio.todisco@ieiit.cnr.it)
 
 Wu Zhuofei, also called Felix (wu.zhuofei@unibo.it)
 *****
