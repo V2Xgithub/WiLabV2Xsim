@@ -23,6 +23,7 @@ minNextSuperframe = min(timeManagement.coex_timeNextSuperframe);
 % Start stopwatch
 tic
 
+fprintf('Simulation ID: %d\nMessage: %s\n',outParams.simID, outParams.message);
 fprintf('Simulation Time: ');
 reverseStr = '';
 
