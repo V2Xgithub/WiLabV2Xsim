@@ -12,7 +12,7 @@ timeManagement.timeNow = 0;
 
 % State of each node
 % Discriminates C-V2X nodes from 11p nodes
-if simParams.technology==1 || simParams.technology==5
+if simParams.technology==1
     
     % All vehicles in C-V2X (lte or 5g) are currently in the same state
     % 100 = LTE TX/RX
@@ -486,7 +486,7 @@ if simParams.cbrActive
     if simParams.technology==4 && simParams.coexMethod==1
         timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDs .* timeManagement.coex_superframeThisIsLTEPart(stationManagement.activeIDs)) = 0;
     end    
-    if simParams.technology~=1 && simParams.technology~=5 % Not only C-V2X
+    if simParams.technology~=1 % Not only C-V2X
         stationManagement.channelSensedBusyMatrix11p = zeros(ceil(simParams.cbrSensingInterval/appParams.allocationPeriod),simValues.maxID);        
     end
     
