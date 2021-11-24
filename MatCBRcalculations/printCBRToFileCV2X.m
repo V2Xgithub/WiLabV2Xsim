@@ -14,17 +14,9 @@ for iChannel=1:phyParams.nChannels
     end
     
     if phyParams.nChannels==1
-        if simParams.technology==1 || simParams.technology==3 %LTE
-            cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_LTE.xls',outParams.outputFolder,outParams.simID);
-        elseif simParams.technology==5 %5G
-            cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_5G.xls',outParams.outputFolder,outParams.simID);
-        end
+        cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_%s.xls',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
     else
-        if simParams.technology==1 || simParams.technology==3 %LTE
-            cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_LTE_C%d.xls',outParams.outputFolder,outParams.simID,iChannel);
-        elseif simParams.technology==5 %5G
-            cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_5G_C%d.xls',outParams.outputFolder,outParams.simID,iChannel);
-        end
+        cbrOutputFileName = sprintf('%s/CBRstatistic_%.0f_%s_C%d.xls',outParams.outputFolder,outParams.simID,simParams.stringCV2X,iChannel);
     end
 
     cbrVector = stationManagement.cbrCV2Xvalues(stationManagement.vehicleChannel==iChannel,:);
@@ -39,32 +31,26 @@ for iChannel=1:phyParams.nChannels
     fclose(fileID);
 
     %% CBR_LTE_only
-    if length(stationManagement.coex_cbrLteOnlyValues(1,:))>10
-        stationManagement.coex_cbrLteOnlyValues(:,1:10) = [];
+    if simParams.technology ~= 1 % not only LTE
+        if length(stationManagement.coex_cbrLteOnlyValues(1,:))>10
+            stationManagement.coex_cbrLteOnlyValues(:,1:10) = [];
+        end
+        valuesCbrLteOnly = stationManagement.coex_cbrLteOnlyValues(stationManagement.coex_cbrLteOnlyValues~=-1);
+        [F2,X2] = ecdf(valuesCbrLteOnly);
+        cbrOutputFileName = sprintf('%s/coex_cv2xOnly_CBRstatistic_%.0f_%s.xls',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
+        fileID2 = fopen(cbrOutputFileName,'w');
+        for i=1:length(F2)
+            fprintf(fileID2,'%f\t%f\n',X2(i),F2(i));
+        end
+        fclose(fileID2);
     end
-    valuesCbrLteOnly = stationManagement.coex_cbrLteOnlyValues(stationManagement.coex_cbrLteOnlyValues~=-1);
-    [F2,X2] = ecdf(valuesCbrLteOnly);
-    if simParams.technology==1 %LTE
-        cbrOutputFileName = sprintf('%s/coex_LteOnly_CBRstatistic_%.0f_LTE.xls',outParams.outputFolder,outParams.simID);
-    elseif simParams.technology==5 %5G
-        cbrOutputFileName = sprintf('%s/coex_LteOnly_CBRstatistic_%.0f_5G.xls',outParams.outputFolder,outParams.simID);
-    end
-    fileID2 = fopen(cbrOutputFileName,'w');
-    for i=1:length(F2)
-        fprintf(fileID2,'%f\t%f\n',X2(i),F2(i));
-    end
-    fclose(fileID2);
 end
 
 %% Generic vehicle
 if ~isempty(stationManagement.activeIDsCV2X)    
     idTest = stationManagement.activeIDsCV2X(1);
     
-    if simParams.technology==1 %LTE
-        cbrOutputFileName = sprintf('%s/CBRofGenericVehicle_%.0f_LTE.xls',outParams.outputFolder,outParams.simID);
-    elseif simParams.technology==5 %5G
-        cbrOutputFileName = sprintf('%s/CBRofGenericVehicle_%.0f_5G.xls',outParams.outputFolder,outParams.simID);
-    end
+    cbrOutputFileName = sprintf('%s/CBRofGenericVehicle_%.0f_%s.xls',outParams.outputFolder,outParams.simID,simParams.stringCV2X);
     values = stationManagement.cbrCV2Xvalues(idTest,:);
     time = (10+(1:length(values))) * simParams.cbrSensingInterval;
     fileID = fopen(cbrOutputFileName,'w');
