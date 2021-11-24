@@ -41,14 +41,14 @@ simParams.fileCfg = fileCfg;
 % Initialize Output parameters
 [outParams,varargin] = initiateOutParameters(simParams,phyParams,fileCfg,varargin{1});
     
-% LTE-V2V derived parameters
+% C-V2X derived parameters
 if simParams.technology ~= 2 % not only 11p
     
-    % Initialize LTE resource assignement algorithm parameters
+    % Initialize CV2X resource assignement algorithm parameters
     [simParams,phyParams,varargin] = initiateBRAssignmentAlgorithm(simParams,phyParams,appParams.allocationPeriod,fileCfg,varargin{1});
     
-    % Derive LTE resources available for beaconing (Beacon Resources)
-    [appParams,phyParams,varargin] = deriveBeaconResources(appParams,phyParams,fileCfg,varargin{1});    
+    % Derive CV2X resources available for beaconing (Beacon Resources)
+    [appParams,phyParams,varargin] = deriveBeaconResources(simParams,appParams,phyParams,fileCfg,varargin{1});    
 end
 
 % Additional parameters (currently only RSUs with DENM)

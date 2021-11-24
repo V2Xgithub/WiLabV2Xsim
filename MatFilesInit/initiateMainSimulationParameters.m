@@ -32,15 +32,23 @@ end
 [simParams,varargin] = addNewParam(simParams,'Technology','LTE-V2X','Choose if simulate "LTE-V2X", "NR-V2X" or "80211p"','string',fileCfg,varargin{1});
 % Check that the string is correct
 if strcmpi(simParams.Technology,'LTE-V2X')
-    simParams.technology = 1; % LTE
+    simParams.technology = 1; % CV2X
+    simParams.mode5G = 0; % LTE
+    simParams.stringCV2X = 'LTE';
 elseif strcmpi(simParams.Technology,'80211p')
     simParams.technology = 2; % 11p
 elseif strcmpi(simParams.Technology,'COEX-NO-INTERF')
     simParams.technology = 3; % LTE+11p, not interfering to each other
+    simParams.mode5G = 0; % LTE
+    simParams.stringCV2X = 'LTE';
 elseif strcmpi(simParams.Technology,'COEX-STD-INTERF')
     simParams.technology = 4; % LTE+11p, interfering with standard protocols
+    simParams.mode5G = 0; % LTE
+    simParams.stringCV2X = 'LTE';
 elseif strcmpi(simParams.Technology,'5G-V2X') || strcmpi(simParams.Technology,'NR-V2X')
-    simParams.technology = 5; % 5G    
+    simParams.technology = 1; % CV2X
+    simParams.mode5G = 1; % 5G
+    simParams.stringCV2X = '5G';
 else
     error('"simParams.Technology" must be "LTE-V2X" or "NR-V2X" or "80211p" or "COEX-NO-INTERF"');
 end
@@ -82,7 +90,7 @@ elseif strcmpi(simParams.TypeOfScenario,'ETSI-Highway')
 elseif strcmpi(simParams.TypeOfScenario,'ETSI-Urban')
     simParams.typeOfScenario = 4; % ETSI Highway high speed scenario
 else
-    error('"simParams.TypeOfScenario" must be "PPP" or "Traces" or "ETSI-Highway"');
+    error('"simParams.TypeOfScenario" must be "PPP" or "Traces" or "ETSI-Highway" or "ETSI-Urban"');
 end
 
 % [positionTimeResolution]

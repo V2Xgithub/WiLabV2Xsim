@@ -12,6 +12,7 @@ fprintf('Output settings\n');
 % Folder where the output files are recorded
 % If the folder is not present, the simulator creates it
 [outParams,varargin]= addNewParam([],'outputFolder','Output','Folder for the output files','string',fileCfg,varargin{1});
+
 fprintf('Full path of the output folder = %s\n',outParams.outputFolder);
 if exist(outParams.outputFolder,'dir')~=7
     mkdir(outParams.outputFolder);
@@ -54,7 +55,7 @@ fprintf('Simulation ID = %.0f\n',outParams.simID);
 % Boolean to activate the print to file of the update delay between received beacons
 [outParams,varargin]= addNewParam(outParams,'printUpdateDelay',false,'Activate the print to file of the update delay between received beacons','bool',fileCfg,varargin{1});
 
-if (simParams.technology==1 || simParams.technology==5) && strcmp(phyParams.duplexCV2X,'HD') % Supported only with C-V2X only
+if simParams.technology==1 && strcmp(phyParams.duplexCV2X,'HD') % Supported only with C-V2X only
     % [enableUpdateDelayHD]
     % Boolean to enable the computation of the update delay caused only by concurrent transmissions on the same TTI (C-V2X and Half Duplex only)
     [outParams,varargin]= addNewParam(outParams,'enableUpdateDelayHD',false,'Enable computation of UD only caused by tx/rx on the same subframe (C-V2X and HD only)','bool',fileCfg,varargin{1});
@@ -162,6 +163,8 @@ end
 %     [outParams,varargin]= addNewParam(outParams,'mco_printInterfStatistic',true,'Print MCO interference statistic','bool',fileCfg,varargin{1});
 % end
 
+% [message]
+[outParams,varargin]= addNewParam(outParams,'message', 'None', 'Message during simulation','string',fileCfg,varargin{1});
 fprintf('\n');
 %
 %%%%%%%%%

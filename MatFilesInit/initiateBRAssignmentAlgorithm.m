@@ -94,10 +94,10 @@ if simParams.BRAlgorithm == 18 || simParams.BRAlgorithm == 101
         end
 
         % [testMBest_5G]
-        % Parameter used for reintroduce L2 in mode2
+        % Parameter that gives the possibility to reintroduce L2 in mode2
         [simParams,varargin]= addNewParam(simParams,'testMBest_5G',1,'Percentage of resources to be considered for random selection','double',fileCfg,varargin{1});
         if simParams.testMBest_5G<=0 || simParams.testMBest_5G>1
-            error('Error: "simParams.testMBest_5G" must be more than 0 and not more than 1 (specs: 0.2)');
+            error('Error: "simParams.testMBest_5G" must be more than 0 and not more than 1');
         end
 
 
@@ -152,6 +152,7 @@ if simParams.BRAlgorithm == 18 || simParams.BRAlgorithm == 101
         end
         
         % [percAsynUser]
+        % TODO
         % if Asynchronous transmitters is active -> sets the percentage of
         % Asynchronous users
         if simParams.asynMode == 1

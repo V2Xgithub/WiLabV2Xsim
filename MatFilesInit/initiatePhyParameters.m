@@ -19,7 +19,7 @@ T0 = 290;               % Reference temperature (�K)
 if phyParams.BwMHz~=1.4 && phyParams.BwMHz~=5 && phyParams.BwMHz~=10 && phyParams.BwMHz~=20
     error('Invalid Bandwidth. Possible values: 1.4, 5, 10, 20 MHz');
 end
-if (simParams.technology~=1 && simParams.technology~=5) && phyParams.BwMHz~=10 % not only C-V2X and not 10MHz
+if simParams.technology~=1 && phyParams.BwMHz~=10 % not only C-V2X and not 10MHz
     error('Invalid Bandwidth. Only with C-V2X (lte or 5g) it can be different from 10 MHz');
 end
 
@@ -100,7 +100,7 @@ else
     
 end
 
-if (simParams.technology~=1 && simParams.technology~=5) % not only C-V2X (lte or 5g)
+if simParams.technology~=1 % not only C-V2X (lte or 5g)
     
     %% PHY parameters related to 802.11p
     
@@ -255,7 +255,7 @@ end
 
 if simParams.technology ~= 2 % not only 11p
     
-    if appParams.mode5G==0
+    if simParams.mode5G==0
     
     %% PHY parameters related to LTE-V2V
     
@@ -301,11 +301,11 @@ if simParams.technology ~= 2 % not only 11p
     % 5G parameters are evaluated only in 5Gmode.
     
     % sets input parameter for the 5G case
-    elseif appParams.mode5G==1
+    elseif simParams.mode5G==1
         fprintf('\nPhysical layer settings for 5G-V2X\n');
         
         % [SCS_NR]
-        % Sets the SCS for 5G
+        % Sets the SCS for 5G (kHz)
         [phyParams,varargin]= addNewParam(phyParams,'SCS_NR',15,'5G SCS','integer',fileCfg,varargin{1});
         
         % [nDMRS_NR]
@@ -355,7 +355,7 @@ if simParams.technology ~= 2 % not only 11p
     
     %% Parameters used in both LTE and 5G
     
-    % [duplex]
+    % [duplexCV2X]
     % Sets the duplexing: HD or FD
     [phyParams,varargin]= addNewParam(phyParams,'duplexCV2X','HD','Duplexing type','string',fileCfg,varargin{1});
     if ~strcmp(phyParams.duplexCV2X,'HD') && ~strcmp(phyParams.duplexCV2X,'FD')
@@ -372,9 +372,7 @@ if simParams.technology ~= 2 % not only 11p
         phyParams.Ksi = 10^(phyParams.Ksi_dB/10);
     end
     
-    % [Huawei]
     % [testSelfIRemove]
-    % Parameter that regulates the threshold for resoruce re-selection during FD sensing. 
     if strcmp(phyParams.duplexCV2X,'FD')
         [phyParams,varargin]= addNewParam(phyParams,'testSelfIRemove',Inf,'Multiplicative SelfI factor to set FD reselection threshold','double',fileCfg,varargin{1});
     end
@@ -392,7 +390,7 @@ if simParams.technology ~= 2 % not only 11p
     [phyParams,varargin]= addNewParam(phyParams,'BRoverlapAllowed',false,'If a pratial overlap in frequency is allowed','bool',fileCfg,varargin{1});
    
     % [cv2xCbrFactor]
-    [phyParams,varargin]= addNewParam(phyParams,'cv2xCbrFactor',1,'Factor for LTE DCC thresholds','double',fileCfg,varargin{1});
+    [phyParams,varargin]= addNewParam(phyParams,'cv2xCbrFactor',1,'Factor for CV2X DCC thresholds','double',fileCfg,varargin{1});
     if phyParams.cv2xCbrFactor<=0
         error('Error: "phyParams.cv2xCbrFactor" must be larger than 0 (set to %.2f)',phyParams.cv2xCbrFactor);
     end
@@ -543,6 +541,7 @@ if phyParams.channelModel>0 %~phyParams.winnerModel
             phyParams.b_mid = phyParams.beta2;
             phyParams.L0_far = phyParams.L0_mid * phyParams.d_threshold2^(phyParams.beta2-phyParams.beta3);
             phyParams.b_far = phyParams.beta3;
+        
         elseif phyParams.channelModel==4 % 5G
             
             [phyParams,varargin]= addNewParam(phyParams,'L0_dB',32.4,'Path loss at 1m (dB)','double',fileCfg,varargin{1});
