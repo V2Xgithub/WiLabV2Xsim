@@ -10,6 +10,8 @@ The simulator is shared under the GNU GPLv3. The software has been developed and
 
 The first release of this simulator is version 6.1 to remark the continuity with LTEV2Xsim, of which the last shared version was 5.4.
 
+From version 5.4 to version 6.1 the main modification is the addition of 5G-V2X, with NR and all the related settings (including numerology). A general refactoring was performed to generalize the parameters which are common for LTE and 5G, now indicated as CV2X. Minor corrections and improvements were also performed. 
+
 NOTICE: at least MATLAB R2016b is required.
 
 The main reference for the simulator is 
@@ -35,13 +37,13 @@ Wu Zhuofei, also called Felix (wu.zhuofei@unibo.it)
 *****
 
 *****
-Also contributing or contributed (if you feel you should be in the list, just let us know...we apologize, we are sure we are missing someone)
-
-Giammarco Cecchini (who started the implementation)
-
-Michele Menarini
+Also contributing or contributed, in alphabetic order (if you feel you should be in the list, just let us know...we apologize, we are sure we are missing someone)
 
 Claudia Campolo
+
+Giammarco Cecchini
+
+Michele Menarini
 
 Francesco Romeo 
 *****
