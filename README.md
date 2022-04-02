@@ -2,6 +2,10 @@
 
 We are uploading the simulator...some supporting documents have not yet been updated...
 
+### For Octave
+Octave ForgeTo is needed.
+To load the package, run 'pkg load statistics' from the Octave prompt.
+
 
 ***WiLabV2Xsim*** is a dynamic simulator, written in MATLAB, overhauling LTEV2Vsim (see https://github.com/alessandrobazzi/LTEV2Vsim) to support sidelink 5G-V2X. 
 It is designed for the investigation of resource allocation in networks based on ***sidelink C-V2X***, with focus on the cooperative awareness service, but it also allows to simulate ***IEEE 802.11p/ITS-G5***.

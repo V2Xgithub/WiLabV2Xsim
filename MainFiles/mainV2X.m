@@ -245,7 +245,10 @@ while timeManagement.timeNow < simParams.simulationTime
         % deterministic part and a random part. The random component is active only when enabled.
         % the random part should be logged first, and then used for
         % comparation or if-statement
-        generationInterval = timeManagement.generationIntervalDeterministicPart(idEvent)+exprnd(appParams.generationIntervalAverageRandomPart);
+        generationInterval = timeManagement.generationIntervalDeterministicPart(idEvent);
+        if appParams.generationIntervalAverageRandomPart > 0
+          generationInterval = generationInterval + appParams.generationIntervalAverageRandomPart;
+        end
         if generationInterval >= timeManagement.dcc_minInterval(idEvent)
             timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + generationInterval;
         else

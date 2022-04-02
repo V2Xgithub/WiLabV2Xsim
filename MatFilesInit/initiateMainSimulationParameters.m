@@ -17,7 +17,7 @@ if simParams.seed == 0
     simParams.seed = randi(2^32-1,1);
     fprintf('Seed used in the simulation: %d\n',simParams.seed);
 end
-rng(simParams.seed);
+rand('seed', simParams.seed);
 
 % [simulationTime]
 % Duration of the simulation in seconds

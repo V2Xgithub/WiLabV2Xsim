@@ -1,8 +1,7 @@
 function [sinrVectorOut,PERout,sinr_dB_fromtable,PER_fromtable,sinr_lin_fromtable_interp,PER_interp] = readPERtable(fileName,nInterp)
 
 if ~exist(fileName,'file')
-    fprintf('Input file %s does not exist',fileName);
-    error('');
+    error('Input file %s does not exist\nChange packet size or do not use "folderPERcurves" should be helpful.',fileName);
 end
 PERtable_ori = load(fileName);
 [PERtable(:,2),I]=unique(PERtable_ori(:,2),'stable');

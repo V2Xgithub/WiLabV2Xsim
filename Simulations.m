@@ -5,9 +5,8 @@ clc          % Clear the command window
 %LTEV2Vsim('help');
 
 % Configuration file
+% configFile = 'Highway_ITS_G5.cfg';
 configFile = 'Highway3GPP.cfg';
-%configFile = 'BolognaA.cfg';
-%configFile = 'Highway3GPP.cfg';
 
 % Simulation time (s)
 T = 10;
@@ -20,4 +19,3 @@ B = 300;
 
 WiLabV2Xsim(configFile,'simulationTime',T,'BRAlgorithm',18,'Raw',150,...
     'beaconSizeBytes',B);
-
