@@ -20,7 +20,7 @@ The CDF of all CBRs values sensed by all vehicles during the whole simulation (e
 |0.05|0.000939|
 
 ## 2. printDataAge
-e.g. awareness range (Raw) = [50, 150, 300 m]
+e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **data_age_*.xls**
 counting the data age
@@ -32,7 +32,7 @@ counting the data age
 
 
 ## 3. printPacketDelay
-e.g. awareness range (Raw) = [50, 150, 300 m]
+e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **packet_delay_*.xls**
 |packet delay [s] | #pkt (0~50) | CDF (0~50) |#pkt (50~150) | CDF (50~150) |#pkt (150~300) | CDF (150~300) |
@@ -41,7 +41,7 @@ e.g. awareness range (Raw) = [50, 150, 300 m]
 |0.002|109|0.006635|306|0.008383|511|0.009142|926|0.008465|
 
 ## 4. printPacketReceptionRatio
-e.g. awareness range (Raw) = [50, 150, 300 m]
+e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **packet_reception_ratio_*.xls**
 
@@ -52,7 +52,7 @@ e.g. awareness range (Raw) = [50, 150, 300 m]
 |30|4709|33|1|4743|0.992832|
 
 ## 5. printUpdateDelay
-e.g. awareness range (Raw) = [50, 150, 300 m]
+e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **update_delay_*.xls**
 |update delay[s]| #pkt (0~50) | CDF (0~50) |#pkt (50~150) | CDF (50~150) |#pkt (150~300) | CDF (150~300) | #pkt [0~300 m] | CDF [0~300 m]|
@@ -61,7 +61,7 @@ e.g. awareness range (Raw) = [50, 150, 300 m]
 |0.007|0|0.000207|0|0.000064|0|0.000032|0|0.00007|
 
 ## 6. printWirelessBlindSpotProb
-e.g. awareness range (Raw) = [50, 150, 300 m]
+e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **wireless_blind_spot_*.xls**
 
@@ -70,6 +70,15 @@ e.g. awareness range (Raw) = [50, 150, 300 m]
 |0.1|279|20825|0.01322|1258|66982|0.018435|5730|128902|0.04256|
 |0.2|55|21049|0.002606|450|67790|0.006594|3280|131352|0.024363|
 
+## 7. printNeighbors
+e.g. awareness range (Raw) = [50, 150] m
+
+-> **neighbors_*.xls**
+
+|time [s] | avg. Neighbors of LTE (0~50 m) | avg. Neighbors of 11p (0~50 m) | avg. tot. Neighbors (0~50 m) | avg. Neighbors of LTE (50~150 m) | avg. Neighbors of 11p (50~150 m) | avg. tot. Neighbors (50~150 m) |
+|---|---|---|---|---|---|---|
+0.2|3.75E+00|NaN|3.75E+00|5.41E+00|NaN|5.41E+00|
+0.3|3.61E+00|NaN|3.61E+00|5.49E+00|NaN|5.49E+00|
 
 
 
