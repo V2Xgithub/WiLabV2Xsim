@@ -25,7 +25,7 @@ if simParams.technology == 4 % COEXISTENCE IN THE SAME BAND
     % 1. The average SINR of LTE is updated
     % Compute SINR of received beacons
     % sinrManagement = updateSINRLTE(timeManagement.timeNow,stationManagement,sinrManagement,phyParams.Pnoise_MHz*phyParams.BwMHz_cv2xBR,simParams,appParams);
-    sinrManagement = updateSINRCV2X(timeManagement.timeNow,stationManagement,sinrManagement,PnoiseData,PnoiseSCI,simParams,appParams);
+    sinrManagement = updateSINRCV2X(timeManagement.timeNow,stationManagement,sinrManagement,phyParams.PnoiseData,phyParams.PnoiseSCI,simParams,appParams);
 
     % 2. The inteference from this 11p is removed
     % only LTE vehicles are interferred (state == 100)
