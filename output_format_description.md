@@ -23,7 +23,8 @@ The CDF of all CBRs values sensed by all vehicles during the whole simulation (e
 e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **data_age_*.xls**
-counting the data age
+
+**note:** the 1st column is not the simulation time
 
 |data age [s] | #pkt (0~50) | CDF (0~50) |#pkt (50~150) | CDF (50~150) |#pkt (150~300) | CDF (150~300) |
 |---|---|---|---|---|---|---|
@@ -35,6 +36,8 @@ counting the data age
 e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **packet_delay_*.xls**
+
+**note:** the 1st column is not the simulation time
 |packet delay [s] | #pkt (0~50) | CDF (0~50) |#pkt (50~150) | CDF (50~150) |#pkt (150~300) | CDF (150~300) |
 |---|---|---|---|---|---|---|
 |0.001|32|0.001506|89|0.001889|66|0.001046|187|0.001422|
@@ -55,7 +58,9 @@ e.g. awareness range (Raw) = [50, 150, 300] m
 e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **update_delay_*.xls**
-|update delay[s]| #pkt (0~50) | CDF (0~50) |#pkt (50~150) | CDF (50~150) |#pkt (150~300) | CDF (150~300) | #pkt [0~300 m] | CDF [0~300 m]|
+
+**note:** the 1st column is not the simulation time
+|update delay [s]| #pkt (0~50) | CDF (0~50) |#pkt (50~150) | CDF (50~150) |#pkt (150~300) | CDF (150~300) | #pkt [0~300 m] | CDF [0~300 m]|
 |---|---|---|---|---|---|---|---|---|
 |0.006|4|0.000207|3|0.000064|2|0.000032|9|0.00007|
 |0.007|0|0.000207|0|0.000064|0|0.000032|0|0.00007|
@@ -64,6 +69,8 @@ e.g. awareness range (Raw) = [50, 150, 300] m
 e.g. awareness range (Raw) = [50, 150, 300] m
 
 -> **wireless_blind_spot_*.xls**
+
+**note:** the 1st column is not the simulation time
 
 |time interval (TI) [s]|(2) #event, delay >= TI (0~50)|(3) #event, delay < TI (0~50)|ratio (2)/((2)+(3))|(5) #event, delay >= TI (50~150)|(6) #event, delay < TI (50~150)|ratio (5)/((5)+(6)) |(8) #event, delay >= TI (150~300)|(9) #event, delay < TI (150~300)|ratio (8)/((8)+(9))|
 |---|---|---|---|---|---|---|---|---|---|
@@ -75,7 +82,7 @@ e.g. awareness range (Raw) = [50, 150] m
 
 -> **neighbors_*.xls**
 
-|time [s] | avg. Neighbors of LTE (0~50 m) | avg. Neighbors of 11p (0~50 m) | avg. tot. Neighbors (0~50 m) | avg. Neighbors of LTE (50~150 m) | avg. Neighbors of 11p (50~150 m) | avg. tot. Neighbors (50~150 m) |
+|simulation time [s] | avg. Neighbors of LTE (0~50 m) | avg. Neighbors of 11p (0~50 m) | avg. tot. Neighbors (0~50 m) | avg. Neighbors of LTE (50~150 m) | avg. Neighbors of 11p (50~150 m) | avg. tot. Neighbors (50~150 m) |
 |---|---|---|---|---|---|---|
 0.2|3.75E+00|NaN|3.75E+00|5.41E+00|NaN|5.41E+00|
 0.3|3.61E+00|NaN|3.61E+00|5.49E+00|NaN|5.49E+00|
