@@ -1,26 +1,40 @@
 **** This zip includes **** 
 - The file "CopyrightNotice.pdf"
-- The file "Notes_on_LTEV2Vsim_v5.4.pdf" with some details on the updates in version 5.4;
-- Two scripts to run example simulations: "Simulations.m" and "Simulations_SpeedTest.m";
-- The main of the simulator, which is the file "LTEV2Vsim.m", version 5.4;
+- The file "WiLabV2Xsim v6.1 Tutorial_v0.pdf" with some details on the updates in version 6.1;
+- Two scripts to run example simulations: "Simulations.m";
+- The main of the simulator, which is the file "WiLabV2Xsim.m", version 6.1;
 - All the functions of the simulator organized in subfolders;
 - The folder "ConfigFiles" with some example configuration files;
 - The folder "TrafficTraces" including some traffic traces;
-- The file "LTEV2Vsim Table of input parameters v5.4.pdf" detailing all the parameters of the simulator in this version.
-
+- The file "WiLabV2Xsim Table of input parameters v6.1.pdf" detailing all the parameters of the simulator in this version.
+- The file "output_format_description.pdf", detailing the output files obtained after simulations.
 
 **** How to run the first simulation? **** 
 Like in previous versions, simply open "Simulations.m" and press play.
 
 
+**** Version 6.1 main points compared to version 5.4
+Added support for NR-V2X, with support of mode2 and 3GPP aperiodic traffic generation.
+
 **** Version 5.4 main points compared to version 5.0 **** 
 Code has been reorganized and refactored.
 
 Several parameters have been added (e.g., it is now possible to fix the power density in 
-LTE instead of the transmitted power, to change the congestion parameters of ITS-G5, etc.) – Please refer to the file "LTEV2Vsim Table of input parameters v5.4.pdf" for all the available parameters. The outputs have been revised. Some have been added (e.g., about CBR).The highway and Manhattan urban scenarios which are often used in ETSI and 3GPP documents have been added.The average SINR calculation has been revised, as detailed in "Notes_on_LTEV2Vsim_v5.4.pdf".Packet generation is not anymore necessarily periodic and an optional function has been implemented which automatically calculates the packet generation based on the vehicle speed as follows from the CAM triggering rules defined by ETSI.
-The LTE allocation process has been improved with the new packet generation (details in "Notes_on_LTEV2Vsim_v5.4.pdf").
-The packet acquisition phase has been revised in ITS-G5; now, the receiver tracks and decodes the stronger signal within 4us, which is compliant with what most devices do.
-CBR and DCC are now implemented for both technologies following the ETSI rules (details in "Notes_on_LTEV2Vsim_v5.4.pdf")
+LTE instead of the transmitted power, to change the congestion parameters of ITS-G5, etc.) – Please refer to the file "LTEV2Vsim Table of input parameters v5.4.pdf" for all the available parameters. 
+
+The outputs have been revised. Some have been added (e.g., about CBR).
+
+The highway and Manhattan urban scenarios which are often used in ETSI and 3GPP documents have been added.
+
+The average SINR calculation has been revised, as detailed in "Notes_on_LTEV2Vsim_v5.4.pdf".
+
+Packet generation is not anymore necessarily periodic and an optional function has been implemented which automatically calculates the packet generation based on the vehicle speed as follows from the CAM triggering rules defined by ETSI.
+
+The LTE allocation process has been improved with the new packet generation (details in "Notes_on_LTEV2Vsim_v5.4.pdf").
+
+The packet acquisition phase has been revised in ITS-G5; now, the receiver tracks and decodes the stronger signal within 4us, which is compliant with what most devices do.
+
+CBR and DCC are now implemented for both technologies following the ETSI rules (details in "Notes_on_LTEV2Vsim_v5.4.pdf")
 
 
 
