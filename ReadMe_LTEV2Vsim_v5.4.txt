@@ -5,9 +5,10 @@
 - The main of the simulator, which is the file "WiLabV2Xsim.m", version 6.1;
 - All the functions of the simulator organized in subfolders;
 - The folder "ConfigFiles" with some example configuration files;
-- The folder "TrafficTraces" including some traffic traces;
 - The file "WiLabV2Xsim Table of input parameters v6.1.pdf" detailing all the parameters of the simulator in this version.
 - The file "output_format_description.pdf", detailing the output files obtained after simulations.
+- The folder "TrafficTraces" including some traffic traces. Which can be downloaded externally from Dropbox.
+  https://www.dropbox.com/s/9j5ug93r83y85sk/TrafficTraces.rar?dl=0
 
 **** How to run the first simulation? **** 
 Like in previous versions, simply open "Simulations.m" and press play.
