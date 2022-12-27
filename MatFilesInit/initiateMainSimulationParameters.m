@@ -1,4 +1,4 @@
-function [simParams,varargin] = initiateMainSimulationParameters(fileCfg,varargin)
+function [simParams,varargin] = initiateMainSimulationParameters(fileCfg,simVersion,varargin)
 % function simParams = initiateMainSimulationParameters(fileCfg,varargin)
 %
 % Main settings of the simulation
@@ -7,6 +7,12 @@ function [simParams,varargin] = initiateMainSimulationParameters(fileCfg,varargi
 % It returns the structure "simParams"
 
 fprintf('Simulation settings\n');
+% [CheckVersion]
+% check if the simulation tasks are running on the right simulator verion
+[simParams,varargin] = addNewParam([],'CheckVersion',simVersion,'Simulator version needed','string',fileCfg,varargin{1});
+if simParams.CheckVersion ~= simVersion
+    error('You are using a wrong version!');
+end
 
 % [seed]
 % Seed for the random numbers generation
@@ -14,7 +20,7 @@ fprintf('Simulation settings\n');
 % in the main output file)
 [simParams,varargin] = addNewParam([],'seed',0,'Seed for random numbers','integer',fileCfg,varargin{1});
 if simParams.seed == 0
-    simParams.seed = randi(2^32-1,1);
+    simParams.seed = getseed();
     fprintf('Seed used in the simulation: %d\n',simParams.seed);
 end
 rng(simParams.seed);

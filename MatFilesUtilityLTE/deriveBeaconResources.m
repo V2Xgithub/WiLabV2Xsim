@@ -170,7 +170,8 @@ end
 % Compute In-Band Emission Matrix 
 % (following 3GPP TS 36.101 v15.0.0) for LTE
 % and 38.101-1 V17.0.0 (2020-12) for 5G
-[phyParams.IBEmatrixData,phyParams.IBEmatrixControl] = IBEcalculation(simParams,phyParams,appParams);
+[phyParams.IBEmatrixData,phyParams.IBEmatrixControl, phyParams.IBEmatrixData_remove, phyParams.IBEmatrixControl_remove] =...
+    IBEcalculation(simParams,phyParams,appParams);
 
 % Check how many BRs to exploit in the frequency domain
 if phyParams.NumBeaconsFrequency~=-1

@@ -55,20 +55,17 @@ function WiLabV2Xsim(varargin)
 %% Initialization
 
 % Version of the simulator
-simVersion = 'v6.1';
+% update for ploting figures in paper:
+% V. Todisco, S. Bartoletti, C. Campolo, A. Molinaro, A. O. Berthet and A. Bazzi,
+% "Performance Analysis of Sidelink 5G-V2X Mode 2 Through an Open-Source Simulator,"
+% in IEEE Access, vol. 9, pp. 145648-145661, 2021, doi: 10.1109/ACCESS.2021.3121151.
+simVersion = 'V6.2';   
 fprintf('WiLabV2Xsim %s\n\n',simVersion);
 
 % The path of the directory of the simulator is saved in 'fullPath'
-fullPath = which('WiLabV2Xsim');
-[~,fullPathUnix] = strtok(fliplr(fullPath), '/');
-[~,fullPathWindows] = strtok(fliplr(fullPath), '\');
-if isempty(fullPathUnix)
-    fullPath = fliplr(fullPathWindows);
-else
-    fullPath = fliplr(fullPathUnix);
-end
+fullPath = fileparts(mfilename('fullpath'));
 addpath(genpath(fullPath));
-chdir(fullPath);
+
 
 % 'help' feature:
 % "WiLabV2Xsim('help')" allows to print the full list of parameters
@@ -81,7 +78,7 @@ if nargin == 1 && strcmp(varargin{1},'help')
 end
 
 % Simulator parameters and initial settings
-[simParams,appParams,phyParams,outParams] = initiateParameters(varargin);
+[simParams,appParams,phyParams,outParams] = initiateParameters(simVersion, varargin);
 
 % Update PHY structure with the ranges
 [phyParams] = deriveRanges(phyParams,simParams);

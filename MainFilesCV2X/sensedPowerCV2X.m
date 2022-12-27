@@ -51,15 +51,5 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
         for BRFi = 1:NbeaconsF           
             sensedPower_MHz(BRFi,indexSensingV) = phyParams.IBEmatrixData(BRFi,:)*rxPsums_MHz; 
         end
-    %         if IDvehicle(iV)==59
-    %             fid = fopen('Temp.xls','a');
-    %             fprintf(fid,'%d\t%d\t%d\t%e\t',elapsedTime_subframes,currentT,BRids_currentSF(BRFi),sensingMatrix(1,BRids_currentSF(BRFi)));
-    %             for k = 1:length(intIndex)
-    %                 fprintf(fid,'%d\t%.2f\t',IDvehicle(intIndex(k)),positionManagement.distanceReal(IDvehicle(iV),IDvehicle(intIndex(k))));
-    %             end            
-    %             fprintf(fid,'\n');
-    %             fclose(fid);        
-    %         end
-%        end
     end
 end

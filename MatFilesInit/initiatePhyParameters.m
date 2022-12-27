@@ -11,7 +11,7 @@ fprintf('Physical layer settings\n');
 %% Common PHY parameters
 
 K = 1.38e-23;           % Avogadro's constant (J/K)
-T0 = 290;               % Reference temperature (�K)
+T0 = 290;               % Reference temperature (K)
 
 % [BwMHz]
 % Bandwidth (MHz)
@@ -401,6 +401,17 @@ if simParams.technology ~= 2 % not only 11p
        if phyParams.Ksic<0
         error('Error: "phyParams.Ksic" must be larger than 0');
        end
+
+    % [haveIBE]
+    % To state simulator considering the In-Band Emission (IBE) or not
+    % 1. have IBE
+    % 2. only considering IBE during sensing mechanism
+    % 3. do not have IBE
+    % note: check MatFilesNoma in other version
+    [phyParams,varargin]= addNewParam(phyParams,'haveIBE', 1, 'Simulator considers the In-Band Emission','integer',fileCfg,varargin{1});
+    if ~ismember(phyParams.haveIBE, [1,2,3])
+        error('Number of haveIBE %d not accepted. Either 1, 2, or 3.', phyParams.haveIBE);
+    end
     
 end
 

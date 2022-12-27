@@ -1,4 +1,4 @@
-function [simParams,appParams,phyParams,outParams] = initiateParameters(varargin)
+function [simParams,appParams,phyParams,outParams] = initiateParameters(simVersion, varargin)
 % Function to initialize simulator parameters
 
 nArgs = length(varargin{1});
@@ -17,7 +17,7 @@ end
 fid = fopen(fileCfg);
 if fid==-1
     if ~strcmp(varargin{1}{1},'help')
-        fprintf('File config "%s" not found. Simulation continues anyway.\n\n',fileCfg);
+        error('File config "%s" not found!\n\n',fileCfg);
     end
 else
     fclose(fid);
@@ -29,7 +29,7 @@ if mod(length(varargin{1}),2)==1
 end
 
 % Initialize Simulation parameters
-[simParams,varargin] = initiateMainSimulationParameters(fileCfg,varargin{1});
+[simParams,varargin] = initiateMainSimulationParameters(fileCfg,simVersion,varargin{1});
 simParams.fileCfg = fileCfg;
 
 % Initialize Application parameters

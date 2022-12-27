@@ -86,9 +86,14 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
             end
 
             % Find total interference using IBE
-            ItotData = phyParams.IBEmatrixData(BRFtx,:)*Isums;
-            ItotControl = phyParams.IBEmatrixControl(BRFtx,:)*Isums;
-
+            if phyParams.haveIBE == 1   % if haveIBE
+                ItotData = phyParams.IBEmatrixData(BRFtx,:)*Isums;
+                ItotControl = phyParams.IBEmatrixControl(BRFtx,:)*Isums;
+            else % phyParams.haveIBE == 2 or 3
+                ItotData = phyParams.IBEmatrixData_remove(BRFtx,:)*Isums;
+                ItotControl = phyParams.IBEmatrixControl_remove(BRFtx,:)*Isums;
+            end
+            
             % Check if the receiver j is transmitting on the same BRT
             % of transmitter i
             %if BRTtx==BRTrx
