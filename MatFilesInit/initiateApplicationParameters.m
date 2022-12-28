@@ -16,6 +16,14 @@ if appParams.allocationPeriod<=0 || appParams.allocationPeriod >1 || mod(appPara
     error('Error: "appParams.allocationPeriod" cannot be <= 0 or different from 0.1:0.1:1');
 end
 
+% [generationInterval]
+% It sets the deterministic part of the packet generation interval (in seconds). 
+% By default is equal to the allocationPeriod.
+[appParams,varargin]= addNewParam(appParams,'generationInterval',appParams.allocationPeriod,'Packet generation interval per each vehicle (s)','double',fileCfg,varargin{1});
+if appParams.generationInterval<=0
+    error('Error: gererationInterval cannot be negative or null');
+end
+
 % [variabilityGenerationInterval]
 % Interval of variability of the generationInterval from vehicle to vehicle
 % Each (11p) vehicle will have a periodicity uniformly randomly chosen
@@ -25,7 +33,7 @@ end
 % In LTE this cannot apply, as in LTE the beacon interval is rigid and
 % small variability to speed does not make the periodicity to vary
 [appParams,varargin]= addNewParam(appParams,'variabilityGenerationInterval',0,'Variability of beacon period per vehicle (s) (only 11p)','double',fileCfg,varargin{1});
-if appParams.variabilityGenerationInterval~=-1 && (appParams.variabilityGenerationInterval<0 || appParams.variabilityGenerationInterval>=appParams.allocationPeriod)
+if appParams.variabilityGenerationInterval~=-1 && (appParams.variabilityGenerationInterval<0 || appParams.variabilityGenerationInterval>=appParams.generationInterval)
     error('Error: "appParams.variabilityGenerationInterval" cannot be < 0 or >= "appParams.allocationPeriod" (except -1, automatic)');
 end
 if appParams.variabilityGenerationInterval==-1 % automatic
@@ -46,17 +54,10 @@ if appParams.variabilityGenerationInterval==-1 % automatic
         end
     end
 end    
-
-% [generationInterval]
-% It sets the deterministic part of the packet generation interval (in seconds). 
-% By default is equal to the allocationPeriod.
-[appParams,varargin]= addNewParam(appParams,'generationInterval',appParams.allocationPeriod,'Packet generation interval per each vehicle (s)','double',fileCfg,varargin{1});
-if appParams.generationInterval<=0
-    error('Error: gererationInterval cannot be negative or null');
-end
 if appParams.generationInterval~=appParams.allocationPeriod && appParams.variabilityGenerationInterval==-1
     error('Error: Incompatible generation interval setting');
 end
+
 
 % [generationIntervalAverageRandomPart]
 % It sets the Average random part of the packet generation interval (in seconds). 
