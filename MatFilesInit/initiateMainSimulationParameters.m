@@ -55,6 +55,10 @@ elseif strcmpi(simParams.Technology,'5G-V2X') || strcmpi(simParams.Technology,'N
     simParams.technology = 1; % CV2X
     simParams.mode5G = 1; % 5G
     simParams.stringCV2X = '5G';
+    % [avgRSRPin5G]
+    % only for plotting figures in related papers
+    % If using average RSRP as same as LTE
+    [simParams,varargin] = addNewParam(simParams,'avgRSRPin5G',false,'If using average RSRP as same as LTE','bool',fileCfg,varargin{1});
 else
     error('"simParams.Technology" must be "LTE-V2X" or "NR-V2X" or "80211p" or "COEX-NO-INTERF"');
 end

@@ -19,7 +19,7 @@ for pSize = [350, 1000]
         if M_values(i_m) == 1
             lgd_name = "Mode 2";
         else
-            lgd_name = sprintf("L2, $M=%d%%$",100*M_values(i_m));
+            lgd_name = sprintf("L2, M=%d%%",100*M_values(i_m));
         end
         for i_thr = 1:length(thresholds)
             if thresholds(i_thr) == -126   

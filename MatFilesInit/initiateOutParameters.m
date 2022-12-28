@@ -35,7 +35,7 @@ else
     C = textread(mainFileName, '%s','delimiter', '\n');
     lastLine = C{end};
     for i=1:length(lastLine)
-        if lastLine(i)=='v'
+        if lower(lastLine(i))=='v'
             simID = str2num(lastLine(1:i-1));
             break;
         end

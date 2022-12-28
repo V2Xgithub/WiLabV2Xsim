@@ -29,7 +29,8 @@ rho = 100; % density of vehicles
 speed=70; % Average speed
 speedStDev=7; % Standard deviation speed
 pKeep=0.4; % keep probability
-periodicity=0.1; % periodic generation every 100ms
+periodicity=0.1; % RRI 
+% generationInterval = 0.1; % periodic generation every 100 ms (default)
 sensingThreshold=-126; % threshold to detect resources as busy
 BandMHz=10;
 

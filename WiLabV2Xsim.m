@@ -55,7 +55,7 @@ function WiLabV2Xsim(varargin)
 %% Initialization
 
 % Version of the simulator
-% update for ploting figures in paper:
+% update for plotting figures in paper:
 % V. Todisco, S. Bartoletti, C. Campolo, A. Molinaro, A. O. Berthet and A. Bazzi,
 % "Performance Analysis of Sidelink 5G-V2X Mode 2 Through an Open-Source Simulator,"
 % in IEEE Access, vol. 9, pp. 145648-145661, 2021, doi: 10.1109/ACCESS.2021.3121151.

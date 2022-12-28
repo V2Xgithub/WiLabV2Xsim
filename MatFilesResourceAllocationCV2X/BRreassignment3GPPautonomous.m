@@ -182,11 +182,6 @@ Nscheduled = length(scheduledID);
 Nreassign = 0;
 
 for indexSensingV = 1:Nscheduled
-
-    %if scheduledID(indexSensingV)==87
-    %    STOPHERE = 0;
-    %end
-
     if simParams.mode5G==0 % 4G procedure
         % Select the sensing matrix only for those vehicles that perform reallocation
         % and calculate the average of the measured power over the sensing window
@@ -198,9 +193,11 @@ for indexSensingV = 1:Nscheduled
         % the last 'averageTbeacon'
         % In 5G the average process is removed and the senging is
         % performed only on the basis of the decoded SCIs.
-        
-        sensingMatrixScheduled = stationManagement.sensingMatrixCV2X(1,:,scheduledID(indexSensingV));
-        
+        if simParams.avgRSRPin5G  % only for related papers
+            sensingMatrixScheduled = sum(stationManagement.sensingMatrixCV2X(:,:,scheduledID(indexSensingV)),1)/length(stationManagement.sensingMatrixCV2X(:,1,1));
+        else  % normal condition
+            sensingMatrixScheduled = stationManagement.sensingMatrixCV2X(1,:,scheduledID(indexSensingV));
+        end
     end
 
     % With intrafrequency coexistence, any coexistence method

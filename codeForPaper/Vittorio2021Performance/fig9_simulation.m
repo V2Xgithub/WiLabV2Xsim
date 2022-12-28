@@ -20,8 +20,7 @@ path_output = fullfile(path_task, 'Output', 'data_fig_9');
 % Configuration file
 configFile = 'fig9_config.cfg';
 
-simTime = 10; % simulation time
-packetSize=350; % 350B packet size
+simTime = 10; % simulation time 
 nTransm=1; % Number of transmission for each packet
 sizeSubchannel=10; % Number of Resource Blocks for each subchannel
 Raw = 150; % Range of Awarness for evaluation of metrics
@@ -29,7 +28,8 @@ rho = 100; % density of vehicles
 speed=70; % Average speed
 speedStDev=7; % Standard deviation speed
 pKeep=0.4; % keep probability
-periodicity=0.1; % periodic generation every 100ms
+periodicity=0.1; % RRI 
+% generationInterval = 0.1; % periodic generation every 100 ms (default)
 BandMHz=10;
 
 SCS = 15;
@@ -37,7 +37,7 @@ nDMRS = 24;
 
 M_values = [1, 0.5, 0.2];
 thresholds = [-126, -110]; % threshold to detect resources as busy
-pSizes = [350, 1000];
+pSizes = [350, 1000]; % 350B packet size
 
 for i_m = 1:length(M_values)
     for i_thr = 1:length(thresholds)
