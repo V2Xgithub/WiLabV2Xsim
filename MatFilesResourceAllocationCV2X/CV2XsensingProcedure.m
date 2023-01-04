@@ -127,6 +127,11 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
                if phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && BRnextReservedTransmission~=-1 && simParams.mode5G
                     % BR of the next reserved resource (blind retransmission)
                     stationManagement.knownUsedMatrixCV2X(BRnextReservedTransmission,idVrx) = 1;
+                    % Power associated to the future reservation
+                    % max between previous sensing and retransmission reservation
+                    reservationRetransmissionPower = max(stationManagement.sensingMatrixCV2X(1,BRnextReservedTransmission,idVrx),stationManagement.sensingMatrixCV2X(1,BRtx,idVrx));
+                    % Sensign matrix updated
+                    stationManagement.sensingMatrixCV2X(1,BRnextReservedTransmission,idVrx) = reservationRetransmissionPower;
                end
                
                % If overlap of beacon resources is allowed, the SCI
