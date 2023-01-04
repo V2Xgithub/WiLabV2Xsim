@@ -8,3 +8,4 @@ This folder is organized for plot figures mentioned in the following paper:
 * Simulation file edds with "*_simulation.m"
 * Plotting file edds with "*_plot.m"
 * All of the output including data and figures are organized in subfolder ".../Vittorio2021Performance/Output"
+* The curves in figure 11 are trying to show the effect of L2 and the averaging process, and other settings do not influence the conclusions. The code given here could plot a similar figure with the paper, and could get the same conclusions. 
