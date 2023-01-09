@@ -262,7 +262,7 @@ if simParams.dcc_active
             % need to remove current packets from the queue
             if stationManagement.pckBuffer(vehiclesToConsider(i))>0 && ... 
                 stationManagement.pckNextAttempt(vehiclesToConsider(i)) > stationManagement.cv2xNumberOfReplicas(vehiclesToConsider(i))
-                [stationManagement,outputValues] = bufferOverflowLTE(vehiclesToConsider(i),positionManagement,stationManagement,phyParams,outputValues,outParams);
+                [stationManagement,outputValues] = bufferOverflowLTE(vehiclesToConsider(i),timeManagement,positionManagement,stationManagement,phyParams,appParams,outputValues,outParams);
             end
         end
     end
