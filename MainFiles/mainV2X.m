@@ -159,6 +159,11 @@ while timeManagement.timeNow < simParams.simulationTime
             % DEBUG EVENTS
             %printDebugEvents(timeEvent,'LTE subframe starts',-1);
             %fprintf('Starts\n');
+ 
+            if timeManagement.timeNow>0
+                [phyParams,simValues,outputValues,sinrManagement,stationManagement,timeManagement] = ...
+                    mainCV2XttiEnds(appParams,simParams,phyParams,outParams,simValues,outputValues,timeManagement,positionManagement,sinrManagement,stationManagement);
+            end
             
             [sinrManagement,stationManagement,timeManagement,outputValues] = ...
                 mainCV2XttiStarts(appParams,phyParams,timeManagement,sinrManagement,stationManagement,simParams,simValues,outParams,outputValues);
@@ -184,7 +189,7 @@ while timeManagement.timeNow < simParams.simulationTime
             %fprintf('Stops\n');
 
             [phyParams,simValues,outputValues,sinrManagement,stationManagement,timeManagement] = ...
-                mainCV2XttiEnds(appParams,simParams,phyParams,outParams,simValues,outputValues,timeManagement,positionManagement,sinrManagement,stationManagement);
+                mainCV2XtransmissionEnds(appParams,simParams,phyParams,outParams,simValues,outputValues,timeManagement,positionManagement,sinrManagement,stationManagement);
 
             % DEBUG TX-RX
             %if isfield(stationManagement,'IDvehicleTXLTE') && ~isempty(stationManagement.transmittingIDsLTE)
@@ -216,10 +221,20 @@ while timeManagement.timeNow < simParams.simulationTime
             %end
             
             stationManagement.pckBuffer(idEvent) = stationManagement.pckBuffer(idEvent)+1;
-            if stationManagement.pckBuffer(idEvent)>1
-                [stationManagement,outputValues] = bufferOverflowLTE(idEvent,positionManagement,stationManagement,phyParams,outputValues,outParams);
+%             %% From version 6.1.2, the following corrects a bug
+%             %The buffer may include a packet that is being transmitted
+%             %If the buffer already includes a packet, this needs to be
+%             %checked at the end of this subframe
+%             %If this is not the case, the pckNextAttempt must be reset
+            if stationManagement.pckBuffer(idEvent)<=1
+                stationManagement.pckNextAttempt(idEvent) = 1; 
             end
-            stationManagement.pckNextAttempt(idEvent) = 1; 
+            % until version 6.1.2, it was:
+%             if stationManagement.pckBuffer(idEvent)>1
+%               [stationManagement,outputValues] = bufferOverflowLTE(idEvent,timeManagement,positionManagement,stationManagement,phyParams,appParams,outputValues,outParams);
+%             end
+%             stationManagement.pckNextAttempt(idEvent) = 1;     
+            %
             
             % DEBUG IMAGE
             %printDebugImage('New packet LTE',timeManagement,stationManagement,positionManagement,simParams,simValues);

@@ -1,4 +1,4 @@
-function [stationManagement,outputValues] = bufferOverflowLTE(idOverflow,positionManagement,stationManagement,phyParams,outputValues,outParams)
+function [stationManagement,outputValues] = bufferOverflowLTE(idOverflow,timeManagement,positionManagement,stationManagement,phyParams,appParams,outputValues,outParams)
 
 pckType = stationManagement.pckType(idOverflow);
 iChannel = stationManagement.vehicleChannel(idOverflow);
@@ -8,11 +8,14 @@ if stationManagement.pckNextAttempt(idOverflow) > 1 % means that one attempt was
     notYetReceived = stationManagement.activeIDsCV2X(stationManagement.pckReceived(stationManagement.activeIDsCV2X,idOverflow)<=0);
 end
 
+
 for iPhyRaw=1:length(phyParams.Raw)
     % from v 5.4.15, retransmissions are possible - thus packets are
     % discarded if this is the first transmission, otherwise is an error
     %if (stationManagement.cv2xNumberOfReplicas(idOverflow) - stationManagement.pckRemainingTx(idOverflow)) > 0
-    if stationManagement.pckNextAttempt(idOverflow) > 1
+    currentT = (mod((timeManagement.elapsedTime_TTIs-1),appParams.NbeaconsT)+1);
+    if stationManagement.pckNextAttempt(idOverflow) > 1 
+        % || ceil((stationManagement.BRid(idOverflow,1))/appParams.NbeaconsF)==currentT    
         % Count as an error if not already received
          NtxBeacons = nnz(positionManagement.distanceReal(idOverflow,notYetReceived) < phyParams.Raw(iPhyRaw)) - 1; % -1 to remove self
          outputValues.NerrorsCV2X(iChannel,pckType,iPhyRaw) = outputValues.NerrorsCV2X(iChannel,pckType,iPhyRaw) + NtxBeacons;
