@@ -2,7 +2,7 @@ function [phyParams,simValues,outputValues,sinrManagement,stationManagement,time
             mainCV2XttiEnds(appParams,simParams,phyParams,outParams,simValues,outputValues,timeManagement,positionManagement,sinrManagement,stationManagement)
 % a C-V2X TTI (time transmission interval) ends
 
-%% From version XYZ
+%% From version 6.2
 % Check of buffer overflow
 % It needs to be performed here, otherwise the case where a packet is
 % geneated in a subframe during which the station is transmitting is

@@ -221,7 +221,7 @@ while timeManagement.timeNow < simParams.simulationTime
             %end
             
             stationManagement.pckBuffer(idEvent) = stationManagement.pckBuffer(idEvent)+1;
-%             %% From version 6.1.2, the following corrects a bug
+%             %% From version 6.2, the following corrects a bug
 %             %The buffer may include a packet that is being transmitted
 %             %If the buffer already includes a packet, this needs to be
 %             %checked at the end of this subframe
@@ -229,7 +229,7 @@ while timeManagement.timeNow < simParams.simulationTime
             if stationManagement.pckBuffer(idEvent)<=1
                 stationManagement.pckNextAttempt(idEvent) = 1; 
             end
-            % until version 6.1.2, it was:
+            % until version 6.2, it was:
 %             if stationManagement.pckBuffer(idEvent)>1
 %               [stationManagement,outputValues] = bufferOverflowLTE(idEvent,timeManagement,positionManagement,stationManagement,phyParams,appParams,outputValues,outParams);
 %             end
