@@ -28,7 +28,7 @@ activeIDsCV2X = stationManagement.activeIDsCV2X;
 
 % 1: check if a reselection is commanded by the PHY layer - i.e., in the case 
 % the resource is not available in the interval T1-T2
-% 2: check if (a) the reselection counter goes to zero and (b) reselection is
+% 2: check if (a) the reselection counter reaches one and (b) reselection is
 % commanded depending on p_keep
 
 %if timeManagement.timeNow>7.00292
@@ -93,8 +93,8 @@ scheduledID_PHY(timeManagement.timeLastPacket(scheduledID_PHY)<0) = [];
 % Following line for debug purposes - allows to remove PHY commanded reallocations
 %scheduledID_PHY = [];
 
-%% 2a - reselection counter to 0
-% Evaluates which vehicles have the counter reaching zero
+%% 2a - reselection counter to 1
+% Evaluates which vehicles have the counter reaching one
 
 %% Until version 5.4.16
 % LTE vehicles that have a resource allocated in this subframe
@@ -109,28 +109,26 @@ scheduledID_PHY(timeManagement.timeLastPacket(scheduledID_PHY)<0) = [];
 % end
 %% Modified into
 hasFirstResourceThisTbeacon = (subframeNextResource(activeIDsCV2X,1)==currentT);
-% Update of next allocation for the vehicles that have a resource allocated in this slot
+hasFirstTransmissionThisSlot = hasFirstResourceThisTbeacon & stationManagement.hasTransmissionThisSlot;
 
 % timeManagement.timeOfResourceAllocationLTE is for possible future use
 %timeManagement.timeOfResourceAllocationLTE(haveResourceThisTbeacon>0) = timeManagement.timeOfResourceAllocationLTE(haveResourceThisTbeacon>0) + appParams.averageTbeacon;
 
 % Update resReselectionCounter
-% Reduce the counter by one to all those that have a packet generated in this slot
+% Reduce the counter by one to all UEs that have the first packet TRANSMITTED in this slot
 %stationManagement.resReselectionCounterCV2X(activeIDsCV2X) = stationManagement.resReselectionCounterCV2X(activeIDsCV2X)-haveResourceOfLastReplicaThisTbeacon(activeIDsCV2X);
-stationManagement.resReselectionCounterCV2X(activeIDsCV2X) = stationManagement.resReselectionCounterCV2X(activeIDsCV2X)-hasFirstResourceThisTbeacon;
+stationManagement.resReselectionCounterCV2X(activeIDsCV2X) = stationManagement.resReselectionCounterCV2X(activeIDsCV2X)-hasFirstTransmissionThisSlot;
 
 %% 2b - p_keep check
-% Among them, those that have reached RC=1 need to evaluate if they will
-% perform the reselection. In case they don't need to select a new resource, they update the RC before
-% it reaches 0. In case UEs need to perform reselection, the reselection is
-% done at the next packet arrival and the last transmission before the change don't reserve
-% any resource (transmission with RRI=0)
+% Vehicles that have reached RC=1 need to evaluate if they will perform the reselection. 
+% In case they don't need to select a new resource, they update the RC before it reaches 0. 
+% In case UEs need to perform reselection, the reselection is  done at the next packet arrival 
+% and the last transmission before the resource change, doesn't reserve any resource 
+% (simulating the event of a transmission with RRI=0)
 
-% Calculate IDs of vehicles which perform reselection
-%scheduledID_MAC = find ( timeManagement.timeLastPacket );
 
-% Detects the UEs that have transmitted in this slot whose RC has reached 1
-keepCheck_MAC = activeIDsCV2X( hasFirstResourceThisTbeacon ...
+% Detects the UEs transmitting in this slot whose RC has reached 1
+keepCheck_MAC = activeIDsCV2X( hasFirstTransmissionThisSlot ...
     & (stationManagement.resReselectionCounterCV2X(activeIDsCV2X)==1));
 
 updateCounter_MAC =[];
@@ -150,14 +148,14 @@ if phyParams.Ksi < Inf && phyParams.testSelfIRemove < Inf
 end
 
 % Detects the UEs that need to perform reselection
-% The reselection is triggered when RC=0 and the UE has a packet to transmit
+% The reselection is triggered when RC=0 and the UE has a new packet generated
 scheduledID_MAC = activeIDsCV2X( hasNewPacketThisTbeacon ...
     & (stationManagement.resReselectionCounterCV2X(activeIDsCV2X)<=0));
 
 
-%if ~isempty(scheduledID_MAC)
+% if ~isempty(scheduledID_MAC)
 %    STOPHERE=0;
-%end
+% end
 
 % FOR DEBUG
 % fid = fopen('temp.xls','a');
