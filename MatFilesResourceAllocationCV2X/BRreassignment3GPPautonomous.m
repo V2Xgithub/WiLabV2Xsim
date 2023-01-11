@@ -139,6 +139,7 @@ if simParams.probResKeep>0
 end
 % Update the RC for those UEs that do not perform reselection due to pkeep
 stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = stationManagement.resReselectionCounterCV2X(updateCounter_MAC) + (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(updateCounter_MAC))';
+% stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = stationManagement.resReselectionCounterCV2X(updateCounter_MAC)*(~simParams.dynamicScheduling)+simParams.dynamicScheduling;
 % stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(updateCounter_MAC));
 
 
@@ -169,6 +170,7 @@ scheduledID_MAC = activeIDsCV2X( hasNewPacketThisTbeacon ...
 % Calculate new resReselectionCounter for scheduledID
 needReselectionCounterRestart = union(scheduledID_PHY,scheduledID_MAC);
 stationManagement.resReselectionCounterCV2X(needReselectionCounterRestart) = (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(needReselectionCounterRestart));
+stationManagement.resReselectionCounterCV2X(needReselectionCounterRestart) = stationManagement.resReselectionCounterCV2X(needReselectionCounterRestart)*(~simParams.dynamicScheduling)+simParams.dynamicScheduling;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SECOND PART is performing the reselection

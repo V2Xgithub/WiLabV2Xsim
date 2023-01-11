@@ -435,6 +435,7 @@ if outputValues.AvgNvehiclesCV2X>0
         fprintf(fileMainID,',Treassign=%.1f',simParams.Treassign);
     elseif simParams.BRAlgorithm==18
         fprintf(fileMainID,'TsensPer=%.2f,pKeep=%.2f,',simParams.TsensingPeriod,simParams.probResKeep);
+        fprintf(fileMainID,'dynamicScheduling=%d,',simParams.dynamicScheduling);
         fprintf(fileMainID,'rRes=%.2f,minR=%d,maxR=%d,',simParams.ratioSelectedMode4,simParams.minRandValueMode4,simParams.maxRandValueMode4);
         fprintf(fileMainID,'T1=%.2f,T2=%.2f,',simParams.T1autonomousMode,simParams.T2autonomousMode);
         fprintf(fileMainID,'Pthr=%d,minSCIsinr=%.2f,',10*log10(simParams.powerThresholdAutonomous)+30,10*log10(phyParams.minSCIsinr));
@@ -446,6 +447,9 @@ if outputValues.AvgNvehiclesCV2X>0
         else
             fprintf(fileMainID,',NOTknownShadowing');
         end
+    end
+    if simParams.BRAlgorithm==101
+        fprintf(fileMainID,'T1=%.2f,T2=%.2f,',simParams.T1autonomousMode,simParams.T2autonomousMode);
     end
     fprintf(fileMainID,'\t');
 else

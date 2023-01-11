@@ -12,10 +12,9 @@ fprintf('Settings of resource assignement algorithm\n');
 % Selects the BR reassignment algorithm:
 % 2 -> CONTROLLED with REUSE DISTANCE and scheduled vehicles
 % 7 -> CONTROLLED with MAXIMUM REUSE DISTANCE (MRD)
-% 8 -> AUTONOMOUS with SENSING (3GPP STANDARD MODE 4) - ON A BEACON PERIOD
-% BASIS
-% 18 -> AUTONOMOUS with SENSING (3GPP STANDARD MODE 4) - ON A SUBFRAME
-% BASIS
+% 8 -> AUTONOMOUS with SENSING (3GPP STANDARD MODE 4) - ON A BEACON PERIOD BASIS
+% 18 -> AUTONOMOUS with SENSING (3GPP STANDARD LTE-MODE-4 or NR-MODE-2) - ON A SLOT BASIS
+%
 % 9 -> CONTROLLED with POWER CONTROL
 % 10 -> CONTROLLED with MINIMUM REUSE POWER (MRP)
 
@@ -79,11 +78,22 @@ end
 
 if simParams.BRAlgorithm == 18 || simParams.BRAlgorithm == 101
     if simParams.BRAlgorithm == 18
+
+        % [dynamicScheduling]
+        % Enables the dynamic scheduling: resources are changed at each generation
+            [simParams,varargin]= addNewParam(simParams,'dynamicScheduling',0,'Probability to keep the previously selected BR','integer',fileCfg,varargin{1});
+        if (simParams.dynamicScheduling ~=0 && simParams.dynamicScheduling ~= 1)
+            error('Error: "simParams.dynamicScheduling" cannot be different from 0 or 1');
+        end
+
         % [probResKeep]
         % Probability to keep the previously selected BR
-        [simParams,varargin]= addNewParam(simParams,'probResKeep',0.8,'Probability to keep the previously selected BR','double',fileCfg,varargin{1});
+        [simParams,varargin]= addNewParam(simParams,'probResKeep',0.8*(~simParams.dynamicScheduling),'Probability to keep the previously selected BR','double',fileCfg,varargin{1});
         if simParams.probResKeep<0 || simParams.probResKeep>0.8
             error('Error: "simParams.probResKeep" must be within 0 and 0.8');
+        end
+        if simParams.dynamicScheduling == 1 && simParams.probResKeep~=0
+            error('Error: "simParams.probResKeep" must be 0 when Dynamic Scheduling is selected');
         end
 
         % [ratioSelectedMode4]

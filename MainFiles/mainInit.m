@@ -105,6 +105,7 @@ stationManagement.pckTxOccurring = zeros(simValues.maxID,1);
 stationManagement.cv2xNumberOfReplicas = phyParams.cv2xNumberOfReplicasMax * ones(simValues.maxID,1);
 %%%%%%%
 
+
 %% Packet generation
 timeManagement.timeGeneratedPacketInTxLTE = -1 * ones(simValues.maxID,1);
 if appParams.variabilityGenerationInterval==-1
@@ -411,6 +412,11 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
         stationManagement.resReselectionCounterCV2X(stationManagement.activeIDs) = (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(stationManagement.activeIDs));
         % COMMENTED: Set value 0 to vehicles that are blocked
         % stationManagement.resReselectionCounterCV2X(stationManagement.BRid==-1)=0;
+        % Sets the Reselection counter to 1 for all vehicles when dynamic scheduling is active
+        if simParams.dynamicScheduling == 1
+            stationManagement.resReselectionCounterCV2X(stationManagement.activeIDs) = ones(simValues.maxID,1);
+        end
+
 
         % Initialization of sensing matrix (BRAlgorithm=18)
         stationManagement.sensingMatrixCV2X = zeros(ceil(simParams.TsensingPeriod/appParams.allocationPeriod),appParams.Nbeacons,simValues.maxID);
