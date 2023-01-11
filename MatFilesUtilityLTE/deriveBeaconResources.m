@@ -139,7 +139,7 @@ end
 if simParams.mode5G==0
     %
     % Compute BW of a BR
-    phyParams.BwMHz_cv2xBR = (phyParams.RBbandwidth*1e-6) * (appParams.RBsBeacon/2) ;
+    phyParams.BwMHz_cv2xBR = phyParams.BwMHz * (phyParams.NsubchannelsBeacon/phyParams.NsubchannelsFrequency);
     % Compute BW of the SCI in LTE
     phyParams.BwMHz_SCI = (phyParams.RBbandwidth*1e-6) * (2) ;
     % Compute power per MHz in LTE
@@ -153,8 +153,7 @@ if simParams.mode5G==0
 else
     
     % Compute BW of a BR in NR
-    % maybe same as mode5G==0, BW of a BR is calculated on subchannels
-    phyParams.BwMHz_cv2xBR = (phyParams.RBbandwidth*1e-6) * (appParams.RBsBeacon) ;
+    phyParams.BwMHz_cv2xBR = phyParams.BwMHz * (phyParams.NsubchannelsBeacon/phyParams.NsubchannelsFrequency);
     % Compute BW of the SCI-1 in NR
     phyParams.BwMHz_SCI = (phyParams.RBbandwidth*1e-6) * (phyParams.nRB_SCI) ;
     % Compute power per MHz in NR
