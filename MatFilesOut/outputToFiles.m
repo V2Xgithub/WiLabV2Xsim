@@ -25,7 +25,7 @@ if fseek(fileMainID, 1, 'bof') == -1
     %4 Phy settings
     fprintf(fileMainID,'Phy (BW,MCS/Mode,Duplex)\t');
     fprintf(fileMainID,'Phy (GenIntervalDeterministic,GenIntervalAverageRandom)\t');
-    fprintf(fileMainID,'Phy (Ptx,PtxMHz,PnMHz,Gt,Gr,L0,beta,sinrMin_dB)\t');
+    fprintf(fileMainID,'Phy (Ptx,PtxMHz,PnMHz,F_dB,Gt,Gr,L0,beta,sinrMin_dB)\t');
     fprintf(fileMainID,'Phy (MaxRange2Sigma,RawMaxLOS,RawMaxNLOS,StdDevShadowLOS,StdDevShadowNLOS)\t');
     fprintf(fileMainID,'Phy (Nchannels:proportion)\t');
     fprintf(fileMainID,'11p backoff (CW,AifsN,Snosy,Ssy)\t');
@@ -299,6 +299,7 @@ if outputValues.AvgNvehicles11p>0
     fprintf(fileMainID,'%.0f',phyParams.P_ERP_MHz_11p_dBm);
 end
 fprintf(fileMainID,',%.0f,',phyParams.Pnoise_MHz_dBm);
+fprintf(fileMainID,',%.1f,',phyParams.F_dB);
 fprintf(fileMainID,'%.0f,%.0f,',phyParams.Gt_dB,phyParams.Gr_dB);
 
 if phyParams.channelModel>0 %~phyParams.winnerModel
