@@ -67,6 +67,10 @@ phyParams.Gr = 10^(phyParams.Gr_dB/10);
 phyParams.Pnoise_MHz_dBm = 10*log10(K*T0*1e6) + phyParams.F_dB + 30;
 phyParams.Pnoise_MHz = 10^((phyParams.Pnoise_MHz_dBm-30)/10);
 
+% [sensitivity11p_dBm]
+% Receiver sensitivty
+[phyParams,varargin]= addNewParam(phyParams,'sensitivity11p_dBm',-100,'SINR threshold to decoded the preamble of 11p','double',fileCfg,varargin{1});
+
 % [folderPERcurves]
 % Select if using a BLER curve
 [phyParams,varargin]= addNewParam(phyParams,'folderPERcurves','null','Name of folder with PER vs. SINR curves - Null if thresholds are used','string',fileCfg,varargin{1});
@@ -226,18 +230,19 @@ if simParams.technology~=1 % not only C-V2X (lte or 5g)
         end
         
         phyParams.sinrVector11p_LOS_dB = phyParams.sinrThreshold11p_LOS_dB;
-        
-        
+
         phyParams.sinrVector11p_NLOS_dB = phyParams.sinrVector11p_LOS_dB;
         phyParams.sinrThreshold11p_NLOS_dB = phyParams.sinrThreshold11p_LOS_dB;
     end
     phyParams.sinrThreshold11p_LOS = 10.^(phyParams.sinrThreshold11p_LOS_dB/10);
     phyParams.sinrVector11p_LOS = 10.^(phyParams.sinrVector11p_LOS_dB/10);
-    
-    
+     
     phyParams.sinrThreshold11p_NLOS = 10.^(phyParams.sinrThreshold11p_NLOS_dB/10);
     phyParams.sinrVector11p_NLOS = 10.^(phyParams.sinrVector11p_NLOS_dB/10);
-    
+
+    phyParams.sinrThreshold11p_preamble_dB = phyParams.sensitivity11p_dBm - (phyParams.Pnoise_MHz_dBm+10*log10(phyParams.BwMHz));
+    phyParams.sinrThreshold11p_preamble = 10.^((phyParams.sinrThreshold11p_preamble_dB )/10);
+
     if simParams.technology==2 && appParams.variableBeaconSize
         error('This part needs revision in version 5');
         %         if ~phyParams.pWithLTEPHY
@@ -250,7 +255,51 @@ if simParams.technology~=1 % not only C-V2X (lte or 5g)
         %             phyParams.tPck11pSmall = packetDuration11p(appParams.beaconSizeSmallBytes,-1,phyParams.NbitsHz,phyParams.BwMHz,phyParams.pWithLTEPHY);
         %         end
     end
-    
+
+    % parameters for IEEE 802.11p repetition
+    % [retransType]
+    [phyParams,varargin]= addNewParam(phyParams ,'retransType',0,'Retransmission type, 0: static, 1: dynamic-hard-threshold, 2: dynamic-soft-threshold','integer',fileCfg,varargin {1}) ;
+    if phyParams.retransType<0 && phyParams.retransType>2
+        error ('Retransmission type = %d not accccepted. Should between [0, 2]', phyParams.retransType);
+    end
+
+    % [ITSNumberOfReplicasMax]
+    [phyParams,varargin]= addNewParam(phyParams ,'ITSNumberOfReplicasMax',1,'Number of retransmissions of ITS-G5','integer',fileCfg,varargin {1}) ;
+    if phyParams.ITSNumberOfReplicasMax<1 || phyParams.ITSNumberOfReplicasMax>4
+        error ('Number of replicas %d not accccepted. Should be 1 ~ 4.', phyParams.lteNumberOfReplicasMax);
+    end
+
+    if phyParams.retransType ~= 0
+        disp('Number of retransmissions of ITS-G5:	[ITSNumberOfReplicasMax] = 4 (forced)');
+        phyParams.ITSNumberOfReplicasMax = 4;
+    end
+
+    % [ITSRetransBackoffInterval]
+    [phyParams,varargin]= addNewParam(phyParams ,'ITSRetransBackoffInterval',0,'ITS-G5 retransmission backoff interval [us]','integer',fileCfg,varargin {1}) ;
+    if phyParams.ITSRetransBackoffInterval<0
+        error ('Number of ITSRetransBackoffInterval = %d [us] not accccepted. Should >= 0', phyParams.ITSRetransBackoffInterval);
+    end
+    % transfer to seconds
+    phyParams.ITSRetransBackoffInterval = 1e-6 * phyParams.ITSRetransBackoffInterval;
+
+    % different from the paper, threshold 1~3 here are the threshold 3~1 in the paper Zhuofei2023Repetition
+    % [ITSReplicasThreshold1]
+    [phyParams,varargin]= addNewParam(phyParams ,'ITSReplicasThreshold1',0.03,'CBR threshold 1 for ITS-G5 retransmission','double',fileCfg,varargin {1}) ;
+    if phyParams.ITSReplicasThreshold1 < 0 || phyParams.ITSReplicasThreshold1 > 1
+        error ('ITSReplicasThreshold1 = %f not accccepted. Should within [0,1]', phyParams.ITSReplicasThreshold1);
+    end
+
+    % [ITSReplicasThreshold2]
+    [phyParams,varargin]= addNewParam(phyParams ,'ITSReplicasThreshold2',0.05,'CBR threshold 2 for ITS-G5 retransmission','double',fileCfg,varargin {1}) ;
+    if phyParams.ITSReplicasThreshold2 < phyParams.ITSReplicasThreshold1 || phyParams.ITSReplicasThreshold2 > 1
+        error ('ITSReplicasThreshold1 = %f not accccepted. Should within [%f,1]', phyParams.ITSReplicasThreshold1, phyParams.ITSReplicasThreshold2);
+    end
+
+    % [ITSReplicasThreshold3]
+    [phyParams,varargin]= addNewParam(phyParams ,'ITSReplicasThreshold3',0.09,'CBR threshold 3 for ITS-G5 retransmission','double',fileCfg,varargin {1}) ;
+    if phyParams.ITSReplicasThreshold3 < phyParams.ITSReplicasThreshold2 || phyParams.ITSReplicasThreshold3 > 1
+        error ('ITSReplicasThreshold1 = %f not accccepted. Should within [%f,1]', phyParams.ITSReplicasThreshold2, phyParams.ITSReplicasThreshold3);
+    end
 end
 
 if simParams.technology ~= 2 % not only 11p
@@ -296,7 +345,7 @@ if simParams.technology ~= 2 % not only 11p
     end
     
     
-   %% PHY parameters related to 5G-V2V (Vittorio)
+    %% PHY parameters related to 5G-V2V (Vittorio)
     
     % 5G parameters are evaluated only in 5Gmode.
     
@@ -404,21 +453,20 @@ if simParams.technology ~= 2 % not only 11p
 
     % [haveIBE]
     % To state simulator considering the In-Band Emission (IBE) or not
-    % 1. have IBE
-    % 2. only considering IBE during sensing mechanism
-    % 3. do not have IBE
-    % note: check MatFilesNoma in other version
-    [phyParams,varargin]= addNewParam(phyParams,'haveIBE', 1, 'Simulator considers the In-Band Emission','integer',fileCfg,varargin{1});
-    if ~ismember(phyParams.haveIBE, [1,2,3])
-        error('Number of haveIBE %d not accepted. Either 1, 2, or 3.', phyParams.haveIBE);
+    [phyParams,varargin]= addNewParam(phyParams,'haveIBE', true, 'Simulator considers the In-Band Emission','bool',fileCfg,varargin{1});
+        
+    % [nsic]
+    % Parameter Successive interference cancellation
+    [phyParams,varargin]= addNewParam(phyParams,'nsic',inf,'Maximum SIC iterations','double',fileCfg,varargin{1});
+    if phyParams.nsic<1
+        error('Error: "phyParams.nsic" must be larger than 0');
     end
-    
-end
 
-% [cv2xNumberOfReplicasMax]
-[phyParams,varargin]= addNewParam(phyParams,'cv2xNumberOfReplicasMax',1,'Number of transmissions (HARQ)','integer',fileCfg,varargin{1});
-if phyParams.cv2xNumberOfReplicasMax~=1 && phyParams.cv2xNumberOfReplicasMax~=2
-    error('Number of replicas %d not accccepted. Either 1 or 2.',phyParams.cv2xNumberOfReplicasMax);
+    % [cv2xNumberOfReplicasMax]
+    [phyParams,varargin]= addNewParam(phyParams,'cv2xNumberOfReplicasMax',1,'Number of transmissions (HARQ)','integer',fileCfg,varargin{1});
+    if phyParams.cv2xNumberOfReplicasMax~=1 && phyParams.cv2xNumberOfReplicasMax~=2
+        error('Number of replicas %d not accccepted. Either 1 or 2.',phyParams.cv2xNumberOfReplicasMax);
+    end
 end
 
 

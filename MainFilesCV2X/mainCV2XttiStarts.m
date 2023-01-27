@@ -68,6 +68,12 @@ if simParams.technology == 4
 end
     
 % Remove the packet from the queue
+% the packet is removed from the queue after the last transmission.
+% If the last transmission is disabled (BRids=-1) the packet remains in the queue.
+% At the next generation an of overflow will occur, which will bring back
+% the pckBuffer to one and properly account for the correct/incorrect reception of the packet.
+% This has been done to allow the possibility of allowing the possibility
+% of triggering retransmissions
 if ~isempty(stationManagement.transmittingIDsCV2X)
     stationManagement.pckTxOccurring(stationManagement.transmittingIDsCV2X) = stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X);
  	stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X) = stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X) + 1;

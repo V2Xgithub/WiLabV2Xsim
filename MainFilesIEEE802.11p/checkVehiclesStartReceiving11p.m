@@ -1,4 +1,4 @@
-function [timeManagement,stationManagement,sinrManagement,outputValues] = checkVehiclesStartReceiving11p(idEvent,indexEventInActiveIDs,timeManagement,stationManagement,sinrManagement,simParams,phyParams,outParams,outputValues,simValues)
+function [timeManagement,stationManagement,sinrManagement,outputValues] = checkVehiclesStartReceiving11p(idEvent,indexEventInActiveIDs,timeManagement,stationManagement,sinrManagement,simParams,phyParams,outParams,outputValues)
 
 % Variable used for easier reading
 activeIDs = stationManagement.activeIDs;
@@ -31,13 +31,18 @@ alreadyReceingAnotherPreamble = ( stationManagement.vehicleState(activeIDs)==9 .
 
 if indexEventInActiveIDs>0
     % Normal case - one node is transmitting
-    %
+
     % Approach 1: I check the SINR and if above a threshold I start decoding
     % The SINR corresponding to PER = 0.9 is used
-    sinrThr=  phyParams.LOS(:,indexEventInActiveIDs)*phyParams.sinrThreshold11p_LOS+... %LOS
-            (1-phyParams.LOS(:,indexEventInActiveIDs))*phyParams.sinrThreshold11p_LOS;
+    preambelSINR = sinrManagement.P_RX_MHz(:,indexEventInActiveIDs) ./ (phyParams.Pnoise_MHz + (rxPowerTotNow_MHz-sinrManagement.P_RX_MHz(:,indexEventInActiveIDs)) + sinrManagement.coex_InterfFromLTEto11p(activeIDs)/phyParams.BwMHz);
+    
+    % if preambel of the same packet was detected earlier, the following
+    % preamble is automatically detected
+    decodingThisPreamble = stationManagement.preambleAlreadyDetected(:,indexEventInActiveIDs) | (preambelSINR > phyParams.sinrThreshold11p_preamble);  
 
-    decodingThisPreample = sinrManagement.P_RX_MHz(:,indexEventInActiveIDs) ./ (phyParams.Pnoise_MHz + (rxPowerTotNow_MHz-sinrManagement.P_RX_MHz(:,indexEventInActiveIDs)) + sinrManagement.coex_InterfFromLTEto11p(activeIDs)/phyParams.BwMHz) >  sinrThr;
+    % update detected preamble
+    stationManagement.preambleAlreadyDetected(:,indexEventInActiveIDs) = decodingThisPreamble;
+
     % % Approach 2: I check that the received power is above the sensing
     % % threshold for decodable signals (-85 dBm in specs)
     % C = (sinrManagement.P_RX_MHz(:,indexEventInActiveIDs)*phyParams.BwMHz) >= phyParams.PrxSensWhenSynch;
@@ -45,11 +50,12 @@ if indexEventInActiveIDs>0
     %
     % From version 5.3.1, the channel check is added
     % If the channel is not the same, then C is set to 0
-    decodingThisPreample = decodingThisPreample .* sameChannel(stationManagement.activeIDs);
+    decodingThisPreamble = decodingThisPreamble .* sameChannel(stationManagement.activeIDs);
 else
     % Only interference, with no real useful signal
     % In this case C is always 'false'
-    decodingThisPreample = zeros(length(sinrManagement.P_RX_MHz(:,1)),1);
+    decodingThisPreamble = zeros(length(sinrManagement.P_RX_MHz(:,1)),1);
+    firstTimeDecodeThisPreamble = zeros(length(sinrManagement.P_RX_MHz(:,1)),1);
 end
 % in D, an additional factor 'coex_virtualInterference' is used to block all 11p transmissions (used
 % in coexistence method A) - it could be added also in C, but adding it in D
@@ -59,8 +65,8 @@ receivingHighPower = (rxPowerTotNow_MHz*phyParams.BwMHz +...
     sinrManagement.coex_virtualInterference(activeIDs)) >= phyParams.PrxSensNotSynch;
 
 % Revised From version 5.3.2
-ifStartReceiving = logical(alreadyReceingAnotherPreamble .* decodingThisPreample + ...
-        idleOBU .* notEndingBackoff .* (decodingThisPreample+receivingHighPower) );
+ifStartReceiving = alreadyReceingAnotherPreamble & decodingThisPreamble | ...
+        idleOBU & notEndingBackoff & (decodingThisPreamble | receivingHighPower);
 %%
 
 %%
@@ -72,9 +78,12 @@ ifStartReceiving = logical(alreadyReceingAnotherPreamble .* decodingThisPreample
 % The node from which receiving is set
 vehiclesFreezingList=activeIDs(logical(ifStartReceiving.*(stationManagement.vehicleState(activeIDs)==2)));
 for idVehicle = vehiclesFreezingList'
-    stationManagement.nSlotBackoff11p(idVehicle) = freezeBackoff11p(timeManagement.timeNow,timeManagement.timeNextTxRx11p(idVehicle),phyParams.tSlot,stationManagement.nSlotBackoff11p(idVehicle));
+    stationManagement.nSlotBackoff11p(idVehicle) =...
+        freezeBackoff11p(timeManagement.timeNow,timeManagement.timeNextTxRx11p(idVehicle),...
+        phyParams.tSlot,stationManagement.nSlotBackoff11p(idVehicle));
+    
     % DEBUG BACKOFF
-    printDebugBackoff11p(timeManagement.timeNow,'11p backoff freeze',idVehicle,stationManagement,outParams)
+    printDebugBackoff11p(timeManagement.timeNow,'11p backoff freeze',idVehicle,stationManagement,outParams,timeManagement)
 end
 stationManagement.vehicleState(activeIDs(ifStartReceiving)) = 9;
 sinrManagement.sinrAverage11p(activeIDs(ifStartReceiving)) = 0;
@@ -91,7 +100,7 @@ if idEvent>0
     % Coexistence   
     % Save 11p as detected by LTE if the SINR is above the threshold
     if simParams.technology == 4 && simParams.coexMethod==3 
-        sinrManagement.coex_lteDetecting11pTx(activeIDs) = logical( stationManagement.vehicleState(activeIDs)==100 .* decodingThisPreample );
+        sinrManagement.coex_lteDetecting11pTx(activeIDs) = logical( stationManagement.vehicleState(activeIDs)==100 .* decodingThisPreamble );
     end
 
     % Coexistence, dynamic slots, calculation of CBR_11p: LTE nodes check if
@@ -107,9 +116,10 @@ if idEvent>0
         else
             interferenceFromLTEnodesPerSubframe = 0; %zeros(length(),1);
         end
-        sinrThr=phyParams.LOS(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs).*phyParams.sinrThreshold11p_LOS+...
-                (1-phyParams.LOS(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs)).*phyParams.sinrThreshold11p_NLOS;
-        decodingThePreamble = (sinrManagement.P_RX_MHz(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs) ./ (phyParams.Pnoise_MHz + (rxPowerTotNow_MHz(stationManagement.activeIDsCV2X)-sinrManagement.P_RX_MHz(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs)) + interferenceFromLTEnodesPerSubframe) > sinrThr);
+%         sinrThr=phyParams.LOS(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs).*phyParams.sinrThreshold11p_LOS+...
+%                 (1-phyParams.LOS(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs)).*phyParams.sinrThreshold11p_NLOS;
+        % retransmission may should be considered here
+        decodingThePreamble = (sinrManagement.P_RX_MHz(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs) ./ (phyParams.Pnoise_MHz + (rxPowerTotNow_MHz(stationManagement.activeIDsCV2X)-sinrManagement.P_RX_MHz(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs)) + interferenceFromLTEnodesPerSubframe) > phyParams.sinrThreshold11p_preamble);
         ifStartDetecting11p = logical( (stationManagement.vehicleState(stationManagement.activeIDsCV2X)==100)...
             .* ~sinrManagement.coex_detecting11p(stationManagement.activeIDsCV2X)...
             .* decodingThePreamble );
@@ -137,21 +147,21 @@ if simParams.cbrActive && ~isempty(stationManagement.channelSensedBusyMatrix11p)
 
     % First of all, E is calculated, which are those nodes transmitting
     % or perceiving interference above -85
-    nodesThatMightStart = (stationManagement.vehicleState(activeIDs)==3) | ...
-        ((rxPowerTotNow_MHz*phyParams.BwMHz + sinrManagement.coex_InterfFromLTEto11p(activeIDs) +...
-         sinrManagement.coex_virtualInterference(activeIDs)) >= phyParams.PrxSensWhenSynch);
+    higherThanThreshold = (rxPowerTotNow_MHz*phyParams.BwMHz + sinrManagement.coex_InterfFromLTEto11p(activeIDs)) >= phyParams.PrxSensWhenSynch;
     
+    % only count the first receiving repetition
+%     nodesMightStartTiming = (stationManagement.vehicleState(activeIDs)==3) | ...
+%         (decodingThisPreamble & higherThanThreshold);
+    nodesMightStartTiming = (activeIDs==indexEventInActiveIDs) | ...
+        (decodingThisPreamble & higherThanThreshold);
+
     % Then the nodes starting the channel busy are calculated
-    ifStartCBR = (timeManagement.cbr11p_timeStartBusy(activeIDs)==-1 & nodesThatMightStart);
+    ifStartCBR = (timeManagement.cbr11p_timeStartBusy(activeIDs)==-1 & nodesMightStartTiming);
+    % only count the first time that it detect the preamble and sensing the high power at the
+    % same time
+    ifFirstTimeStartCBR = (ifStartCBR - stationManagement.alreadyStartCBR(:,indexEventInActiveIDs)) > 0;
+    stationManagement.alreadyStartCBR(:,indexEventInActiveIDs) = stationManagement.alreadyStartCBR(:,indexEventInActiveIDs) | ifStartCBR;
     
     % Time is updated
-    timeManagement.cbr11p_timeStartBusy(activeIDs(ifStartCBR)) = timeManagement.timeNow;
-
+    timeManagement.cbr11p_timeStartBusy(activeIDs(ifFirstTimeStartCBR)) = timeManagement.timeNow;
 end
-%%
-
-% Temporary
-% if simParams.mco_nVehInterf>0 && outParams.mco_printInterfStatistic
-%     outputValues = mco_updateInterfFromAdjacent(timeManagement,stationManagement,sinrManagement,phyParams,simParams,outputValues);
-% end
-

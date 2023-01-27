@@ -48,7 +48,7 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
         % Find total received power using IBE
         % Including possible interference from 11p (note: the
         % interfering power is already calculated per BR)
-        for BRFi = 1:NbeaconsF           
+        for BRFi = 1:NbeaconsF
             sensedPower_MHz(BRFi,indexSensingV) = phyParams.IBEmatrixData(BRFi,:)*rxPsums_MHz; 
         end
     end

@@ -8,15 +8,13 @@ PERtable_ori = load(fileName);
 [PERtable(:,2),I]=unique(PERtable_ori(:,2),'stable');
 PERtable(:,1)=PERtable_ori(I,1);
 
-sinr_dB_fromtable = fliplr(PERtable(:,1));
-PER_fromtable = fliplr(PERtable(:,2));
+sinr_dB_fromtable = PERtable(:,1);
+PER_fromtable = PERtable(:,2);
 
 
 if PER_fromtable(1)~=1
-    PER_fromtable(end+1) = 1;
-    PER_fromtable = circshift(PER_fromtable,1);
-    sinr_dB_fromtable(end+1) = sinr_dB_fromtable(1)-0.01;
-    sinr_dB_fromtable = circshift(sinr_dB_fromtable,1);
+    PER_fromtable = [1; PER_fromtable];
+    sinr_dB_fromtable = [sinr_dB_fromtable(1)-0.01; sinr_dB_fromtable];
 end
 
 if PER_fromtable(end)==0

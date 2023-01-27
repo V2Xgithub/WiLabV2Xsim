@@ -37,10 +37,7 @@ BandMHz=10;
 SCS = [15, 30, 60];
 nDMRS = [24, 18, 12];
 
-% 1: have IBE
-% 2: only considering IBE during sensing mechanism
-% 3: do not have IBE
-haveIBE = [1, 3];  
+haveIBE = [true, false];  
 IBE_name = ["true", "false"];
 
 for i_SCS = 1:length(SCS)

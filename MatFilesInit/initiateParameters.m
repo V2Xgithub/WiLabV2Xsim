@@ -17,7 +17,7 @@ end
 fid = fopen(fileCfg);
 if fid==-1
     if ~strcmp(varargin{1}{1},'help')
-        error('File config "%s" not found!\n\n',fileCfg);
+        error('File config "%s" not found. Simulation stoppted.\n\n',fileCfg);
     end
 else
     fclose(fid);

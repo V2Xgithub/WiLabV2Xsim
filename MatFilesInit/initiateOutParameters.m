@@ -31,15 +31,10 @@ fid = fopen(mainFileName);
 if fid==-1
     simID = 0;
 else
+    % use recommended function textscan
+    C = textscan(fid,'%s %*[^\n]');
+    simID = str2double(C{1}{end});
     fclose(fid);
-    C = textread(mainFileName, '%s','delimiter', '\n');
-    lastLine = C{end};
-    for i=1:length(lastLine)
-        if lower(lastLine(i))=='v'
-            simID = str2num(lastLine(1:i-1));
-            break;
-        end
-    end
 end
 outParams.simID = simID+1;
 fprintf('Simulation ID = %.0f\n',outParams.simID);

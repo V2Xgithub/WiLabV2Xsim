@@ -39,18 +39,25 @@ idVehicleVector=activeIDs(logical(ifStopReceiving .* (stationManagement.pckBuffe
 for iVehicle = idVehicleVector'
     if stationManagement.nSlotBackoff11p(iVehicle)==-1
         if simParams.technology~=4 || simParams.coexMethod~=3 || ~simParams.coexCmodifiedCW
-            [stationManagement.nSlotBackoff11p(iVehicle), timeManagement.timeNextTxRx11p(iVehicle)] = startNewBackoff11p(timeManagement.timeNow,stationManagement.CW_11p(iVehicle),stationManagement.tAifs_11p(iVehicle),phyParams.tSlot);
+            [stationManagement.nSlotBackoff11p(iVehicle), timeManagement.timeNextTxRx11p(iVehicle)] =...
+                startNewBackoff11p(timeManagement.timeNow,stationManagement.CW_11p(iVehicle),...
+                stationManagement.tAifs_11p(iVehicle),phyParams.tSlot);
+
         else
             relativeTime = timeManagement.timeNow-simParams.coex_superFlength*floor(timeManagement.timeNow/simParams.coex_superFlength);
             subframeIndex = floor(relativeTime/phyParams.Tsf);
-            [stationManagement.nSlotBackoff11p(iVehicle), timeManagement.timeNextTxRx11p(iVehicle)] = coexistenceStartNewBackoff11pModified(timeManagement.timeNow,stationManagement.CW_11p(iVehicle),stationManagement.tAifs_11p(iVehicle),phyParams.tSlot,subframeIndex,simParams.coex_superframeSF);
+            [stationManagement.nSlotBackoff11p(iVehicle), timeManagement.timeNextTxRx11p(iVehicle)] =...
+                coexistenceStartNewBackoff11pModified(...
+                    timeManagement.timeNow, stationManagement.CW_11p(iVehicle),...
+                    stationManagement.tAifs_11p(iVehicle), phyParams.tSlot,...
+                    subframeIndex,simParams.coex_superframeSF);
         end
         % DEBUG BACKOFF
-        printDebugBackoff11p(timeManagement.timeNow,'11p backoff start',iVehicle,stationManagement,outParams);
+%         printDebugBackoff11p(timeManagement.timeNow,'11p backoff started',iVehicle,stationManagement,outParams,timeManagement);
     else
         timeManagement.timeNextTxRx11p(iVehicle) = resumeBackoff11p(timeManagement.timeNow,stationManagement.nSlotBackoff11p(iVehicle),stationManagement.tAifs_11p(iVehicle),phyParams.tSlot);
         % DEBUG BACKOFF
-        printDebugBackoff11p(timeManagement.timeNow,'11p backoff resume',iVehicle,stationManagement,outParams);
+%         printDebugBackoff11p(timeManagement.timeNow,'11p backoff resume',iVehicle,stationManagement,outParams,timeManagement);
     end
 end
 
@@ -60,19 +67,10 @@ end
 if simParams.cbrActive && ~isempty(stationManagement.channelSensedBusyMatrix11p)
     % Identify those nodes that were perceiving the channel as busy and now
     % are not 
-    
-    % Nodes that are not transmitting and perceive a power below the
-    % threshold do not consider the channel as busy
-    nodesThatMightStop = ((stationManagement.vehicleState(activeIDs)~=3) & (stationManagement.vehicleState(activeIDs)~=100) &(rxPowerTotNow < phyParams.PrxSensWhenSynch));
-    
-    ifStopCBR = (nodesThatMightStop & timeManagement.cbr11p_timeStartBusy(activeIDs)>=0);
-
-    if sum(  ((timeManagement.timeNow-timeManagement.cbr11p_timeStartBusy(activeIDs(logical(ifStopCBR)))))<-1e-9 ) >0
-        error('error here');
-    end
-    
-    stationManagement.channelSensedBusyMatrix11p(1,activeIDs(logical(ifStopCBR))) = stationManagement.channelSensedBusyMatrix11p(1,activeIDs(logical(ifStopCBR))) + (timeManagement.timeNow-timeManagement.cbr11p_timeStartBusy(activeIDs(logical(ifStopCBR)))');
-    timeManagement.cbr11p_timeStartBusy(activeIDs(logical(ifStopCBR))) = -1;
+    nodesThatMightStop = ifReceivingFromThis;
+    ifStopCBR = (nodesThatMightStop & timeManagement.cbr11p_timeStartBusy(activeIDs)>=0);   
+    stationManagement.channelSensedBusyMatrix11p(1,activeIDs(ifStopCBR)) = stationManagement.channelSensedBusyMatrix11p(1,activeIDs(ifStopCBR)) + (timeManagement.timeNow-timeManagement.cbr11p_timeStartBusy(activeIDs(ifStopCBR))');
+    timeManagement.cbr11p_timeStartBusy(activeIDs(ifStopCBR)) = -1;
 end
 %%
 
@@ -90,9 +88,7 @@ if simParams.technology == 4 && simParams.coexMethod~=0 && simParams.coex_slotMa
     else
         interferenceFromLTEnodesPerSubframe = 0;
     end
-    %fprintf('Time=%f\n',timeManagement.timeNow);
     %% Changed in version 5.2.10
-    % lowSensedPower = (rxPowerTotNow_PartA(stationManagement.activeIDsCV2X) + interferenceFromLTEnodesPerSubframe ) < simParams.coex_powerStopSensing11p;
     lowSensedPower = (rxPowerTotNow_PartA(stationManagement.activeIDsCV2X) + interferenceFromLTEnodesPerSubframe ) < phyParams.PrxSensWhenSynch;
     %%
     ifStopDetecting11p = logical(sinrManagement.coex_detecting11p(stationManagement.activeIDsCV2X)...
@@ -100,14 +96,5 @@ if simParams.technology == 4 && simParams.coexMethod~=0 && simParams.coex_slotMa
     sinrManagement.coex_detecting11p(stationManagement.activeIDsCV2X(ifStopDetecting11p)) = false; 
     stationManagement.channelSensedBusyMatrix11p(1,stationManagement.activeIDsCV2X(ifStopDetecting11p)) = stationManagement.channelSensedBusyMatrix11p(1,stationManagement.activeIDsCV2X(ifStopDetecting11p)) + (timeManagement.timeNow-timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDsCV2X(ifStopDetecting11p))');
     timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDsCV2X(ifStopDetecting11p)) = -1;
-    %fp = fopen('_Debug_LTE_CBR11p.xls','a');
-    %fprintf(fp,'%f\t\t%d\n',timeManagement.timeNow,sum(ifStopDetecting11p));
-    %fclose(fp);
 end    
-
-% Temporary
-% if simParams.mco_nVehInterf>0 && outParams.mco_printInterfStatistic
-%     outputValues = mco_updateInterfFromAdjacent(timeManagement,stationManagement,sinrManagement,phyParams,simParams,outputValues);
-% end
-
 

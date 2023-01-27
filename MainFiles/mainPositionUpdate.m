@@ -222,6 +222,9 @@ timeManagement.timeNextPacket(stationManagement.activeIDsExit) = Inf;
 stationManagement.pckBuffer(stationManagement.activeIDsExit) = 0;
 stationManagement.pckReceived(:,stationManagement.activeIDsExit) = 0;
 sinrManagement.cumulativeSINR(:,stationManagement.activeIDsExit) = 0;
+stationManagement.preambleAlreadyDetected(:,stationManagement.activeIDsExit) = 0;
+stationManagement.alreadyStartCBR(:,stationManagement.activeIDsExit) = 0;
+
 stationManagement.pckNextAttempt(stationManagement.activeIDsExit) = 1;
 stationManagement.pckTxOccurring(stationManagement.activeIDsExit) = 0;
 

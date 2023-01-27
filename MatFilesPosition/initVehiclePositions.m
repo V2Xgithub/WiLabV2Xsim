@@ -130,12 +130,14 @@ if simParams.typeOfScenario~=2 % Not traffic trace
         
         simValues.IDvehicle(:,1) = 1:Nvehicles;             % Vector of IDs
         simValues.maxID = Nvehicles;                        % Maximum vehicle's ID
-           
-        % Generate X coordinates of vehicles (uniform distribution)
-        positionManagement.XvehicleReal = simValues.Xmax.*rand(Nvehicles,1);
         
-        % Uniformly positioned
-        %positionManagement.XvehicleReal = (1:Nvehicles)*floor(simValues.Xmax/(Nvehicles));
+        if simParams.randomXPosition
+            % Generate X coordinates of vehicles (uniform distribution)
+            positionManagement.XvehicleReal = simValues.Xmax.*rand(Nvehicles,1);
+        else
+            % Uniformly positioned
+            positionManagement.XvehicleReal = (1:Nvehicles)*floor(simValues.Xmax/(Nvehicles));
+        end
         
         % Generate driving direction
         % 0 -> from left to right

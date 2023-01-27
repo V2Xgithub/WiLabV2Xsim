@@ -93,16 +93,30 @@ end
 % pckReceived=0 means never attempted to decode
 % pckReceived=-x means attempted to decode 'x' times 
 stationManagement.pckReceived = zeros(simValues.maxID,simValues.maxID); % (TO, FROM)
-% cumulative SINR
+% cumulate SINR
 sinrManagement.cumulativeSINR = zeros(simValues.maxID,simValues.maxID); % (TO, FROM)
-% pckRemainingTx counts the remaining transmissions
+
+stationManagement.preambleAlreadyDetected = zeros(simValues.maxID,simValues.maxID); % (TO, FROM)
+% counting the CBR of 11p, for many repetitions, only counting the first
+% received packets
+stationManagement.alreadyStartCBR = zeros(simValues.maxID,simValues.maxID); % (TO, FROM)
+
+% pckNextAttempt is the total times the packet transmitting if countting
+% the next packet
 stationManagement.pckNextAttempt = ones(simValues.maxID,1);
 % pckTxOccurring is used in LTE and set at the beginning of the subframe,
 % because pckRemainingTx might change during the subframe
 stationManagement.pckTxOccurring = zeros(simValues.maxID,1);
 
+% Parameter for 11p retransmission KPI calculation, the index of active11p
+% in the range during earlier retransmission
+NactiveIDs11p = length(stationManagement.activeIDs11p);
+stationManagement.indexInRaw_earler = zeros(NactiveIDs11p, NactiveIDs11p, length(phyParams.Raw)); % (to, from, idRaw)
+
 % HARQ init
 stationManagement.cv2xNumberOfReplicas = phyParams.cv2xNumberOfReplicasMax * ones(simValues.maxID,1);
+% IGS-G5 retransmission init
+stationManagement.ITSNumberOfReplicas = phyParams.ITSNumberOfReplicasMax * ones(simValues.maxID,1);
 %%%%%%%
 
 
@@ -255,7 +269,7 @@ end
 timeManagement.timeNextTxRx11p = Inf * ones(simValues.maxID,1);
 %
 if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
-%if simParams.technology~=1 % if not only LTE
+% if not only LTE
     % When a node senses the medium as busy and goes to State RX, the
     % transmitting node is saved in 'idFromWhichRx'
     % Note that once a node starts receiving a signal, it will not be able to
@@ -413,10 +427,12 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
         % COMMENTED: Set value 0 to vehicles that are blocked
         % stationManagement.resReselectionCounterCV2X(stationManagement.BRid==-1)=0;
         % Sets the Reselection counter to 1 for all vehicles when dynamic scheduling is active
-        if simParams.dynamicScheduling == 1
+        if simParams.dynamicScheduling == true
             stationManagement.resReselectionCounterCV2X(stationManagement.activeIDs) = ones(simValues.maxID,1);
         end
 
+        % Initialize newDataIndicator vector for resource re-evaluation (BRAlgorithm=18)
+        stationManagement.newDataIndicator = ones(simValues.maxID,1);
 
         % Initialization of sensing matrix (BRAlgorithm=18)
         stationManagement.sensingMatrixCV2X = zeros(ceil(simParams.TsensingPeriod/appParams.allocationPeriod),appParams.Nbeacons,simValues.maxID);
@@ -443,10 +459,10 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
         stationManagement.correctSCImatrixCV2X = [];
     end
 
-    %if simParams.BRAlgorithm==101
+    % if simParams.BRAlgorithm==101
         % The random allocation is performed when the packet is generated
         % Therefore nothing needs to be done here
-    %end
+    % end
     
     % Initialization of lambda: SINR threshold for BRAlgorithm 9
     if simParams.BRAlgorithm==9
@@ -490,7 +506,7 @@ if simParams.cbrActive
     timeManagement.cbr11p_timeStartMeasInterval(stationManagement.activeIDs11p) = 0;
     timeManagement.cbr11p_timeStartBusy = -1 * ones(simValues.maxID,1);
     if simParams.technology==4 && simParams.coexMethod==1
-        timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDs .* timeManagement.coex_superframeThisIsLTEPart(stationManagement.activeIDs)) = 0;
+        timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDs .* timeManagement.coex_superframeThisIsLTEPart(stationManagement.activeIDs)) = -1;
     end    
     if simParams.technology~=1 % Not only C-V2X
         stationManagement.channelSensedBusyMatrix11p = zeros(ceil(simParams.cbrSensingInterval/appParams.allocationPeriod),simValues.maxID);        
@@ -499,7 +515,15 @@ if simParams.cbrActive
     nCbrIntervals = ceil(simParams.simulationTime/simParams.cbrSensingInterval);
     stationManagement.cbr11pValues = -1 * ones(simValues.maxID,nCbrIntervals); 
     stationManagement.cbrCV2Xvalues = -1 * ones(simValues.maxID,nCbrIntervals);     
-    stationManagement.coex_cbrLteOnlyValues = -1 * ones(simValues.maxID,nCbrIntervals);     
+    stationManagement.coex_cbrLteOnlyValues = -1 * ones(simValues.maxID,nCbrIntervals); 
+
+%     %% =========
+%     % Plot figs of related paper, could be commented in other case.
+%     % Please check .../codeForPaper/Zhuofei2023Repetition/fig6
+%     % Only for IEEE 802.11p, highway scenario. 
+%     stationManagement.ITSReplicasLog = zeros(simValues.maxID,nCbrIntervals);
+%     stationManagement.positionLog = zeros(simValues.maxID,nCbrIntervals);
+%     %% =========
 else
     timeManagement.timeNextCBRupdate = inf;
 end

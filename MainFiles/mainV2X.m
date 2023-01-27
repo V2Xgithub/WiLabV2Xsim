@@ -72,7 +72,7 @@ while timeManagement.timeNow < simParams.simulationTime
     
     % If the time instant exceeds or is equal to the duration of the
     % simulation, the simulation is ended
-    if round(timeManagement.timeNow*1e10)/1e10>=round(simParams.simulationTime*1e10)/1e10
+    if round(timeManagement.timeNow, 10)>=round(simParams.simulationTime, 10)
         break;
     end
 
@@ -86,7 +86,6 @@ while timeManagement.timeNow < simParams.simulationTime
 
     %% Action
     % The action at timeManagement.timeNow depends on the selected event
- 
     % POSITION UPDATE: positions of vehicles are updated
     if timeEvent==timeManagement.timeNextPosUpdate        
         % DEBUG EVENTS
@@ -119,8 +118,16 @@ while timeManagement.timeNow < simParams.simulationTime
         % CBR and DCC (if active)
         if ~isempty(stationManagement.activeIDs11p)
             vehiclesToConsider = stationManagement.activeIDs11p(stationManagement.cbr_subinterval(stationManagement.activeIDs11p)==thisSubInterval);        
-            [timeManagement,stationManagement,stationManagement.cbr11pValues(vehiclesToConsider,ceil(timeEvent/simParams.cbrSensingInterval))] = ...
+            [timeManagement,stationManagement,stationManagement.cbr11pValues(vehiclesToConsider,ceil(timeEvent/simParams.cbrSensingInterval-1e-9))] = ...
                 cbrUpdate11p(timeManagement,vehiclesToConsider,stationManagement,simParams,phyParams);
+%             %% =========
+%             % Plot figs of related paper, could be commented in other case.
+%             % Please check .../codeForPaper/Zhuofei2023Repetition/fig6
+%             % Only for IEEE 802.11p, highway scenario. 
+%             % log number of replicas
+%             stationManagement.ITSReplicasLog(vehiclesToConsider,ceil(timeEvent/simParams.cbrSensingInterval-1e-9)) = stationManagement.ITSNumberOfReplicas(vehiclesToConsider);
+%             stationManagement.positionLog(vehiclesToConsider,ceil(timeEvent/simParams.cbrSensingInterval-1e-9)) = positionManagement.XvehicleReal(vehiclesToConsider);
+%             %% =========
         end
         % In case of Mitigation method with dynamic slots, also in LTE nodes
         if simParams.technology==4 && simParams.coexMethod>0 && simParams.coex_slotManagement==2 && simParams.coex_cbrTotVariant==2
@@ -153,7 +160,7 @@ while timeManagement.timeNow < simParams.simulationTime
         minNextSuperframe=min(timeManagement.coex_timeNextSuperframe(stationManagement.activeIDs));
         
         % CASE C-V2X
-    elseif timeEvent == timeManagement.timeNextCV2X
+    elseif abs(timeEvent-timeManagement.timeNextCV2X)<1e-8    % timeEvent == timeManagement.timeNextCV2X
 
         if timeManagement.ttiCV2Xstarts
             % DEBUG EVENTS
@@ -174,7 +181,7 @@ while timeManagement.timeNow < simParams.simulationTime
             %end
 
             % DEBUG TX
-            printDebugTx(timeManagement.timeNow,true,-1,stationManagement,positionManagement,sinrManagement,outParams,phyParams);
+%             printDebugTx(timeManagement.timeNow,true,-1,stationManagement,positionManagement,sinrManagement,outParams,phyParams);
 
             timeManagement.ttiCV2Xstarts = false;
             timeManagement.timeNextCV2X = timeManagement.timeNextCV2X + (phyParams.TTI - phyParams.TsfGap);
@@ -206,9 +213,9 @@ while timeManagement.timeNow < simParams.simulationTime
         end
      
     % CASE A: new packet is generated
-    elseif timeEvent == timeManagement.timeNextPacket(idEvent)
-        
-        % printDebugReallocation(timeEvent,idEvent,positionManagement.XvehicleReal(indexEvent),'gen',-1,outParams);
+    elseif abs(timeEvent-timeManagement.timeNextPacket(idEvent))<1e-8   % timeEvent == timeManagement.timeNextPacket(idEvent)
+
+%         printDebugReallocation(timeEvent,idEvent,positionManagement.XvehicleReal(indexEvent),'gen',-1,outParams);
 
         if stationManagement.vehicleState(idEvent)==100 % is LTE
             % DEBUG EVENTS
@@ -243,37 +250,36 @@ while timeManagement.timeNow < simParams.simulationTime
             %printDebugEvents(timeEvent,'New packet, 11p',idEvent);
             
             % In the case of 11p, some processing is necessary
-            [timeManagement,stationManagement,outputValues] = ...
-                newPacketIn11p(timeEvent,idEvent,indexEvent,outParams,simParams,positionManagement,phyParams,timeManagement,stationManagement,sinrManagement,outputValues,appParams);
+            [timeManagement,stationManagement,sinrManagement,outputValues] = ...
+                newPacketIn11p(idEvent,indexEvent,outParams,simParams,positionManagement,...
+                phyParams,timeManagement,stationManagement,sinrManagement,outputValues,appParams);
    
             % DEBUG TX-RX
             %printDebugTxRx(timeManagement.timeNow,'11p tx started',stationManagement,sinrManagement);
             %printDebugBackoff11p(timeManagement.timeNow,'11p backoff started',idEvent,stationManagement,outParams)
+            
 
             % DEBUG IMAGE
             %printDebugImage('New packet 11p',timeManagement,stationManagement,positionManagement,simParams,simValues);
         end
 
-        % printDebugGeneration(timeManagement,idEvent,positionManagement,outParams);
+%         printDebugGeneration(timeManagement,idEvent,positionManagement,outParams);
         
         % from version 5.6.2 the 3GPP aperiodic generation is also supported. The generation interval is now composed of a
         % deterministic part and a random part. The random component is active only when enabled.
-        % the random part should be logged first, and then used for
-        % comparation or if-statement
-        generationInterval = timeManagement.generationIntervalDeterministicPart(idEvent)+exprnd(appParams.generationIntervalAverageRandomPart);
+%         timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + max(timeManagement.generationInterval(idEvent),timeManagement.dcc_minInterval(idEvent));
+        generationInterval = timeManagement.generationIntervalDeterministicPart(idEvent) + exprnd(appParams.generationIntervalAverageRandomPart);
         if generationInterval >= timeManagement.dcc_minInterval(idEvent)
             timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + generationInterval;
         else
             timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + timeManagement.dcc_minInterval(idEvent);
-            % mark as dcc is actived
-            if ismember(idEvent,stationManagement.activeIDs11p)
+            if ismember(idEvent, stationManagement.activeIDs11p)
                 stationManagement.dcc11pTriggered(stationManagement.vehicleChannel(idEvent)) = true;
             elseif ismember(idEvent, stationManagement.activeIDsCV2X)
                 stationManagement.dccLteTriggered(stationManagement.vehicleChannel(idEvent)) = true;
             end
         end
         
-%         timeManagement.timeNextPacket(idEvent) = timeManagement.timeNow + max(timeManagement.generationIntervalDeterministicPart(idEvent)+exprnd(appParams.generationIntervalAverageRandomPart),timeManagement.dcc_minInterval(idEvent));
         timeManagement.timeLastPacket(idEvent) = timeManagement.timeNow-timeManagement.addedToGenerationTime(idEvent);
         
         if simParams.technology==4 && simParams.coexMethod==1 && simParams.coexA_improvements>0
@@ -292,10 +298,10 @@ while timeManagement.timeNow < simParams.simulationTime
  
             % DEBUG TX-RX
             %printDebugTxRx(timeManagement.timeNow,'11p tx started',stationManagement,sinrManagement);
-            printDebugBackoff11p(timeManagement.timeNow,'11p tx started',idEvent,stationManagement,outParams)
+%             printDebugBackoff11p(timeManagement.timeNow,'11p tx started',idEvent,stationManagement,outParams,timeManagement)
  
             % DEBUG TX
-            printDebugTx(timeManagement.timeNow,true,idEvent,stationManagement,positionManagement,sinrManagement,outParams,phyParams);
+%             printDebugTx(timeManagement.timeNow,true,idEvent,stationManagement,positionManagement,sinrManagement,outParams,phyParams);
             
             % DEBUG IMAGE
             %printDebugImage('11p TX starts',timeManagement,stationManagement,positionManagement,simParams,simValues);
@@ -313,7 +319,7 @@ while timeManagement.timeNow < simParams.simulationTime
 
             % DEBUG TX-RX
             %printDebugTxRx(timeManagement.timeNow,'11p tx ended',stationManagement,sinrManagement);
-            printDebugBackoff11p(timeManagement.timeNow,'11p tx ended',idEvent,stationManagement,outParams)
+%             printDebugBackoff11p(timeManagement.timeNow,'11p tx ended',idEvent,stationManagement,outParams,timeManagement)
 
         else
             fprintf('idEvent=%d, state=%d\n',idEvent,stationManagement.vehicleState(idEvent));

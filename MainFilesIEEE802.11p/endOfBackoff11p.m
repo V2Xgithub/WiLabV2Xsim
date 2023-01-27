@@ -30,7 +30,7 @@ end
 sinrManagement = updateSINR11p(timeManagement,sinrManagement,stationManagement,phyParams);
 
 % Check the nodes that start receiving
-[timeManagement,stationManagement,sinrManagement,outputValues] = checkVehiclesStartReceiving11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,simParams,phyParams,outParams,outputValues,simValues);
+[timeManagement,stationManagement,sinrManagement,outputValues] = checkVehiclesStartReceiving11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,simParams,phyParams,outParams,outputValues);
 
 % The present overall/useful power received and the instant of calculation are updated
 % The power received must be calculated after
@@ -56,4 +56,8 @@ if simParams.technology == 4 % COEXISTENCE IN THE SAME BAND
     % fprintf('RXinterf 178 --> 9 is %e, %fdB\n',sinrManagement.interferingPRXfrom11p(9,178),10*log10(sinrManagement.interferingPRXfrom11p(9,178)));
     % fprintf('RXinterfFrom11pLastLTE(9) is %e, %fdB\n',sinrManagement.RXinterfFrom11pLastLTE(9),10*log10(sinrManagement.RXinterfFrom11pLastLTE(9)));
 end
+
+stationManagement.pckTxOccurring(idEvent) = stationManagement.pckNextAttempt(idEvent);
+stationManagement.pckNextAttempt(idEvent) = stationManagement.pckNextAttempt(idEvent) + 1;
+
 

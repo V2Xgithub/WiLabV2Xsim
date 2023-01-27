@@ -4,4 +4,3 @@ function [nSlot, timeNextTxRx] = startNewBackoff11p(timeNow,CW,tAifs,tSlot)
 nSlot = randi(CW);
 timeNextTxRx = timeNow + tAifs + nSlot * tSlot;
 
-end

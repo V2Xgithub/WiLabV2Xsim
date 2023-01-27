@@ -328,6 +328,16 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Print To Files
 
+% %% =========
+% % Plot figs of related paper, could be commented in other case.
+% % Please check .../codeForPaper/Zhuofei2023Repetition/fig6
+% % Only for IEEE 802.11p, highway scenario. 
+% fname = fullfile(outParams.outputFolder, sprintf('_log_replications_%d_%s',outParams.simID, simParams.Technology));
+% ITSReplicasLog = stationManagement.ITSReplicasLog;
+% positionLog = stationManagement.positionLog;
+% save(fname, "ITSReplicasLog", "positionLog");
+% %% =========
+
 % Print to file of the CBR statistics
 if simParams.cbrActive == true
     if outParams.printCBR

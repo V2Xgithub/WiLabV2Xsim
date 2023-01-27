@@ -20,7 +20,7 @@ end
 % in the main output file)
 [simParams,varargin] = addNewParam([],'seed',0,'Seed for random numbers','integer',fileCfg,varargin{1});
 if simParams.seed == 0
-    simParams.seed = getseed();
+    simParams.seed = getseed;
     fprintf('Seed used in the simulation: %d\n',simParams.seed);
 end
 rng(simParams.seed);
@@ -220,7 +220,7 @@ else
         if simParams.rho<=0
             error('Error: "simParams.rho" cannot be <= 0');
         end
-        
+
         % [NLanes]
         % Number of lanes per direction
         [simParams,varargin] = addNewParam(simParams,'NLanes',3,'Number of lanes per direction','integer',fileCfg,varargin{1});
@@ -263,6 +263,10 @@ else
         if simParams.rho<=0
             error('Error: "simParams.rho" cannot be <= 0');
         end
+
+        % [randomXPosition]
+        % switch if vehicles are randomly or Uniformly positioned
+        [simParams, varargin] = addNewParam(simParams, 'randomXPosition', true, 'Randomly/uniformly position', 'bool',fileCfg,varargin{1});
         
         % [NLanes]
         % Number of lanes per direction

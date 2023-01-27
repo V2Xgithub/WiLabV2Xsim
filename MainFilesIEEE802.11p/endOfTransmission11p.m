@@ -2,7 +2,7 @@ function [simValues,outputValues,timeManagement,stationManagement,sinrManagement
 % A transmission ends in IEEE 802.11p
 
 % The transmitting vehicle is first updated
-[timeManagement,stationManagement,sinrManagement] = updateVehicleEndingTx11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,phyParams);
+[timeManagement,stationManagement,sinrManagement] = updateVehicleEndingTx11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,phyParams,simParams);
 
 % The average SINR of all vehicles is then updated
 sinrManagement = updateSINR11p(timeManagement,sinrManagement,stationManagement,phyParams);
@@ -11,7 +11,7 @@ sinrManagement = updateSINR11p(timeManagement,sinrManagement,stationManagement,p
 printDebugTx(timeManagement.timeNow,false,idEvent,stationManagement,positionManagement,sinrManagement,outParams,phyParams);            
 
 % Update KPIs
-[simValues,outputValues] = updateKPI11p(idEvent,indexEvent,timeManagement,stationManagement,positionManagement,sinrManagement,simParams,phyParams,outParams,simValues,outputValues);
+[simValues,outputValues,sinrManagement,stationManagement] = updateKPI11p(idEvent,indexEvent,timeManagement,stationManagement,positionManagement,sinrManagement,simParams,phyParams,outParams,simValues,outputValues);
 
 % The nodes that may stop receiving must be checked
 [timeManagement,stationManagement,sinrManagement,outputValues] = checkVehiclesStopReceiving11p(timeManagement,stationManagement,sinrManagement,simParams,phyParams,outParams,outputValues);

@@ -7,6 +7,15 @@ if simParams.technology~=1 % not only C-V2X (lte or 5g)
     % Compute maximum range with 2 times standard deviation of shadowing in LOS (m)
     phyParams.RawMax11p =  phyParams.RawMaxLOS11p * 10^((2*phyParams.stdDevShadowLOS_dB)/(10*phyParams.b_far));
 
+%     %% =========
+%     % Plot figs of related paper, could be commented in other case.
+%     % Please check .../codeForPaper/Zhuofei2023Repetition/fig6
+%     % Only for IEEE 802.11p, highway scenario. 
+%     if phyParams.RawMax11p < 1000
+%         phyParams.RawMax11p = 1000;
+%     end
+%     %% =========
+
     if phyParams.Raw(end) > phyParams.RawMax11p
         error('Max Raw > RawMax11p not yet considered');
     %    fprintf('The awareness range exceeds the maximum possible one of 11p: ');

@@ -1,14 +1,12 @@
-function [IBEmatrixData, IBEmatrixControl, IBEmatrixData_remove, IBEmatrixControl_remove] =...
+function [IBEmatrixData, IBEmatrixControl] =...
     IBEcalculation(simParams,phyParams,appParams)
 % This function computes the In-Band Emission Matrix, following 
 % the model reported in 3GPP TS 36.101 V15.0.0 for LTE and 
 % the model reported in 3GPP TS 38.101-1 V17.0.0 (2020-12) for 5G
 
-IBEmatrixData_remove = eye(appParams.NbeaconsF,appParams.NbeaconsF);
-IBEmatrixControl_remove = IBEmatrixData_remove;
-if phyParams.haveIBE == 3
-    IBEmatrixData = IBEmatrixData_remove;
-    IBEmatrixControl = IBEmatrixControl_remove;
+if ~phyParams.haveIBE
+    IBEmatrixData = eye(appParams.NbeaconsF,appParams.NbeaconsF);
+    IBEmatrixControl = eye(appParams.NbeaconsF,appParams.NbeaconsF);
     return
 end
 
