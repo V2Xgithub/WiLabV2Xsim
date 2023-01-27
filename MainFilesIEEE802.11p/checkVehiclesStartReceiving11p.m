@@ -83,7 +83,7 @@ for idVehicle = vehiclesFreezingList'
         phyParams.tSlot,stationManagement.nSlotBackoff11p(idVehicle));
     
     % DEBUG BACKOFF
-    printDebugBackoff11p(timeManagement.timeNow,'11p backoff freeze',idVehicle,stationManagement,outParams,timeManagement)
+%     printDebugBackoff11p(timeManagement.timeNow,'11p backoff freeze',idVehicle,stationManagement,outParams,timeManagement)
 end
 stationManagement.vehicleState(activeIDs(ifStartReceiving)) = 9;
 sinrManagement.sinrAverage11p(activeIDs(ifStartReceiving)) = 0;

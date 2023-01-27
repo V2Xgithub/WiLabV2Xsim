@@ -115,7 +115,7 @@ if stationManagement.vehicleState(idEvent)==1 % idle
                 stationManagement.tAifs_11p(idEvent), phyParams.tSlot,...
                 subframeIndex,simParams.coex_superframeSF);
     end        
-    printDebugBackoff11p(timeManagement.timeNow,'11p backoff started',idEvent,stationManagement,outParams,timeManagement);
+%     printDebugBackoff11p(timeManagement.timeNow,'11p backoff started',idEvent,stationManagement,outParams,timeManagement);
 end
 
 % reset of pckReceive and cumulativeSINR
