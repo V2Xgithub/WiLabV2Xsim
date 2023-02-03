@@ -26,7 +26,7 @@ for ch = ch_model
     grid on;
     hold on;
     xlabel('Density [vehicles/km]');
-    ylabel('Range with Winner+ B1 [m]');
+    
     markers = ["^", "diamond", "square", "o"];
     marker_points = 6;
 
@@ -135,10 +135,12 @@ for ch = ch_model
     if ch == 0
         text(20, 50, "$From ~ 0 ~ to ~ 3 ~ rep.$","FontSize",12, Interpreter="latex");
         title("Effectiveness of the repetition strategies, Winner+ B1");
+        ylabel('Range with Winner+ B1 [m]');
         saveas(fig, fullfile(path_task, "fig_Effectiveness of the repetition strategies Winner.png"));
     else
         text(500, 200, "$From ~ 0 ~ to ~ 3 ~ rep.$","FontSize",12, Interpreter="latex");
         title("Effectiveness of the repetition strategies, ECC rural");
+        ylabel('Range with ECC [m]');
         saveas(fig, fullfile(path_task, "fig_Effectiveness of the repetition strategies ECC.png"));
     end
 end

@@ -1,7 +1,7 @@
 # Code Explanation
 This folder is organized for plot figures mentioned in the following paper:
 
-    Adaptive Repetition Strategies in IEEE 802.11bd V2X Networks
+    W. Zhuofei, S. Bartoletti, V. Martinez and A. Bazzi, "Adaptive Repetition Strategies in IEEE 802.11bd V2X Networks," in IEEE Transactions on Vehicular Technology, doi: 10.1109/TVT.2023.3241865.
 
 ## 1. Plot figure 3
 1. Uncomment following part in file "deriveRanges.m", which would extand the range upto 1000 meters
