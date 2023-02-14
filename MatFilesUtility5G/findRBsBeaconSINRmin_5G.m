@@ -69,7 +69,7 @@ CR = TBSmin/(nREmin*Qm);
 % Tslot in s
 % Tslot_NR=1e-3/(phyParams.SCS_NR/15);
 
-NbitsHz = (12*14*Qm*CR)/(phyParams.Tslot_NR*phyParams.RBbandwidth);
+NbitsHz = (12*14*Qm*CR)/(phyParams.Tslot_NR*phyParams.RBbandwidth*1e6);
 
 % Compute the minimum required SINR
 % (alfa is taken from 3GPP)
