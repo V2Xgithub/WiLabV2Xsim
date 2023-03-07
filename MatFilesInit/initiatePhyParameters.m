@@ -261,49 +261,43 @@ if simParams.technology ~= 2 % not only 11p
     
     if simParams.mode5G==0
     
-    %% PHY parameters related to LTE-V2V
-    
-    phyParams.Tfr = 0.01;                        % LTE frame period (s)
-    phyParams.Tsf = phyParams.Tfr/10;            % LTE subframe period (s)
-    phyParams.Tslot = phyParams.Tsf/2;           % LTE time slot period (s)
-    phyParams.TsfGap = phyParams.Tsf * (1/14);   % LTE gap at the end of the subframe
-    phyParams.TTI = phyParams.Tsf;               % LTE time transmission interval (s)
-    phyParams.muNumerology = 0;                  % μ numerology
-    
-    % [PnRB_dBm]
-    % Noise power over a RB (dBm)
-    phyParams.RBbandwidth = 180e3;    % Bandwidth of a RB (Hz)
-    %phyParams.PnRB_dBm = 10*log10(K*T0*phyParams.RBbandwidth) + phyParams.F_dB + 30;
-    %phyParams.PnRB = 10^((phyParams.PnRB_dBm-30)/10);
-    
-    % [MCS_LTE]
-    % Sets the modulation and coding scheme between 0 and 28
-    [phyParams,varargin]= addNewParam(phyParams,'MCS_LTE',3,'Modulation and coding scheme','integer',fileCfg,varargin{1});
-    if phyParams.MCS_LTE<0 || phyParams.MCS_LTE>28
-        error('Error: "phyParams.MCS_LTE" must be within [0,28]');
-    end
-    
-    % [sizeSubchannel]
-    % Select the subchannel size according to 3GPP TS 36.331
-    % -1 -> default value: automatically select the best value
-    [phyParams,varargin]= addNewParam(phyParams,'sizeSubchannel',-1,'Subchannel size','integer',fileCfg,varargin{1});
-    if phyParams.sizeSubchannel<=0 && phyParams.sizeSubchannel~=-1
-        error('Error: "phyParams.sizeSubchannel" must be -1 (best choice) or larger than 0');
-    end
-    
-    
-    % [ifAdjacent]
-    % Select the subchannelization scheme: adjacent or non-adjacent PSCCH and PSSCH
-    [phyParams,varargin]= addNewParam(phyParams,'ifAdjacent',true,'If using adjacent PSCCH and PSSCH','bool',fileCfg,varargin{1});
-    if phyParams.ifAdjacent<0
-        error('Error: "phyParams.ifAdjacent" must be equal to false or true');
-    end
-    
-    
+        %% PHY parameters related to LTE-V2V
+        
+        phyParams.Tfr = 0.01;                        % LTE frame period (s)
+        phyParams.Tsf = phyParams.Tfr/10;            % LTE subframe period (s)
+        phyParams.Tslot = phyParams.Tsf/2;           % LTE time slot period (s)
+        phyParams.TsfGap = phyParams.Tsf * (1/14);   % LTE gap at the end of the subframe
+        phyParams.TTI = phyParams.Tsf;               % LTE time transmission interval (s)
+        phyParams.muNumerology = 0;                  % μ numerology
+        phyParams.RBbandwidth = 0.18;                % Bandwidth of a RB (MHz)
+
+        
+        % [MCS_LTE]
+        % Sets the modulation and coding scheme between 0 and 28
+        [phyParams,varargin]= addNewParam(phyParams,'MCS_LTE',3,'Modulation and coding scheme','integer',fileCfg,varargin{1});
+        if phyParams.MCS_LTE<0 || phyParams.MCS_LTE>28
+            error('Error: "phyParams.MCS_LTE" must be within [0,28]');
+        end
+        
+        % [sizeSubchannel]
+        % Select the subchannel size according to 3GPP TS 36.331
+        % -1 -> default value: automatically select the best value
+        [phyParams,varargin]= addNewParam(phyParams,'sizeSubchannel',-1,'Subchannel size','integer',fileCfg,varargin{1});
+        if phyParams.sizeSubchannel<=0 && phyParams.sizeSubchannel~=-1
+            error('Error: "phyParams.sizeSubchannel" must be -1 (best choice) or larger than 0');
+        end
+        
+        
+        % [ifAdjacent]
+        % Select the subchannelization scheme: adjacent or non-adjacent PSCCH and PSSCH
+        [phyParams,varargin]= addNewParam(phyParams,'ifAdjacent',true,'If using adjacent PSCCH and PSSCH','bool',fileCfg,varargin{1});
+        if phyParams.ifAdjacent<0
+            error('Error: "phyParams.ifAdjacent" must be equal to false or true');
+        end
+        
+        
     %% PHY parameters related to 5G-V2V (Vittorio)
-    
     % 5G parameters are evaluated only in 5Gmode.
-    
     % sets input parameter for the 5G case
     elseif simParams.mode5G==1
         fprintf('\nPhysical layer settings for 5G-V2X\n');
@@ -353,7 +347,7 @@ if simParams.technology ~= 2 % not only 11p
         phyParams.TTI = phyParams.Tslot_NR;                         % 5G time transmission interval (s)
         phyParams.TsfGap = phyParams.Tslot_NR * (1/14);             % Gap at the end of the slot
         phyParams.muNumerology = log2(phyParams.SCS_NR/15);         % μ numerology SCS=[15,30,60] -> μ=[0,1,2]
-        phyParams.RBbandwidth = 180e3*phyParams.SCS_NR/15;          % 5G Resource Block Bandwidth [Hz]
+        phyParams.RBbandwidth = phyParams.SCS_NR * 12e-3;           % 5G Resource Block Bandwidth [MHz]  SCS_NR / 1000 * 12
     end
     
     

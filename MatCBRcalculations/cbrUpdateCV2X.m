@@ -5,9 +5,9 @@ function [timeManagement,stationManagement,sinrManagement,CBRvalues,coex_cbrLTEo
 % For PSSCH, CBR is the fraction of "sub-channels" whose S-RSSI exceeds a threshold -94 dBm.
 % Note: sensingMatrix is per-MHz
 % The threshold needs to be converted from sub-channel to RB
-threshCBR_perSubchannel = 10^((-94-30)/10); % fixed in this version
+threshCBR_perSubchannel = db2pow(-94-30); % fixed in this version
 %threshCBR_perRB = threshCBR_perSubchannel/phyParams.sizeSubchannel;
-threshCBR_perMHz = (threshCBR_perSubchannel/phyParams.sizeSubchannel) * (1e6/phyParams.RBbandwidth);
+threshCBR_perMHz = threshCBR_perSubchannel / phyParams.BwMHz_cv2xSubCH;
 
 % The sensingMatrix is a 3D matrix with
 % 1st D -> Number of values to be stored in the time domain, corresponding

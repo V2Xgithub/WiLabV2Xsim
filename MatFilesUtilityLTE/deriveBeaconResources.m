@@ -137,28 +137,30 @@ end
 %phyParams.PtxERP_RB_dBm = 10*log10(phyParams.PtxERP_RB)+30;
 
 if simParams.mode5G==0
-    %
-    % Compute BW of a BR
-    phyParams.BwMHz_cv2xBR = phyParams.BwMHz * (phyParams.NsubchannelsBeacon/phyParams.NsubchannelsFrequency);
+    % Compute BW of subchannel
+    phyParams.BwMHz_cv2xSubCH = phyParams.RBbandwidth * phyParams.sizeSubchannel;
+    % Compute BW of a Beacon Resource
+    phyParams.BwMHz_cv2xBR = phyParams.NsubchannelsBeacon * phyParams.BwMHz_cv2xSubCH;
     % Compute BW of the SCI in LTE
-    phyParams.BwMHz_SCI = (phyParams.RBbandwidth*1e-6) * (2) ;
+    phyParams.BwMHz_SCI = phyParams.RBbandwidth * 2;
     % Compute power per MHz in LTE
     phyParams.P_ERP_MHz_CV2X_dBm = (phyParams.Ptx_dBm + phyParams.Gt_dB) - 10*log10(phyParams.BwMHz_cv2xBR);
-    phyParams.P_ERP_MHz_CV2X = 10^((phyParams.P_ERP_MHz_CV2X_dBm-30)/10);
+    phyParams.P_ERP_MHz_CV2X = db2pow(phyParams.P_ERP_MHz_CV2X_dBm-30);
     % Compute the Pnoise of a BR in LTE (Vittorio)
     phyParams.PnoiseData = phyParams.Pnoise_MHz*phyParams.BwMHz_cv2xBR;
     % Compute the Pnoise of the SCIs of a BR in LTE
     phyParams.PnoiseSCI  = phyParams.Pnoise_MHz*phyParams.BwMHz_SCI;
 
 else
-    
-    % Compute BW of a BR in NR
-    phyParams.BwMHz_cv2xBR = phyParams.BwMHz * (phyParams.NsubchannelsBeacon/phyParams.NsubchannelsFrequency);
+    % Compute BW of subchannel
+    phyParams.BwMHz_cv2xSubCH = phyParams.RBbandwidth * phyParams.sizeSubchannel;
+    % Compute BW of a Beacon Resource in NR
+    phyParams.BwMHz_cv2xBR = phyParams.NsubchannelsBeacon * phyParams.BwMHz_cv2xSubCH;
     % Compute BW of the SCI-1 in NR
-    phyParams.BwMHz_SCI = (phyParams.RBbandwidth*1e-6) * (phyParams.nRB_SCI) ;
+    phyParams.BwMHz_SCI = phyParams.RBbandwidth * phyParams.nRB_SCI;
     % Compute power per MHz in NR
     phyParams.P_ERP_MHz_CV2X_dBm = (phyParams.Ptx_dBm + phyParams.Gt_dB) - 10*log10(phyParams.BwMHz_cv2xBR);
-    phyParams.P_ERP_MHz_CV2X = 10^((phyParams.P_ERP_MHz_CV2X_dBm-30)/10);
+    phyParams.P_ERP_MHz_CV2X = db2pow(phyParams.P_ERP_MHz_CV2X_dBm-30);
     % Compute the Pnoise of a BR in 5G
     phyParams.PnoiseData = phyParams.Pnoise_MHz*phyParams.BwMHz_cv2xBR;
     % Compute the Pnoise of the SCIs of a BR in 5G
