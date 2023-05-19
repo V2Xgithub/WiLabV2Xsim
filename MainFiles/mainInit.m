@@ -12,13 +12,13 @@ timeManagement.timeNow = 0;
 
 % State of each node
 % Discriminates C-V2X nodes from 11p nodes
-if simParams.technology==1
+if simParams.technology==constants.TECH_ONLY_CV2X
     
     % All vehicles in C-V2X (lte or 5g) are currently in the same state
     % 100 = LTE TX/RX
-    stationManagement.vehicleState = 100 * ones(simValues.maxID,1);
+    stationManagement.vehicleState = constants.V_STATE_LTE_TXRX * ones(simValues.maxID,1);
  
-elseif simParams.technology==2
+elseif simParams.technology==constants.TECH_ONLY_11P
    
     % The possible states in 11p are four:
     % 1 = IDLE :    the node has no packet and senses the medium as free
@@ -33,34 +33,26 @@ elseif simParams.technology==2
 else % coexistence
     
     % Init all as LTE
-    stationManagement.vehicleState = 100 * ones(simValues.maxID,1);
+    stationManagement.vehicleState = constants.V_STATE_LTE_TXRX * ones(simValues.maxID,1);
     %Then use simParams.numVehiclesLTE and simParams.numVehicles11p to
     %initialize
-    for i11p = 1:simParams.numVehicles11p
-        stationManagement.vehicleState(simParams.numVehiclesLTE+i11p:simParams.numVehiclesLTE+simParams.numVehicles11p:end) = 1;
-    end
-        
-%     % POSSIBLE OPTION FOR DEBUG PURPOSES
-%     % First half 11p, Second half LTE
-%     stationManagement.vehicleState = 100*ones(simValues.maxID,1);
-%     stationManagement.vehicleState(1:1:end/2) = 1;
-
+    stationManagement.vehicleState(simParams.numVehiclesLTE+1:simParams.numVehiclesLTE+simParams.numVehicles11p) = constants.V_STATE_11P_IDLE;
 end
 
 % RSUs technology set
 if appParams.nRSUs>0
     if strcmpi(appParams.RSU_technology,'11p')
-        stationManagement.vehicleState(end-appParams.nRSUs+1:end) = 1;
+        stationManagement.vehicleState(end-appParams.nRSUs+1:end) = constants.V_STATE_11P_IDLE;
     elseif strcmpi(appParams.RSU_technology,'LTE')
-        stationManagement.vehicleState(end-appParams.nRSUs+1:end) = 100;
+        stationManagement.vehicleState(end-appParams.nRSUs+1:end) = constants.V_STATE_LTE_TXRX;
     end
 end
 
 %% Initialization of the vectors of active vehicles in each technology, 
 % which is helpful to work with smaller vectors and matrixes
-stationManagement.activeIDsCV2X = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)==100);
+stationManagement.activeIDsCV2X = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX);
 stationManagement.activeIDsCV2X = stationManagement.activeIDsCV2X(stationManagement.activeIDsCV2X>0);
-stationManagement.activeIDs11p = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)~=100);
+stationManagement.activeIDs11p = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX);
 stationManagement.activeIDs11p = stationManagement.activeIDs11p(stationManagement.activeIDs11p>0);
 stationManagement.indexInActiveIDs_ofLTEnodes = zeros(length(stationManagement.activeIDsCV2X),1);
 for i=1:length(stationManagement.activeIDsCV2X)
@@ -83,9 +75,9 @@ stationManagement.pckBuffer = zeros(simValues.maxID,1);
 % Type of packets
 % 1 = CAM
 % 2 = DENM
-stationManagement.pckType = 1*ones(simValues.maxID,1);
+stationManagement.pckType = constants.PACKET_TYPE_CAM * ones(simValues.maxID,1);
 if appParams.nRSUs>0 && ~strcmpi(appParams.RSU_pckTypeString,'CAM')
-    stationManagement.pckType(end-appParams.nRSUs+1:end) = 2;
+    stationManagement.pckType(end-appParams.nRSUs+1:end) = constants.PACKET_TYPE_DENM;
 end
 % From v 5.4.14 the following are needed for multiple transmissions 
 % 'pckReceived' registers if the current packet has already been received
@@ -122,8 +114,8 @@ stationManagement.ITSNumberOfReplicas = phyParams.ITSNumberOfReplicasMax * ones(
 
 %% Packet generation
 timeManagement.timeGeneratedPacketInTxLTE = -1 * ones(simValues.maxID,1);
-if appParams.variabilityGenerationInterval==-1
-    if simParams.typeOfScenario~=2 % Not traffic trace
+if appParams.variabilityGenerationInterval == constants.PACKET_GENERATION_ETSI_CAM
+    if simParams.typeOfScenario ~= constants.SCENARIO_TRACE % Not traffic trace
         timeManagement.generationIntervalDeterministicPart = generationPeriodFromSpeed(simValues.v,appParams);
     else
         timeManagement.generationIntervalDeterministicPart = appParams.generationInterval * ones(simValues.maxID,1);
@@ -142,7 +134,7 @@ if appParams.nRSUs>0 && ~strcmpi(appParams.RSU_pckTypeString,'CAM')
 end
 %timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDsCV2X) = appParams.averageTbeacon;
 timeManagement.timeNextPacket = Inf * ones(simValues.maxID,1);
-timeManagement.timeNextPacket(stationManagement.activeIDs) = timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDs) .* rand(length(stationManagement.activeIDs),1);
+timeManagement.timeNextPacket(stationManagement.activeIDs) = round(timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDs) .* rand(length(stationManagement.activeIDs),1), 10);
 timeManagement.timeLastPacket = -1 * ones(simValues.maxID,1); % needed for the calculation of the CBR
 
 timeManagement.dcc_minInterval = zeros(simValues.maxID,1);
@@ -181,8 +173,8 @@ end
 
 % Vehicles in a technology have the power to -1000 in the other; this is helpful for
 % verification purposes
-phyParams.P_ERP_MHz_CV2X(stationManagement.vehicleState~=100) = -1000;
-phyParams.P_ERP_MHz_11p(stationManagement.vehicleState==100) = -1000;
+phyParams.P_ERP_MHz_CV2X(stationManagement.vehicleState ~= constants.V_STATE_LTE_TXRX) = -1000;
+phyParams.P_ERP_MHz_11p(stationManagement.vehicleState == constants.V_STATE_LTE_TXRX) = -1000;
 
 %% Channels
 stationManagement.vehicleChannel = ones(simValues.maxID,1);
@@ -199,7 +191,7 @@ sinrManagement.Shadowing_dB = triu(sinrManagement.Shadowing_dB,1)+triu(sinrManag
 %% Management of coordinates and distances
 % Init knowledge at eNodeB of nodes positions
 %if simParams.technology~=2 % not only 11p
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0    
+if sum(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX)>0    
     % Number of groups for position update
  	positionManagement.NgroupPosUpdate = round(simParams.Tupdate/appParams.allocationPeriod);
     % Assign update period to all vehicles (introduce a position update delay)
@@ -231,10 +223,10 @@ dUpdate = zeros(outputValues.Nvehicles,outputValues.Nvehicles);
 [sinrManagement,simValues.Xmap,simValues.Ymap,phyParams.LOS] = computeChannelGain(sinrManagement,stationManagement,positionManagement,phyParams,simParams,dUpdate);
 
 % Update of the neighbors
-[positionManagement,stationManagement] = computeNeighbors (stationManagement,positionManagement,phyParams);
+[positionManagement,stationManagement] = computeNeighbors(stationManagement,positionManagement,phyParams);
 
 % The variable 'timeManagement.timeNextPosUpdate' is used for updating the positions
-timeManagement.timeNextPosUpdate = simParams.positionTimeResolution;
+timeManagement.timeNextPosUpdate = round(simParams.positionTimeResolution, 10);
 positionManagement.NposUpdates = 1;
 
 % Number of neighbors
@@ -257,7 +249,7 @@ if outParams.printUpdateDelay && outParams.printWirelessBlindSpotProb
 end
 
 % Floor coordinates for PRRmap creation (if enabled)
-if simParams.typeOfScenario==2 && outParams.printPRRmap % Only traffic traces
+if simParams.typeOfScenario==constants.SCENARIO_TRACE && outParams.printPRRmap % Only traffic traces
     simValues.XmapFloor = floor(simValues.Xmap);
     simValues.YmapFloor = floor(simValues.Ymap);
 end
@@ -268,7 +260,7 @@ end
 % init to inf in all cases
 timeManagement.timeNextTxRx11p = Inf * ones(simValues.maxID,1);
 %
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
+if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX)>0
 % if not only LTE
     % When a node senses the medium as busy and goes to State RX, the
     % transmitting node is saved in 'idFromWhichRx'
@@ -286,7 +278,7 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
     timeManagement.cbr11p_timeStartBusy = -1 * ones(simValues.maxID,1); % needed for the calculation of the CBR
     timeManagement.cbr11p_timeStartMeasInterval = -1 * ones(simValues.maxID,1); % needed for the calculation of the CBR
 
-    % Total power being received from nodes in State 3
+    % Total power being received from nodes are transmitting
     sinrManagement.rxPowerInterfLast11p = zeros(simValues.maxID,1);
     sinrManagement.rxPowerUsefulLast11p = zeros(simValues.maxID,1);
  
@@ -295,12 +287,12 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
     %sinrManagement.instantThisPrStarted11p = Inf;
     sinrManagement.instantThisSINRstarted11p = ones(simValues.maxID,1)*Inf;
 
-    % Average SINR - This parameter is irrelevant if the node is not in State 9
+    % Average SINR - This parameter is irrelevant if the node is not in state V_STATE_11P_RX
     sinrManagement.sinrAverage11p = zeros(simValues.maxID,1);
     sinrManagement.interfAverage11p = zeros(simValues.maxID,1);
 
-    % Instant when the average SINR of a node in State 9 was initiated - This
-    % parameter is irrelevant if the node is not in State 9
+    % Instant when the average SINR of a node in State V_STATE_11P_RX was initiated - This
+    % parameter is irrelevant if the node is not in State V_STATE_11P_RX
     sinrManagement.instantThisSINRavStarted11p = Inf * ones(simValues.maxID,1);
 
     % Number of slots for the backoff - Set to '-1' when not initiated
@@ -365,7 +357,7 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
     end
 
     % Initialize vector containing variable beacon periodicity
-    if simParams.technology==2 && appParams.variableBeaconSize
+    if simParams.technology==constants.TECH_ONLY_11P && appParams.variableBeaconSize
         % Generate a random integer for each vehicle indicating the period of
         % transmission (1 corresponds to the transmission of a big beacon)
         stationManagement.variableBeaconSizePeriodicity = randi(appParams.NbeaconsSmall+1,simValues.maxID,1);
@@ -379,11 +371,12 @@ end % end of not only LTE
 % Settings of Coexistence must be before BR assignment initialization
 timeManagement.coex_timeNextSuperframe = inf * ones(simValues.maxID,1);
 sinrManagement.coex_virtualInterference = zeros(simValues.maxID,1);
-sinrManagement.coex_averageSFinterfFrom11pToLTE = zeros(simValues.maxID,1);
-if simParams.technology==4 && simParams.coexMethod~=0
-    [timeManagement,stationManagement,sinrManagement,simParams,phyParams] = mainInitCoexistence(timeManagement,stationManagement,sinrManagement,simParams,simValues,phyParams,appParams);
-end
-if simParams.technology==4 
+sinrManagement.coex_averageTTIinterfFrom11pToLTE = zeros(simValues.maxID,1);
+if simParams.technology==constants.TECH_COEX_STD_INTERF 
+    if simParams.coexMethod~=constants.COEX_METHOD_NON
+        [timeManagement,stationManagement,sinrManagement,simParams,phyParams] = mainInitCoexistence(timeManagement,stationManagement,sinrManagement,simParams,simValues,phyParams,appParams);
+    end
+
     % Initialization of the matrix coex_correctSCIhistory
     sinrManagement.coex_correctSCIhistory = zeros(appParams.NbeaconsT*appParams.NbeaconsF,simValues.maxID);
 end
@@ -399,12 +392,12 @@ stationManagement.BRid(stationManagement.activeIDs,:) = -1;
 %
 % Initialize next LTE event to inf
 timeManagement.timeNextCV2X = inf;
-%
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
-%if simParams.technology ~= 2 % not only 11p
 
-    % Initialization of resouce allocation algorithms in LTE-V2X
-   if simParams.BRAlgorithm==2 || simParams.BRAlgorithm==7 || simParams.BRAlgorithm==10
+% if not only 11p
+if ismember(constants.V_STATE_LTE_TXRX, stationManagement.vehicleState(stationManagement.activeIDs))
+   % Initialization of resouce allocation algorithms in LTE-V2X
+   if ismember(simParams.BRAlgorithm, [constants.REASSIGN_BR_REUSE_DIS_SCHEDULED_VEH,...
+           constants.REASSIGN_BR_MAX_REUSE_DIS, constants.REASSIGN_BR_MIN_REUSE_POW])
         % Number of groups for scheduled resource reassignment (BRAlgorithm=2, 7 or 10)
         stationManagement.NScheduledReassignLTE = round(simParams.Treassign/appParams.allocationPeriod);
 
@@ -412,7 +405,7 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
         stationManagement.scheduledReassignLTE = randi(stationManagement.NScheduledReassignLTE,simValues.maxID,1);
     end
 
-    if simParams.BRAlgorithm==18
+    if simParams.BRAlgorithm == constants.REASSIGN_BR_STD_MODE_4
         % Find min and max values for random counter (BRAlgorithm=18)
         [simParams.minRandValueMode4,simParams.maxRandValueMode4] = findRCintervalAutonomous(appParams.allocationPeriod,simParams);
 
@@ -449,9 +442,9 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
         % Must be ordered with respect to the packet generation instant
         % (Vittorio 5.5.3)
         % subframeGen = ceil(timeManagement.timeNextPacket/phyParams.Tsf);
-        subframeGen = ceil(timeManagement.timeNextPacket/phyParams.TTI);
-        subframe_BR = ceil(stationManagement.BRid/appParams.NbeaconsF);
-        stationManagement.BRid = stationManagement.BRid + (subframe_BR<=subframeGen) * appParams.Nbeacons;
+        TTIGen = ceil(timeManagement.timeNextPacket/phyParams.TTI);
+        TTI_BR = ceil(stationManagement.BRid/appParams.NbeaconsF);
+        stationManagement.BRid = stationManagement.BRid + (TTI_BR<=TTIGen) * appParams.Nbeacons;
         stationManagement.BRid = sort(stationManagement.BRid,2);
         stationManagement.BRid = stationManagement.BRid - (stationManagement.BRid>appParams.Nbeacons) * appParams.Nbeacons;
         
@@ -463,9 +456,12 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
         % The random allocation is performed when the packet is generated
         % Therefore nothing needs to be done here
     % end
+
+    % FD exploitation initialization
+    % [stationManagement] = FDinit(simParams,stationManagement,phyParams,simValues);
     
     % Initialization of lambda: SINR threshold for BRAlgorithm 9
-    if simParams.BRAlgorithm==9
+    if simParams.BRAlgorithm == constants.REASSIGN_BR_POW_CONTROL
         stationManagement.lambdaLTE = phyParams.sinrThresholdCV2X_LOS;
     end
 
@@ -493,7 +489,7 @@ end % end of if simParams.technology ~= 2 % not only 11p
 % if CBR is active, set the next CBR instant - else set to inf
 if simParams.cbrActive
     
-    if simParams.technology==4 && simParams.coexMethod==1
+    if simParams.technology == constants.TECH_COEX_STD_INTERF && simParams.coexMethod == constants.COEX_METHOD_A
         if mod(simParams.coex_superFlength/simParams.cbrSensingInterval, 1) ~= 0 && ...
            mod(simParams.cbrSensingInterval/simParams.coex_superFlength, 1) ~= 0
             error('coex, Method A, cbrSensingInterval must be a multiple or a divisor of coex_superFlength');
@@ -505,10 +501,10 @@ if simParams.cbrActive
     
     timeManagement.cbr11p_timeStartMeasInterval(stationManagement.activeIDs11p) = 0;
     timeManagement.cbr11p_timeStartBusy = -1 * ones(simValues.maxID,1);
-    if simParams.technology==4 && simParams.coexMethod==1
-        timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDs .* timeManagement.coex_superframeThisIsLTEPart(stationManagement.activeIDs)) = -1;
-    end    
-    if simParams.technology~=1 % Not only C-V2X
+%     if simParams.technology==4 && simParams.coexMethod==1
+%         timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDs .* timeManagement.coex_superframeThisIsLTEPart(stationManagement.activeIDs)) = -1;
+%     end    
+    if simParams.technology~=constants.TECH_ONLY_CV2X % Not only C-V2X
         stationManagement.channelSensedBusyMatrix11p = zeros(ceil(simParams.cbrSensingInterval/appParams.allocationPeriod),simValues.maxID);        
     end
     
@@ -529,7 +525,7 @@ else
 end
 
 % BRid set to -1 for non-LTE
-stationManagement.BRid(stationManagement.vehicleState~=100,:)=-3;
+stationManagement.BRid(stationManagement.vehicleState~=constants.V_STATE_LTE_TXRX,:)=-3;
 
 % Temporary
 % %% INIT FOR MCO

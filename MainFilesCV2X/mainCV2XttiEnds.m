@@ -16,7 +16,7 @@ end
 %%
 
 Nreassign = 0;
-if simParams.BRAlgorithm==18
+if simParams.BRAlgorithm == constants.REASSIGN_BR_STD_MODE_4
     % BRs sensing procedure
     [timeManagement,stationManagement,sinrManagement] = ...
         CV2XsensingProcedure(timeManagement,stationManagement,sinrManagement,simParams,phyParams,appParams,outParams);    
@@ -24,16 +24,9 @@ if simParams.BRAlgorithm==18
     % BRs reassignment (3GPP MODE 4)     
     [timeManagement,stationManagement,sinrManagement,Nreassign] = ...
         BRreassignment3GPPautonomous(timeManagement,stationManagement,positionManagement,sinrManagement,simParams,phyParams,appParams,outParams);
-        % Code for possible DEBUG
-        % figure(400)
-        % plot(timeManagement.timeNow*ones(1,length(stationManagement.BRid)),stationManagement.BRid,'*');
-        % hold on
-        % figure(500)
-        % plot(stationManagement.activeIDsCV2X,stationManagement.BRid,'*');
-        % hold on
         
 % Introduced for NOMA support from version 5.6
-elseif simParams.BRAlgorithm==101
+elseif simParams.BRAlgorithm == constants.REASSIGN_BR_RAND_ALLOCATION
     
     hasNewPacketThisTbeacon = (timeManagement.timeLastPacket(stationManagement.activeIDsCV2X) > (timeManagement.timeNow-phyParams.TTI-1e-8));
 
@@ -46,9 +39,6 @@ elseif simParams.BRAlgorithm==101
             [BRidModified(:,j),Nreassign] = BRreassignmentRandom(simParams.T1autonomousModeTTIs,simParams.T2autonomousModeTTIs,stationManagement.activeIDsCV2X(hasNewPacketThisTbeacon),simParams,timeManagement,sinrManagement,stationManagement,phyParams,appParams);
         end      
         % Must be ordered with respect to the packet generation instant
-        %subframeGen = ceil(timeManagement.timeNextPacket(hasNewPacketThisTbeacon)/phyParams.TTI);
-        %subframeGen = mod(ceil(timeManagement.timeNow/phyParams.TTI)-1,appParams.NbeaconsT)+1;
-        %subframeGen = mod(ceil(timeManagement.timeLastPacket(hasNewPacketThisTbeacon)/phyParams.TTI)-1,appParams.NbeaconsT)+1;
         subframeGen = mod(ceil((timeManagement.timeNow-1e-8)/phyParams.TTI)-1,appParams.NbeaconsT)+1;
         subframe_BR = ceil(BRidModified/appParams.NbeaconsF);
         BRidModified = BRidModified + (subframe_BR<=subframeGen) * appParams.Nbeacons;
@@ -63,7 +53,7 @@ elseif mod(timeManagement.elapsedTime_TTIs,appParams.NbeaconsT)==0
     % TODO not checked in version 5.X
     
     %% Radio Resources Reassignment
-    if simParams.BRAlgorithm==2 || simParams.BRAlgorithm==7 || simParams.BRAlgorithm==10
+    if simParams.BRAlgorithm==constants.REASSIGN_BR_REUSE_DIS_SCHEDULED_VEH || simParams.BRAlgorithm==constants.REASSIGN_BR_MAX_REUSE_DIS || simParams.BRAlgorithm==constants.REASSIGN_BR_MIN_REUSE_POW
         
         if timeManagement.elapsedTime_TTIs > 0
             % Current scheduled reassign period
@@ -78,58 +68,49 @@ elseif mod(timeManagement.elapsedTime_TTIs,appParams.NbeaconsT)==0
         end
     end
 
-    if simParams.BRAlgorithm==2
+    if simParams.BRAlgorithm == constants.REASSIGN_BR_REUSE_DIS_SCHEDULED_VEH
 
         % BRs reassignment (CONTROLLED with REUSE DISTANCE and scheduled vehicles)
         % Call function for BRs reassignment
         % Returns updated stationManagement.BRid vector and number of successful reassignments
         [stationManagement.BRid,Nreassign] = BRreassignmentControlled(stationManagement.activeIDsCV2X,scheduledID,positionManagement.distanceEstimated,stationManagement.BRid,appParams.Nbeacons,phyParams.Rreuse);
 
-    elseif simParams.BRAlgorithm==7
+    elseif simParams.BRAlgorithm == constants.REASSIGN_BR_MAX_REUSE_DIS
 
         % BRs reassignment (CONTROLLED with MAXIMUM REUSE DISTANCE)
         %[stationManagement.BRid,Nreassign] = BRreassignmentControlledMaxReuse(stationManagement.activeIDsCV2X,stationManagement.BRid,scheduledID,stationManagement.neighborsIDLTE,appParams.NbeaconsT,appParams.NbeaconsF);
         [stationManagement.BRid,Nreassign] = BRreassignmentControlledMaxReuse(stationManagement.activeIDsCV2X,stationManagement.BRid,scheduledID,stationManagement.allNeighborsID,appParams.NbeaconsT,appParams.NbeaconsF);
 
-        %     elseif simParams.BRAlgorithm==9
-% 
-%         if mod(timeManagement.elapsedTime_subframes-appParams.NbeaconsT,simParams.Treassign)==0
-%             % BRs reassignment (CONTROLLED with POWER CONTROL)
-%             [stationManagement.BRid,phyParams.P_ERP_MHz_CV2X,stationManagement.lambdaLTE,Nreassign] = BRreassignmentControlledPC(stationManagement.activeIDsCV2X,stationManagement.BRid,phyParams.P_ERP_MHz_CV2X,sinrManagement.CHgain,awarenessID_LTE,appParams.Nbeacons,stationManagement.lambdaLTE,phyParams.sinrThresholdCV2X_LOS,phyParams.Pnoise_MHz,simParams.blockTarget,phyParams.maxERP_MHz);
-%         else
-%             Nreassign = 0;
-%         end
-% 
-    elseif simParams.BRAlgorithm==10
+    elseif simParams.BRAlgorithm == constants.REASSIGN_BR_MIN_REUSE_POW
 
         % BRs reassignment (CONTROLLED with MINIMUM POWER REUSE)
         [stationManagement.BRid,Nreassign] = BRreassignmentControlledMinPowerReuse(stationManagement.activeIDsCV2X,stationManagement.BRid,scheduledID,sinrManagement.P_RX_MHz,sinrManagement.Shadowing_dB,simParams.knownShadowing,appParams.NbeaconsT,appParams.NbeaconsF);
 
-    elseif (simParams.BRAlgorithm==9 && timeManagement.elapsedTime_TTIs == 0) || (simParams.BRAlgorithm==10 && timeManagement.elapsedTime_TTIs == 0)                
+    elseif (simParams.BRAlgorithm==constants.REASSIGN_BR_POW_CONTROL && timeManagement.elapsedTime_TTIs == 0) || (simParams.BRAlgorithm==constants.REASSIGN_BR_MIN_REUSE_POW && timeManagement.elapsedTime_TTIs == 0)                
         % SAME CALL AS Algorithm 101 (RANDOM ALLOCATION)
-    hasNewPacketThisTbeacon = (timeManagement.timeLastPacket(stationManagement.activeIDsCV2X) > (timeManagement.timeNow-phyParams.TTI-1e-8));
+        hasNewPacketThisTbeacon = (timeManagement.timeLastPacket(stationManagement.activeIDsCV2X) > (timeManagement.timeNow-phyParams.TTI-1e-8));
 
-    if sum(hasNewPacketThisTbeacon)>0
-        % Call Benchmark Algorithm 101 (RANDOM ALLOCATION)
-        BRidModified = zeros(sum(hasNewPacketThisTbeacon),phyParams.cv2xNumberOfReplicasMax);
-        for j=1:phyParams.cv2xNumberOfReplicasMax
-            % From v5.4.16, when HARQ is active, n random
-            % resources are selected, one per each replica 
-            [BRidModified(:,j),Nreassign] = BRreassignmentRandom(simParams.T1autonomousModeTTIs,simParams.T2autonomousModeTTIsstationManagement.activeIDsCV2X(hasNewPacketThisTbeacon),simParams,timeManagement,sinrManagement,stationManagement,phyParams,appParams);
-        end      
-        % Must be ordered with respect to the packet generation instant
-        %subframeGen = ceil(timeManagement.timeNextPacket(hasNewPacketThisTbeacon)/phyParams.TTI);
-        subframeGen = mod(ceil(timeManagement.timeNow/phyParams.TTI)-1,appParams.NbeaconsT)+1;
-        subframe_BR = ceil(BRidModified/appParams.NbeaconsF);
-        BRidModified = BRidModified + (subframe_BR<=subframeGen) * appParams.Nbeacons;
-        BRidModified = sort(BRidModified,2);
-        BRidModified = BRidModified - (BRidModified>appParams.Nbeacons) * appParams.Nbeacons;
-   
-        stationManagement.BRid(stationManagement.activeIDsCV2X(hasNewPacketThisTbeacon),:) = BRidModified;
-    end
+        if sum(hasNewPacketThisTbeacon)>0
+            % Call Benchmark Algorithm 101 (RANDOM ALLOCATION)
+            BRidModified = zeros(sum(hasNewPacketThisTbeacon),phyParams.cv2xNumberOfReplicasMax);
+            for j=1:phyParams.cv2xNumberOfReplicasMax
+                % From v5.4.16, when HARQ is active, n random
+                % resources are selected, one per each replica 
+                [BRidModified(:,j),Nreassign] = BRreassignmentRandom(simParams.T1autonomousModeTTIs,simParams.T2autonomousModeTTIsstationManagement.activeIDsCV2X(hasNewPacketThisTbeacon),simParams,timeManagement,sinrManagement,stationManagement,phyParams,appParams);
+            end      
+            % Must be ordered with respect to the packet generation instant
+            %subframeGen = ceil(timeManagement.timeNextPacket(hasNewPacketThisTbeacon)/phyParams.TTI);
+            subframeGen = mod(ceil(timeManagement.timeNow/phyParams.TTI)-1,appParams.NbeaconsT)+1;
+            subframe_BR = ceil(BRidModified/appParams.NbeaconsF);
+            BRidModified = BRidModified + (subframe_BR<=subframeGen) * appParams.Nbeacons;
+            BRidModified = sort(BRidModified,2);
+            BRidModified = BRidModified - (BRidModified>appParams.Nbeacons) * appParams.Nbeacons;
+       
+            stationManagement.BRid(stationManagement.activeIDsCV2X(hasNewPacketThisTbeacon),:) = BRidModified;
+        end
     
         
-    elseif simParams.BRAlgorithm==102
+    elseif simParams.BRAlgorithm==constants.REASSIGN_BR_ORDERED_ALLOCATION
 
         % Call Benchmark Algorithm 102 (ORDERED ALLOCATION)
         [stationManagement.BRid,Nreassign] = BRreassignmentOrdered(positionManagement.XvehicleReal,stationManagement.activeIDsCV2X,stationManagement.BRid,appParams.NbeaconsT,appParams.NbeaconsF);
@@ -138,7 +119,7 @@ elseif mod(timeManagement.elapsedTime_TTIs,appParams.NbeaconsT)==0
 
 end
 
-if simParams.BRAlgorithm == 18 && ~isfield(sinrManagement,'sensedPowerByLteNo11p')
+if simParams.BRAlgorithm == constants.REASSIGN_BR_STD_MODE_4 && ~isfield(sinrManagement,'sensedPowerByLteNo11p')
     sinrManagement.sensedPowerByLteNo11p = [];
 end
 

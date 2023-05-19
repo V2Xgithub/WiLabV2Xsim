@@ -11,7 +11,7 @@ end
 
 %% Calculation of NLOSv
 PNLOSv=10.^(0.69); %6.9 dB are assumed for each vehicle, following ETSI TR 103 257
-if phyParams.channelModel==4 % 5G
+if phyParams.channelModel==constants.CH_5G_NLOSV % 5G
     NLOSv = calculateNLOSv(positionManagement.XvehicleReal, positionManagement.YvehicleReal);
 else
     NLOSv = zeros(Nvehicles,Nvehicles);  
@@ -24,7 +24,7 @@ if (~simParams.fileObstaclesMap)
     D_corr = 25;         % Decorrelation distance for the shadowing calculation
     [X,Y] = convertToGrid(positionManagement.XvehicleReal,positionManagement.YvehicleReal,positionManagement.XminMap,positionManagement.YmaxMap,positionManagement.StepMap);
     
-    if simParams.typeOfScenario==4 %ETSI-Urban
+    if simParams.typeOfScenario==constants.SCENARIO_URBAN %ETSI-Urban
         D1 = zeros(Nvehicles,Nvehicles);
         C = zeros(Nvehicles,Nvehicles);
         horizontal=abs(real(positionManagement.direction));
@@ -87,7 +87,7 @@ PLOS=( ...
     (distance>phyParams.d_threshold2) .*(phyParams.L0_far * (distance.^phyParams.b_far)) ...
     );
 
-if simParams.typeOfScenario==4 % ETSI_Urban
+if simParams.typeOfScenario==constants.SCENARIO_URBAN % ETSI_Urban
     
     %% Path loss calculation for the Winner+ model
     k1=(phyParams.b_nj0.*max(phyParams.n_j0-phyParams.a_bj0*distance,phyParams.n_threshold))/10;
@@ -104,7 +104,7 @@ else
     
 end
 
-if phyParams.channelModel==0 %phyParams.winnerModel
+if phyParams.channelModel==constants.CH_WINNER_PLUS_B1 %phyParams.winnerModel
     PL = (LOS>0).*PLOS+(LOS==0).*PNLOS;
 else
     % PL and LOS derivation in case of non-winner model
@@ -119,7 +119,7 @@ end
 %plot(distance,NLOSv,'p');
 
 %% Compuatiomn of the channel gain
-if (phyParams.stdDevShadowLOS_dB~=0)
+if phyParams.stdDevShadowLOS_dB ~= 0
     
     % Call function to calculate shadowing
     %Shadowing_dB = computeShadowing(sinrManagement.Shadowing_dB,LOS,dUpdate,phyParams.stdDevShadowLOS_dB,phyParams.stdDevShadowNLOS_dB,D_corr);

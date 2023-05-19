@@ -12,144 +12,147 @@ threshCBR_perMHz = threshCBR_perSubchannel / phyParams.BwMHz_cv2xSubCH;
 % The sensingMatrix is a 3D matrix with
 % 1st D -> Number of values to be stored in the time domain, corresponding
 %          to the standard duration of 1 second, of size ceil(1/Tbeacon)
-%          First is current subframe, then the second is teh previous one
+%          First is current frame, then the second is the previous one
 %          and so on
 % 2nd D -> BRid, of size Nbeacons
 % 3rd D -> IDs of vehicles
 sensingMatrix = stationManagement.sensingMatrixCV2X;
 % nAllocationPeriodsCBR counts the number of allocation periods used for the
 % sensing
-nAllocationPeriodsCBR = min(ceil(simParams.cbrSensingInterval/appParams.allocationPeriod),length(sensingMatrix(:,1,1)));
-
-% MAYBE NOT USED ANYMORE
-%subframeLastPacket = mod(ceil(timeManagement.timeLastPacket/phyParams.Tsf)-1,(appParams.NbeaconsT))+1;
-%packetInTheLastSubframe(stationManagement.activeIDsCV2X) = (subframeLastPacket(stationManagement.activeIDsCV2X)==appParams.currentT);
-
-coex_cbrLTEonlyValues = [];
+nAllocationPeriodsCBR = min(ceil(simParams.cbrSensingInterval/appParams.allocationPeriod),size(sensingMatrix,1));
 
 % The list of vehicles that must be updated is provided in input
 
 % CBR is calculated only if enough subframes have elapsed
 if ~isempty(vehiclesToConsider) && timeManagement.elapsedTime_TTIs > nAllocationPeriodsCBR * appParams.NbeaconsT
-
-    % Print to output
-    %if outParams.printCBR
-    %    cbrToPrint = zeros(1,length(vehiclesToConsider));
-    %    index = 1;
-    %end
-   
-    % Cycle over the nodes to be updated
-    for indexV = 1:length(vehiclesToConsider)
-        iV = vehiclesToConsider(indexV);
-        % sensingMatrix(-,-,-) > T returns a matrix (recall: comparisons
-        % are considering the power per resource block)
-        % then reshape converts into a vector and sum sums up
-        % IF BR overlap is not allowed, all is simple
-        % OTHERWISE the overlap should be taken into account        
-        % FOR THE MOMENT IT IS APPROXIMATED
-        if ~phyParams.BRoverlapAllowed
-             sinrManagement.cbrCV2X(iV) = sum(reshape(sensingMatrix(1:nAllocationPeriodsCBR,:,iV) > threshCBR_perMHz, [], 1)) ...
-                / (nAllocationPeriodsCBR * appParams.NbeaconsT * appParams.NbeaconsF);        
-        else
-            % I store in BRoccupied the evaluation of the power sensed in
-            % each beacon resource
-            % The vector length is nBeaconsF x nBeaconsT x nAllocationPeriodsCBR            
-            BRfree = reshape(sensingMatrix(1:nAllocationPeriodsCBR,:,iV) <= threshCBR_perMHz, 1, []);
-            % Then I need to convert from beacon resources to subchannels
-            % A matrix is used of size "nSubchannels" x "nBeaconsT x nAllocationPeriodsCBR"
-            subchannelFree = true(phyParams.NsubchannelsFrequency,length(BRfree)/appParams.NbeaconsF);
-            for i=1:appParams.NbeaconsF
-                subchannelFree(i:(i+phyParams.NsubchannelsBeacon-1),:) = subchannelFree(i:(i+phyParams.NsubchannelsBeacon-1),:) & repmat(BRfree(i:appParams.NbeaconsF:end),phyParams.NsubchannelsBeacon,1);
-            end    
-            sinrManagement.cbrCV2X(iV) = sum(sum(~subchannelFree)) ...
-                / (nAllocationPeriodsCBR * appParams.NbeaconsT * phyParams.NsubchannelsFrequency);                    
+    % calculate CBR for each vehicle
+    
+%     currentT = (mod((timeManagement.elapsedTime_TTIs-1),appParams.NbeaconsT)+1);
+%     sensingMatrix(:,currentT+1:end,:) = circshift(sensingMatrix(:,currentT+1:end,:), 1, 2);
+    BRfree = sensingMatrix(1:nAllocationPeriodsCBR,:,vehiclesToConsider) <= threshCBR_perMHz;
+    % 1. To use reshape function, the 1st and 2nd dimention should be
+    % exchanged. because it outputs as follows
+    % [1 2;        
+    %  3 4]   -->> [1 3 2 4]
+    %
+    % 2. After reshape, BRfree should be with dimention a*b*c, where:
+    % 1st-D is for different BR in one frame, 'a' is number of BRs in frequency
+    % 2nd-D is for subframes, 'b' is the number of frames (= nAllocationPeriodsCBR * appParams.NbeaconsT)
+    % 3rd-D is for different vehicles, 'c' is the number of vehicles to be considered
+    BRfree = reshape(permute(BRfree, [2, 1, 3]), appParams.NbeaconsF, [], length(vehiclesToConsider));
+    subchannelFree = true(phyParams.NsubchannelsFrequency, size(BRfree, 2), length(vehiclesToConsider));
+    if ~phyParams.BRoverlapAllowed
+        % fill BRfree on the subchannelFree.
+        % 5 subchannels, each beacon occupies 2 subchannels, 2 BRs in frequency
+        % [1 2]' stands for BRfree senced by one vehicle
+        % [1    [0    [1
+        %  1     0     1
+        %  0  +  2  =  2
+        %  0     2     2
+        %  0]    0]    0]
+        % 2 BRs on 5 subchannels
+        subchannelFree(1:phyParams.NsubchannelsBeacon*appParams.NbeaconsF,:,:) =...
+            subchannelFree(1:phyParams.NsubchannelsBeacon*appParams.NbeaconsF,:,:) & repelem(BRfree, phyParams.NsubchannelsBeacon, 1);
+    else
+        % overlap BRfree on the subchannelFree. An easy way to consider the overlap,
+        % the follow figure might explain the idea: 
+        % 5 subchannels, each beacon occupies 2 subchannels, 4 BRs in frequency
+        % [1 2 3 4]' stands for BRfree senced by one vehicle
+        %      [1;   [0   [1
+        %       2;    1    1 2
+        %       3; +  2 =    2 3  
+        %       4;    3        3 4
+        %       0]    4]         4]
+        % 4 BRs on 5 subchannels
+        for i = 1:phyParams.NsubchannelsBeacon
+            subchannelFree(i:i+appParams.NbeaconsF-1,:,:) = subchannelFree(i:i+appParams.NbeaconsF-1,:,:) & BRfree;
         end
-                        
-        % recall: phyParams.NsubchannelsBeacon indicates how many subchannel per
-        % beacon and thus phyParams.NsubchannelsBeacon-1 is the overlapping
-        % phyParams.NsubchannelsFrequency is the number of subchannels
-        %if outParams.printCBR
-        %    cbrToPrint(index) = sinrManagement.cbrCV2X(iV);            
-        %    index = index + 1;
-        %end
     end
-    %if outParams.printCBR
-    %    printCBRToFile(cbrToPrint,outParams,false);
-    %end
+    if simParams.technology == constants.TECH_COEX_STD_INTERF && simParams.coexMethod == constants.COEX_METHOD_A
+        % TTI mark to exclude the 11p part if it has (assuming TTI = 1 ms)
+        mask_length = nAllocationPeriodsCBR * appParams.NbeaconsT;
+        mask_lte = [true(1, simParams.coex_endOfLTE/phyParams.TTI), false(1, round((simParams.coex_superFlength-simParams.coex_endOfLTE)/phyParams.TTI))];
+        mask = repmat(mask_lte, 1, mask_length/length(mask_lte));
+        subchannelFree = subchannelFree(:, mask, :);
+        sinrManagement.cbrCV2X(vehiclesToConsider) = sum(~subchannelFree, [1, 2]) ./ numel(subchannelFree(:,:,1));
+    end
+    
+    % Dynamic setting of PDelta
+    if strcmp(phyParams.duplexCV2X,'FD') && simParams.FDalgorithm~=0 && simParams.dynamicPDelta==1
+        for indexV = 1:length(vehiclesToConsider)
+            iV = vehiclesToConsider(indexV);
+            if (0<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)<0.5)
+                stationManagement.PDelta(iV) = 1.1;   % 0.41dB
+            elseif (0.5<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)< 0.6)
+                stationManagement.PDelta(iV) = 1.25;     % 0.97dB
+            elseif (0.6<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)< 0.7)
+                stationManagement.PDelta(iV) = 1.5;     % 1.76dB
+            elseif (0.7<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)< 0.8)
+                stationManagement.PDelta(iV) = 2;     % 3dB
+            elseif (0.8<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)< 0.85)
+                stationManagement.PDelta(iV) = 4;     % 6dB (was 4.78dB for FDalg2)
+            elseif (0.85<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)< 0.9)
+                stationManagement.PDelta(iV) = 8;     % 9dB (was 6dB for FDalg2)
+            elseif (0.9<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)< 0.95)
+                stationManagement.PDelta(iV) = 16;    % 12dB (was 9dB for FDalg2)      
+            elseif (0.95<=sinrManagement.cbrCV2X(iV)) && (sinrManagement.cbrCV2X(iV)<= 1)
+                stationManagement.PDelta(iV) = 32;    % 15dB (was 12dB for FDalg2)
+            else
+                error("error in CBR calculation")
+            end
+        end
+    end
 end
 
-%if simParams.technology==4 && simParams.coexMethod>1 && simParams.coex_slotManagement==2
-if simParams.technology==4
+if simParams.technology == constants.TECH_COEX_STD_INTERF
     % calculation of the CBR_LTE for the dynamic slot duration
-    %
-    %% Removed in v2.5.10_1
-%     % The correct/wrong reception of SCI messages in this subframe is
-%     % stored in "stationManagement.correctSCImatrixCV2X(,)"
-%     % A record with the SCI messages in the last 100 subframes is
-%     % required: "stationManagement.coex_correctSCIhistory(subframe,idVehicle)" is used 
-%     %
-%     % Step 1: circular shift of the matrix and zeros to remove oldest
-%     % record
-%     sinrManagement.coex_correctSCIhistory(:,:) = circshift(sinrManagement.coex_correctSCIhistory(:,:),appParams.NbeaconsF);
-%     sinrManagement.coex_correctSCIhistory(1:appParams.NbeaconsF,:) = 0;
-%     % Step 2: new record
-%     if  ~isempty(stationManagement.transmittingIDsLTE)
-%         for i = 1:length(stationManagement.transmittingIDsLTE)
-%             indexVtxLte = stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(i);
-%             for indexNeighborsOfVtx = 1:length(stationManagement.neighborsIDLTE(indexVtxLte,:))
-%                idVrx = stationManagement.neighborsIDLTE(indexVtxLte,indexNeighborsOfVtx);
-%                if idVrx<=0
-%                    break;
-%                end
-%                if stationManagement.correctSCImatrixCV2X(i,indexNeighborsOfVtx) == 1 % correct reception of the SCI
-%                    sinrManagement.coex_correctSCIhistory(mod(stationManagement.BRid(stationManagement.transmittingIDsLTE(i))-1,appParams.NbeaconsF)+1,idVrx) = 1;
-%                end
-%             end
-%         end
-%     end
-    %% Removed from here since version 5.2.9 - now in main
-    % % Possible step 3: update of the cbr_11p
-    %if simParams.coex_cbrTotVariant==2
-    %    for iV = vehiclesToConsider'
-    %        [timeManagement,stationManagement,sinrManagement.cbrLTE_coex11ponly(iV)] = cbrUpdate11p(timeManagement,iV,stationManagement,simParams,outParams);
-    %    end
-    %end 
-    %%
 
-    % Step 3: update of the cbr
+    % update the cbr
     if ~isempty(vehiclesToConsider) && timeManagement.elapsedTime_TTIs > nAllocationPeriodsCBR * appParams.NbeaconsT
         if simParams.coexMethod>1 && simParams.coex_slotManagement==2 && simParams.coex_printTechPercentage
             filenameTechP = sprintf('%s/coex_TechPercStatistic_%.0f.xls',outParams.outputFolder,outParams.simID);
             fpTechP = fopen(filenameTechP,'at');
+            
+            % the file could not be opened sometimes
+            if fpTechP == -1
+                reOpenTimes = 10;
+                while fpTechP == -1 && reOpenTimes > 0
+                    pause(5);
+                    fpTechP = fopen(filenameTechP,'at');
+                    reOpenTimes = reOpenTimes - 1;
+                end
+                if fpTechP == -1
+                    error('Could not open file:\n%s', filenameTechP);
+                end
+            end
         end        
         % same timing as std CBR
         for iV = vehiclesToConsider'
-            
+
             %% VARIANTS for CBR_LTE
-            %
             % 1: number of received SCIs over number of beacon resources
             %    this is valid only if all packets use the same number of
             %    subchannels - cannot be the one in the standards
             if simParams.coex_cbrLteVariant==1
-                sinrManagement.cbrLTE_coexLTEonly(iV) = (sum( sinrManagement.coex_correctSCIhistory(:,iV) )/((appParams.NbeaconsT * appParams.NbeaconsF)));
-            %
+                sinrManagement.cbrCV2X_coexLTEonly(iV) = sum(sinrManagement.coex_correctSCIhistory(:,iV))/appParams.Nbeacons;
+
             % 2: number of received SCIs over number of subchannels
             %    expected to understimate the use of the channel (saturates
             %    before 100%)
             elseif simParams.coex_cbrLteVariant==2
-                sinrManagement.cbrLTE_coexLTEonly(iV) = (sum( sinrManagement.coex_correctSCIhistory(:,iV) )/((appParams.NbeaconsT * phyParams.NsubchannelsFrequency)));
-            %
+                sinrManagement.cbrCV2X_coexLTEonly(iV) = sum(sinrManagement.coex_correctSCIhistory(:,iV))/(appParams.NbeaconsT * phyParams.NsubchannelsFrequency);
+
             % 3: CBR_LTE = sum( SCI*subchannels_per_SCI ) / (num_subchannels*num_subframes)
             %    NOTE: with this definition and overlapping packets, it migth
             %    happen that the CBR_LTE goes above 100%
             elseif simParams.coex_cbrLteVariant==3
-                sinrManagement.cbrLTE_coexLTEonly(iV) = (sum( sinrManagement.coex_correctSCIhistory(:,iV)*phyParams.NsubchannelsBeacon)/((appParams.NbeaconsT * phyParams.NsubchannelsFrequency)));
-            %
+                sinrManagement.cbrCV2X_coexLTEonly(iV) = sum(sinrManagement.coex_correctSCIhistory(:,iV)*phyParams.NsubchannelsBeacon)/(appParams.NbeaconsT * phyParams.NsubchannelsFrequency);
+
             % 4: CBR_LTE = sum( subchannels_used ) / (num_subchannels*num_subframes)
             elseif simParams.coex_cbrLteVariant==4
                 if ~phyParams.BRoverlapAllowed
-                     sinrManagement.cbrLTE_coexLTEonly(iV) = (sum( sinrManagement.coex_correctSCIhistory(:,iV)*phyParams.NsubchannelsBeacon)...
-                         /((appParams.NbeaconsT * phyParams.NsubchannelsFrequency)));
+                     sinrManagement.cbrCV2X_coexLTEonly(iV) = sum(sinrManagement.coex_correctSCIhistory(:,iV)*phyParams.NsubchannelsBeacon) / ...
+                         (appParams.NbeaconsT * phyParams.NsubchannelsFrequency);
                 else
                     % I store in BRoccupied the evaluation of the power sensed in
                     % each beacon resource
@@ -161,73 +164,67 @@ if simParams.technology==4
                     for i=1:appParams.NbeaconsF
                         subchannelFree(i:(i+phyParams.NsubchannelsBeacon-1),:) = subchannelFree(i:(i+phyParams.NsubchannelsBeacon-1),:) & repmat(BRfree(i:appParams.NbeaconsF:end),phyParams.NsubchannelsBeacon,1);
                     end    
-                    sinrManagement.cbrLTE_coexLTEonly(iV) = sum(sum(~subchannelFree)) ...
+                    sinrManagement.cbrCV2X_coexLTEonly(iV) = sum(~subchannelFree, "all") ...
                         / (appParams.NbeaconsT * phyParams.NsubchannelsFrequency);                    
                 end
             elseif simParams.coex_cbrLteVariant==5
                 BRfree = ~sinrManagement.coex_correctSCIhistory(:,iV)';
-                subframeFree = true(1,length(BRfree)/appParams.NbeaconsF);
+                TTIFree = true(1,length(BRfree)/appParams.NbeaconsF);
                 for i=1:appParams.NbeaconsF
-                    subframeFree = subframeFree & BRfree(i:appParams.NbeaconsF:end);
+                    TTIFree = TTIFree & BRfree(i:appParams.NbeaconsF:end);
                 end    
-                sinrManagement.cbrLTE_coexLTEonly(iV) = sum(sum(~subframeFree)) ...
-                    / (appParams.NbeaconsT);  
+                sinrManagement.cbrCV2X_coexLTEonly(iV) = sum(~TTIFree, "all") / appParams.NbeaconsT;  
             else
                 error('Variant of CBR_LTE not implemented');
             end
             
-            if simParams.coexMethod>1 
+            if ~ismember(simParams.coexMethod, [constants.COEX_METHOD_NON, constants.COEX_METHOD_A])  
                 % Update of the parameter "simParams.coex_NtsLTE"
                 if simParams.coex_cbrTotVariant==1
-                    Tech_percentage = sinrManagement.cbrLTE_coexLTEonly(iV)./sinrManagement.cbrCV2X(iV);
+                    Tech_percentage = sinrManagement.cbrCV2X_coexLTEonly(iV)./sinrManagement.cbrCV2X(iV);
                 elseif simParams.coex_cbrTotVariant==2
-                    Tech_percentage = sinrManagement.cbrLTE_coexLTEonly(iV)./(sinrManagement.cbrLTE_coexLTEonly(iV)+sinrManagement.cbrLTE_coex11ponly(iV));
+                    Tech_percentage = sinrManagement.cbrCV2X_coexLTEonly(iV)./(sinrManagement.cbrCV2X_coexLTEonly(iV)+sinrManagement.cbrCV2X_coex11ponly(iV));
                 elseif simParams.coex_cbrTotVariant==9
+                    % todo:
+                    error("Following code need to be checked in case of NR-V2X");
                     BRfree = reshape(sensingMatrix(1:nAllocationPeriodsCBR,:,iV) <= threshCBR_perMHz, 1, []);
-                    subframeFree = true(1,length(BRfree)/appParams.NbeaconsF);
+                    TTIFree = true(1,length(BRfree)/appParams.NbeaconsF);
                     for i=1:appParams.NbeaconsF
-                        subframeFree(1,:) = subchannelFree(1,:) & BRfree(i:appParams.NbeaconsF:end);
+                        TTIFree(1,:) = subchannelFree(1,:) & BRfree(i:appParams.NbeaconsF:end);
                     end    
                     totLTEbusy = 0;
                     tot11pBusy = 0;
-                    for j=1:(nAllocationPeriodsCBR * appParams.NbeaconsT/simParams.coex_superframeSF)
-                        totLTEbusy = totLTEbusy + sum(~subframeFree((j-1)*simParams.coex_superframeSF+1:(j-1)*simParams.coex_superframeSF+sinrManagement.coex_NtsLTE(iV)));
-                        tot11pBusy = tot11pBusy + sum(~subframeFree((j-1)*simParams.coex_superframeSF+sinrManagement.coex_NtsLTE(iV)+1:j*simParams.coex_superframeSF));
+                    for j=1:(nAllocationPeriodsCBR * appParams.NbeaconsT/simParams.coex_superframeTTI)
+                        totLTEbusy = totLTEbusy + sum(~TTIFree((j-1)*simParams.coex_superframeSF+1:(j-1)*simParams.coex_superframeSF+sinrManagement.coex_NtotSubframeLTE(iV)));
+                        tot11pBusy = tot11pBusy + sum(~TTIFree((j-1)*simParams.coex_superframeSF+sinrManagement.coex_NtotSubframeLTE(iV)+1:j*simParams.coex_superframeSF));
                     end
-                    sinrManagement.cbrLTE_coexLTEonly(iV) = totLTEbusy ...
-                        / (nAllocationPeriodsCBR * appParams.NbeaconsT * (sinrManagement.coex_NtsLTE(iV)/simParams.coex_superframeSF));
-                    sinrManagement.cbrLTE_coex11ponly(iV) = tot11pBusy ...
-                        / (nAllocationPeriodsCBR * appParams.NbeaconsT * (1-sinrManagement.coex_NtsLTE(iV)/simParams.coex_superframeSF));
+                    sinrManagement.cbrCV2X_coexLTEonly(iV) = totLTEbusy ...
+                        / (nAllocationPeriodsCBR * appParams.NbeaconsT * (sinrManagement.coex_NtotSubframeLTE(iV)/simParams.coex_superframeSF));
+                    sinrManagement.cbrCV2X_coex11ponly(iV) = tot11pBusy ...
+                        / (nAllocationPeriodsCBR * appParams.NbeaconsT * (1-sinrManagement.coex_NtotSubframeLTE(iV)/simParams.coex_superframeSF));
                     Tech_percentage = sum(stationManagement.vehicleState==100)/length(stationManagement.vehicleState);
-                    %sinrManagement.cbrLTE_coexLTEonly(iV)./(sinrManagement.cbrLTE_coexLTEonly(iV)+sinrManagement.cbrLTE_coex11ponly(iV));
+                    %sinrManagement.cbrCV2X_coexLTEonly(iV)./(sinrManagement.cbrCV2X_coexLTEonly(iV)+sinrManagement.cbrCV2X_coex11ponly(iV));
                 else
                     error('simParams.coex_cbrTotVariant=%d not accepted',simParams.coex_cbrTotVariant);
                 end
                 % The new number of subframes that can be used by node iV is
-                % calculated
-                % A factor '(simParams.coex_superframeSF/10)' is added to cope 
-                % with possible value different to 10
-                if simParams.coex_slotManagement==2 
-                    %nSubframes = round((simParams.coex_superframeSF/10) * max(min(floor(Tech_percentage*10+0.5),9),1));
+                % calculated, same as NR-V2X
+                if simParams.coex_slotManagement == constants.COEX_SLOT_DYNAMIC
                     nSubframes = round(Tech_percentage * simParams.coex_superframeSF);
-                    sinrManagement.coex_NtsLTE(iV) = max(5,min(nSubframes,simParams.coex_superframeSF-5));
+                    sinrManagement.coex_NtotSubframeLTE(iV) = max(5,min(nSubframes,simParams.coex_superframeSF-5));
+                    sinrManagement.coex_NtotTTILTE(iV) = sinrManagement.coex_NtotSubframeLTE(iV) * (phyParams.Tsf / phyParams.TTI);
                 end
-                if simParams.coexMethod>1 && simParams.coex_slotManagement==2 && simParams.coex_printTechPercentage
-                    %fprintf(fpTechP,'%f\t%d\t%f\t%d\n',timeManagement.timeNow,iV,Tech_percentage,sinrManagement.coex_NtsLTE(iV));
-                    if simParams.coex_cbrTotVariant==1
-                        fprintf(fpTechP,'%f\t%d\t%f\t%f\t%f\t%d\n',timeManagement.timeNow,iV,sinrManagement.cbrLTE_coexLTEonly(iV),sinrManagement.cbrCV2X(iV),Tech_percentage,sinrManagement.coex_NtsLTE(iV));
+                if ~ismember(simParams.coexMethod, [constants.COEX_METHOD_NON, constants.COEX_METHOD_A]) &&...
+                        simParams.coex_slotManagement==constants.COEX_SLOT_DYNAMIC && simParams.coex_printTechPercentage
+                    if simParams.coex_cbrTotVariant == 1
+                        fprintf(fpTechP,'%f\t%d\t%f\t%f\t%f\t%d\n',timeManagement.timeNow,iV,sinrManagement.cbrCV2X_coexLTEonly(iV),sinrManagement.cbrCV2X(iV),Tech_percentage,sinrManagement.coex_NtotSubframeLTE(iV));
                     else
-                        fprintf(fpTechP,'%f\t%d\t%f\t%f\t%f\t%d\n',timeManagement.timeNow,iV,sinrManagement.cbrLTE_coexLTEonly(iV),(sinrManagement.cbrLTE_coexLTEonly(iV)+sinrManagement.cbrLTE_coex11ponly(iV)),Tech_percentage,sinrManagement.coex_NtsLTE(iV));
+                        fprintf(fpTechP,'%f\t%d\t%f\t%f\t%f\t%d\n',timeManagement.timeNow,iV,sinrManagement.cbrCV2X_coexLTEonly(iV),(sinrManagement.cbrCV2X_coexLTEonly(iV)+sinrManagement.cbrCV2X_coex11ponly(iV)),Tech_percentage,sinrManagement.coex_NtotSubframeLTE(iV));
                     end
                 end
             end
         end
-%             figure(1)
-%             bar([sinrManagement.cbrCV2X sinrManagement.cbrLTE_coexLTEonly sinrManagement.cbrLTE_coex11ponly]);
-% %             figure(2)
-% %             bar(sinrManagement.cbrLTE_coexLTEonly./sinrManagement.cbrCV2X);
-%             figure(3)
-%             bar(sinrManagement.coex_NtsLTE);
+
         if simParams.coexMethod>1 && simParams.coex_slotManagement==2 && simParams.coex_printTechPercentage
             fclose(fpTechP);
         end        
@@ -269,7 +266,9 @@ if simParams.dcc_active
     %(Vittorio 5.5.3)
     % timeManagement.dcc_minInterval(vehiclesToConsider) = stationManagement.cv2xNumberOfReplicas(vehiclesToConsider) .* (phyParams.NsubchannelsBeacon)/(phyParams.NsubchannelsFrequency) * phyParams.Tsf ./ CRlimit;          
 	timeManagement.dcc_minInterval(vehiclesToConsider) = stationManagement.cv2xNumberOfReplicas(vehiclesToConsider) .* (phyParams.NsubchannelsBeacon)/(phyParams.NsubchannelsFrequency) * phyParams.TTI ./ CRlimit;          
-%     if timeManagement.dcc_minInterval(vehiclesToConsider)>timeManagement.generationIntervalDeterministicPart(vehiclesToConsider)
-%         stationManagement.dccLteTriggered(stationManagement.vehicleChannel(vehiclesToConsider)) = true;
-%     end
+    % move dcc trigger to mainV2X.m, because the random part of generation
+    % interval would change value if they appear at different places
+    % if timeManagement.dcc_minInterval(vehiclesToConsider)>timeManagement.generationIntervalDeterministicPart(vehiclesToConsider)
+    %     stationManagement.dccLteTriggered(stationManagement.vehicleChannel(vehiclesToConsider)) = true;
+    % end
 end

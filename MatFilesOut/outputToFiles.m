@@ -1,4 +1,4 @@
-function outputToFiles(simVersion,stationManagement,simParams,appParams,phyParams,sinrManagement,outParams,outputValues)
+function outputToFiles(stationManagement,simParams,appParams,phyParams,sinrManagement,outParams,outputValues)
 % This function writes one line in the main output file
 
 outputFolder = outParams.outputFolder;
@@ -45,25 +45,25 @@ if fseek(fileMainID, 1, 'bof') == -1
 end
 
 %1 Main settings
-fprintf(fileMainID,'%.0f\t%s\t%s\t%.0f\t%f\t%f\t',outParams.simID,simVersion,datestr(now),simParams.seed,simParams.simulationTime,outputValues.computationTime);
-if simParams.technology==1 || outputValues.AvgNvehicles11p==0
-    if simParams.mode5G==0
+fprintf(fileMainID,'%.0f\t%s\t%s\t%.0f\t%f\t%f\t',outParams.simID,constants.SIM_VERSION,datestr(now),simParams.seed,simParams.simulationTime,outputValues.computationTime);
+if simParams.technology == constants.TECH_ONLY_CV2X || outputValues.AvgNvehicles11p==0
+    if simParams.mode5G == constants.MODE_LTE
         fprintf(fileMainID,'LTE-V2X\t');
-    elseif simParams.mode5G==1
+    elseif simParams.mode5G == constants.MODE_5G
         fprintf(fileMainID,'5G-V2X\t');
     end
-elseif simParams.technology==2 || outputValues.AvgNvehiclesCV2X==0
+elseif simParams.technology == constants.TECH_ONLY_11P || outputValues.AvgNvehiclesCV2X==0
     fprintf(fileMainID,'802.11p\t');
-elseif simParams.technology==3
+elseif simParams.technology == constants.TECH_COEX_NO_INTERF
     fprintf(fileMainID,'CV2X+802.11p, orthogonal\t');
-elseif simParams.technology==4
+elseif simParams.technology == constants.TECH_COEX_STD_INTERF
     fprintf(fileMainID,'CV2X+802.11p, coex');
-    if simParams.coexMethod==0
+    if simParams.coexMethod == constants.COEX_METHOD_NON
         fprintf(fileMainID,', std');
-    elseif simParams.coexMethod==1
-        if simParams.coex_slotManagement==1
+    elseif simParams.coexMethod == constants.COEX_METHOD_A
+        if simParams.coex_slotManagement == constants.COEX_SLOT_STATIC
             fprintf(fileMainID,', A static (Tsf=%.3f,Tcv2x=%.3f,Tg=%.6f',simParams.coex_superFlength,simParams.coex_endOfLTE,simParams.coexA_guardTime);
-            if simParams.coexA_improvements>0
+            if simParams.coexA_improvements > 0
                 fprintf(fileMainID,',+%d',simParams.coexA_improvements);
             end
             if simParams.coexA_desynchError>0
@@ -74,8 +74,8 @@ elseif simParams.technology==4
         else
             fprintf(fileMainID,', A non static - err');
         end
-    elseif simParams.coexMethod==2
-        if simParams.coex_slotManagement==1
+    elseif simParams.coexMethod == constants.COEX_METHOD_B
+        if simParams.coex_slotManagement == constants.COEX_SLOT_STATIC
             fprintf(fileMainID,', B static (Tsf=%.3f,Tcv2x=%.3f',simParams.coex_superFlength,simParams.coex_endOfLTE);
         else
             fprintf(fileMainID,', B dynamic (Tsf=%.3f',simParams.coex_superFlength);
@@ -88,24 +88,24 @@ elseif simParams.technology==4
             fprintf(fileMainID,',selTx');
         end
         fprintf(fileMainID,')');
-    elseif simParams.coexMethod==3
-        if simParams.coex_slotManagement==1
+    elseif simParams.coexMethod == constants.COEX_METHOD_C
+        if simParams.coex_slotManagement == constants.COEX_SLOT_STATIC
             % In Method C with the variant with a gap,
             % simParams.coex_endOfLTE is set to 0 to mamage the virtual
             % interference
-            fprintf(fileMainID,', C static (Tsf=%.3f,Tcv2x=%.3f',simParams.coex_superFlength,sinrManagement.coex_NtsLTE(1)*phyParams.Tsf);
+            fprintf(fileMainID,', C static (Tsf=%.3f,Tcv2x=%.3f',simParams.coex_superFlength,sinrManagement.coex_NtotSubframeLTE(1)*phyParams.Tsf);
         else
             fprintf(fileMainID,', C dynamic (Tsf=%.3f',simParams.coex_superFlength);
         end
-        if simParams.coexC_timegapVariant==2
+        if simParams.coexC_timegapVariant == 2
             fprintf(fileMainID,',w.gap');
         end
         if simParams.coexC_11pDetection
             fprintf(fileMainID,',w.pdet');
         end
         fprintf(fileMainID,')');
-    elseif simParams.coexMethod==6
-        if simParams.coex_slotManagement==1
+    elseif simParams.coexMethod == constants.COEX_METHOD_F
+        if simParams.coex_slotManagement == constants.COEX_SLOT_STATIC
             fprintf(fileMainID,', F static (Tsf=%.3f,Tcv2x=%.3f)',simParams.coex_superFlength,simParams.coex_endOfLTE);  
         else
             fprintf(fileMainID,', F dynamic (Tsf=%.3f)',simParams.coex_superFlength);  
@@ -113,7 +113,7 @@ elseif simParams.technology==4
     else
         fprintf(fileMainID,', UNKNOWN');
     end
-    if simParams.coexMethod>0 && simParams.coex_slotManagement==2
+    if simParams.coexMethod ~= constants.COEX_METHOD_NON && simParams.coex_slotManagement == constants.COEX_SLOT_DYNAMIC
         fprintf(fileMainID,',dyn:vT%d',simParams.coex_cbrTotVariant);        
         %% Removed in v5.2.10
         %fprintf(fileMainID,',dyn:vT%d,vL%d',coex_cbrTotVariant,simParams.coex_cbrLteVariant);
@@ -210,7 +210,7 @@ fprintf(fileMainID,'\t');
 
 %3 App settings
 fprintf(fileMainID,'%.3f',appParams.allocationPeriod);
-if appParams.variabilityGenerationInterval==-1
+if appParams.variabilityGenerationInterval == constants.PACKET_GENERATION_ETSI_CAM
     fprintf(fileMainID,'(auto');
     if strcmp(appParams.camDiscretizationType,'allSteps') 
         fprintf(fileMainID,'-alls-%.1f',appParams.camDiscretizationIncrease);
@@ -218,7 +218,7 @@ if appParams.variabilityGenerationInterval==-1
         fprintf(fileMainID,'-algn-%.1f',appParams.camDiscretizationIncrease);
     end    
     fprintf(fileMainID,')');
-elseif appParams.variabilityGenerationInterval>0
+elseif appParams.variabilityGenerationInterval ~= constants.PACKET_GENERATION_PERIODICALLY  % has positive value
     fprintf(fileMainID,'(+/-%.3f,11p)',appParams.variabilityGenerationInterval/2);
 end
 fprintf(fileMainID,',');
@@ -275,7 +275,7 @@ if outputValues.AvgNvehiclesCV2X>0
 %if simParams.technology ~= 2 % not only 11p
     fprintf(fileMainID,'%s',phyParams.duplexCV2X);
     if strcmp(phyParams.duplexCV2X,'FD')
-        fprintf(fileMainID,'(Ksi=%.0fdB)',phyParams.Ksi_dB);
+        fprintf(fileMainID,'(Ksi=%.0fdB,FDalgorithm=%.0f,PDelta=%.2f,dynamicPDelta=%.0f)',phyParams.Ksi_dB,simParams.FDalgorithm,phyParams.PDelta,simParams.dynamicPDelta);
     end
 else
     fprintf(fileMainID,'-');    
@@ -436,11 +436,18 @@ if outputValues.AvgNvehiclesCV2X>0
         fprintf(fileMainID,',Treassign=%.1f',simParams.Treassign);
     elseif simParams.BRAlgorithm==18
         fprintf(fileMainID,'TsensPer=%.2f,pKeep=%.2f,',simParams.TsensingPeriod,simParams.probResKeep);
-        fprintf(fileMainID,'dynamicScheduling=%d,',simParams.dynamicScheduling);
-        fprintf(fileMainID,'rRes=%.2f,minR=%d,maxR=%d,',simParams.ratioSelectedMode4,simParams.minRandValueMode4,simParams.maxRandValueMode4);
+        fprintf(fileMainID,"dynamicScheduling="+simParams.dynamicScheduling+",");
+        fprintf(fileMainID,"resourceReEvaluation="+simParams.resourceReEvaluation+",");
+        fprintf(fileMainID,"reEvalAfterEmptyResource="+simParams.reEvalAfterEmptyResource+",");
+        fprintf(fileMainID,'rRes=%.2f,minR=%d,maxR=%d,',simParams.ratioSelectedAutonomousMode,simParams.minRandValueMode4,simParams.maxRandValueMode4);
         fprintf(fileMainID,'T1=%.2f,T2=%.2f,',simParams.T1autonomousMode,simParams.T2autonomousMode);
         fprintf(fileMainID,'Pthr=%d,minSCIsinr=%.2f,',10*log10(simParams.powerThresholdAutonomous)+30,10*log10(phyParams.minSCIsinr));
+        fprintf(fileMainID,"L2active="+simParams.L2active+",");
+        fprintf(fileMainID,"averageSensingActive="+simParams.averageSensingActive+",");
         fprintf(fileMainID,'Ksic=%f',phyParams.Ksic);
+        if phyParams.Ksic<1
+            fprintf(fileMainID,',%0.f sic iterations',phyParams.nsic);
+        end
     end
     if simParams.BRAlgorithm==10
         if simParams.knownShadowing
@@ -451,6 +458,10 @@ if outputValues.AvgNvehiclesCV2X>0
     end
     if simParams.BRAlgorithm==101
         fprintf(fileMainID,'T1=%.2f,T2=%.2f,',simParams.T1autonomousMode,simParams.T2autonomousMode);
+        fprintf(fileMainID,'Ksic=%f',phyParams.Ksic);
+        if phyParams.Ksic<1
+            fprintf(fileMainID,',%0.f sic iterations',phyParams.nsic);
+        end
     end
     fprintf(fileMainID,'\t');
 else

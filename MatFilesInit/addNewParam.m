@@ -9,7 +9,7 @@ if ~isnan(valueInCfg)
     sourceForValue = 1; % 1: file config
 end
 for i=1:(length(varargin{1}))/2
-    if strcmpi(char(varargin{1,1}(2*i-1)),field)
+    if strcmpi(varargin{1,1}{2*i-1},field)
         value = varargin{1,1}{2*i};
         sourceForValue = 2; % 2: command line
         % I remove this parameter and value from varargin

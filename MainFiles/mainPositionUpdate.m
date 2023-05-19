@@ -4,10 +4,10 @@ function [appParams,simParams,phyParams,outParams,simValues,outputValues,timeMan
 
 if simParams.typeOfScenario~=2 % Not traffic trace
     % Call function to update vehicles positions
-    [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,positionManagement] = updatePosition(timeManagement.timeNow,stationManagement.activeIDs,simValues.v,simValues.direction,simParams.positionTimeResolution,simValues.Xmax,positionManagement,appParams,simValues,outParams);
+    [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,positionManagement] = updatePosition(timeManagement.timeNow,stationManagement.activeIDs,simValues.v,simValues.direction,simParams.positionTimeResolution,simValues.Xmax,positionManagement,appParams,simValues,outParams,simParams);
 else
     % Store IDs of vehicles at the previous beacon period and update positions
-    [positionManagement.XvehicleReal,positionManagement.YvehicleReal,stationManagement.activeIDs,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,simValues.v] = updatePositionFile(round(timeManagement.timeNextPosUpdate*100)/100,simValues.dataTrace,stationManagement.activeIDs,positionManagement.XvehicleReal,positionManagement.YvehicleReal,round(timeManagement.timeNextPosUpdate*100)/100-simParams.positionTimeResolution,simValues,outParams);
+    [positionManagement.XvehicleReal,positionManagement.YvehicleReal,stationManagement.activeIDs,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,simValues.v] = updatePositionFile(round(timeManagement.timeNextPosUpdate, 2),simValues.dataTrace,stationManagement.activeIDs,positionManagement.XvehicleReal,positionManagement.YvehicleReal,round(timeManagement.timeNextPosUpdate, 2)-simParams.positionTimeResolution,simValues,outParams);
     %% ONLY LTE
     if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
     %if simParams.technology ~= 2 % not only 11p
@@ -40,12 +40,12 @@ end
 if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
     
     % if simParams.BRAlgorithm==18 && timeManagement.timeNow > phyParams.Tsf (Vittorio 5.5.3)
-    if simParams.BRAlgorithm==18 && timeManagement.timeNow > phyParams.TTI
+    if simParams.BRAlgorithm==constants.REASSIGN_BR_STD_MODE_4 && timeManagement.timeNow > phyParams.TTI
         % First random allocation 
         if ~isempty(indexNewVehicles)
             %[stationManagement.BRid,~] = BRreassignmentRandom(simValues.IDvehicle,stationManagement.BRid,simParams,sinrManagement,appParams);
             [stationManagement.BRid(stationManagement.activeIDs(indexNewVehicles),1),~] = BRreassignmentRandom(simParams.T1autonomousModeTTIs,simParams.T2autonomousModeTTIs,stationManagement.activeIDs(indexNewVehicles),simParams,timeManagement,sinrManagement,stationManagement,phyParams,appParams);
-            if simParams.technology==4 && (simParams.coexMethod==1 || simParams.coexMethod==2 || simParams.coexMethod==6)
+            if simParams.technology==constants.TECH_COEX_STD_INTERF && ismember(simParams.coexMethod, [constants.COEX_METHOD_A, constants.COEX_METHOD_B, constants.COEX_METHOD_F])
                 timeManagement.coex_timeNextSuperframe(stationManagement.activeIDs(indexNewVehicles)) = timeManagement.timeNow + ...
                     (simParams.coex_knownEndOfLTE(stationManagement.activeIDs(indexNewVehicles)) + simParams.coex_guardTimeAfter) * ones(length(stationManagement.activeIDs(indexNewVehicles)),1);
                 timeManagement.coex_timeNextSuperframe(stationManagement.activeIDs(indexNewVehicles)) = timeManagement.coex_timeNextSuperframe(stationManagement.activeIDs(indexNewVehicles)) +...
@@ -57,8 +57,8 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
         % Update stationManagement.resReselectionCounterCV2X for vehicles entering the scenario
         % a) LTE vehicles that enter or are blocked start with a counter set to 0
         % b) 11p vehicles are set to Inf
-        stationManagement.resReselectionCounterCV2X(logical((stationManagement.BRid(:,1)==-1) .* (stationManagement.vehicleState==100))) = 0;
-        stationManagement.resReselectionCounterCV2X(logical((stationManagement.BRid(:,1)==-1) .* (stationManagement.vehicleState~=100))) = Inf;
+        stationManagement.resReselectionCounterCV2X((stationManagement.BRid(:,1)==-1) & (stationManagement.vehicleState==constants.V_STATE_LTE_TXRX)) = 0;
+        stationManagement.resReselectionCounterCV2X((stationManagement.BRid(:,1)==-1) & (stationManagement.vehicleState~=constants.V_STATE_LTE_TXRX)) = Inf;
         % Reset stationManagement.errorSCImatrixLTE for new computation of correctly received SCIs
         %stationManagement.correctSCImatrixCV2X = zeros(length(stationManagement.activeIDsCV2X),length(stationManagement.activeIDsCV2X)-1);
     end
@@ -204,8 +204,8 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
 end
 
 % Generate time values of new vehicles entering the scenario
-timeManagement.timeNextPacket(stationManagement.activeIDs(indexNewVehicles)) = timeManagement.timeNow + appParams.allocationPeriod * rand(1,length(indexNewVehicles));
-if appParams.variabilityGenerationInterval==-1
+timeManagement.timeNextPacket(stationManagement.activeIDs(indexNewVehicles)) = round(timeManagement.timeNow + appParams.allocationPeriod * rand(1,length(indexNewVehicles)), 10);
+if appParams.variabilityGenerationInterval == constants.PACKET_GENERATION_ETSI_CAM
     timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDs(indexNewVehicles)) = generationPeriodFromSpeed(simValues.v(indexNewVehicles),appParams);
 else
     timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDs(indexNewVehicles)) = appParams.generationInterval - appParams.variabilityGenerationInterval/2 + appParams.variabilityGenerationInterval*rand(length(indexNewVehicles),1);
@@ -229,16 +229,9 @@ stationManagement.pckNextAttempt(stationManagement.activeIDsExit) = 1;
 stationManagement.pckTxOccurring(stationManagement.activeIDsExit) = 0;
 
 %% CBR settings for the new vehicles
-if simParams.cbrActive && (outParams.printCBR || (simParams.technology==4 && simParams.coexMethod~=0 && simParams.coex_slotManagement==2))
+if simParams.cbrActive && (outParams.printCBR || (simParams.technology==constants.TECH_COEX_STD_INTERF && simParams.coexMethod~=constants.COEX_METHOD_NON && simParams.coex_slotManagement==constants.COEX_SLOT_DYNAMIC))
     timeManagement.cbr11p_timeStartMeasInterval(stationManagement.activeIDs(indexNewVehicles)) = timeManagement.timeNow;
-    if simParams.technology==4 && simParams.coexMethod==1        
+    if simParams.technology==constants.TECH_COEX_STD_INTERF && simParams.coexMethod==constants.COEX_METHOD_A    
         timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDs(indexNewVehicles) .* timeManagement.coex_superframeThisIsLTEPart(stationManagement.activeIDs(indexNewVehicles))) = timeManagement.timeNow;
     end
 end
-
-% figure(1000)
-% plot(timeManagement.timeNow,positionManagement.XvehicleReal(idDebug1),'xb');
-% hold on
-% grid on
-% plot(timeManagement.timeNow,positionManagement.XvehicleReal(idDebug2),'*r');
-

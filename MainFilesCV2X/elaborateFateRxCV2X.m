@@ -68,7 +68,7 @@ for i = 1:Ntx
             resultingList(indexRaw,2) = IDvehicleRX;
             resultingList(indexRaw,3) = stationManagement.BRid(IDvehicleTXLTE(i),stationManagement.pckTxOccurring(IDvehicleTXLTE(i)));
             resultingList(indexRaw,4) = distance(indexVehicleTX(i),stationManagement.activeIDsCV2X==IDvehicleRX);
-            resultingList(indexRaw,5) = 0; % COLUMN 5=1 IS "ERROR"
+            resultingList(indexRaw,5) = 0; % COLUMN 5=0 IS "ERROR"
         elseif ~isinf(phyParams.Ksi) || isempty(find(IDvehicleTXLTE == IDvehicleRX, 1))
             % ERROR IN ATTEMPT (NOT THE LAST ONE) AND THE RECEIVER IS NOT
             % TRANSMITTING

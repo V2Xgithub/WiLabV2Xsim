@@ -3,7 +3,7 @@ function [timeManagement,stationManagement,sinrManagement,outputValues] = checkV
 
 % Variable used for easier reading
 activeIDs = stationManagement.activeIDs;
-if sum(stationManagement.vehicleState(activeIDs)~=100)==0
+if sum(stationManagement.vehicleState(activeIDs)~=constants.V_STATE_LTE_TXRX)==0
     return;
 end
 
@@ -12,15 +12,16 @@ end
 % They are those that:
 % 1) are currently receiving
 % 2) do not have the 'idFromWhichRx' currently transmitting
-ifReceivingFromThis = logical( (stationManagement.vehicleState(activeIDs)==9) .* ...
-    (stationManagement.vehicleState(sinrManagement.idFromWhichRx11p(activeIDs))~=3) );
+ifReceivingFromThis = (stationManagement.vehicleState(activeIDs)==constants.V_STATE_11P_RX) & ...
+    (stationManagement.vehicleState(sinrManagement.idFromWhichRx11p(activeIDs))~=constants.V_STATE_11P_TX);
 
 sinrManagement.idFromWhichRx11p(activeIDs(ifReceivingFromThis)) = activeIDs(ifReceivingFromThis);
-% Then, those that also sense the medium as idle will exit from state 9
+% Then, those that also sense the medium as idle will exit from state
+% 9(V_STATE_11P_RX)
 % 3) sense a total power below the threshold
 
 % an additional factor is used to block all 11p transmissions (used in coexistence methods)
-rxPowerTotNow_PartA = (sinrManagement.P_RX_MHz*phyParams.BwMHz) * (stationManagement.vehicleState(activeIDs)==3);
+rxPowerTotNow_PartA = (sinrManagement.P_RX_MHz*phyParams.BwMHz) * (stationManagement.vehicleState(activeIDs)==constants.V_STATE_11P_TX);
 rxPowerTotNow_PartB = sinrManagement.coex_InterfFromLTEto11p(activeIDs) + ...
                     sinrManagement.coex_virtualInterference(activeIDs);
 rxPowerTotNow = rxPowerTotNow_PartA + rxPowerTotNow_PartB;
@@ -33,16 +34,15 @@ ifStopReceiving = ifReceivingFromThis .* (rxPowerTotNow < phyParams.PrxSensNotSy
 % 'nSlotBackoff' contains a '-1', it means that a new backoff
 % should be started; otherwise, it was freezed and should be
 % resumed
-stationManagement.vehicleState(activeIDs((logical(ifStopReceiving .* (stationManagement.pckBuffer(activeIDs)==0))))) = 1;
-stationManagement.vehicleState(activeIDs((logical(ifStopReceiving .* (stationManagement.pckBuffer(activeIDs)>0))))) = 2;
-idVehicleVector=activeIDs(logical(ifStopReceiving .* (stationManagement.pckBuffer(activeIDs)>0)));
+stationManagement.vehicleState(activeIDs(ifStopReceiving & (stationManagement.pckBuffer(activeIDs)==0))) = constants.V_STATE_11P_IDLE;
+stationManagement.vehicleState(activeIDs(ifStopReceiving & (stationManagement.pckBuffer(activeIDs)>0))) = constants.V_STATE_11P_BACKOFF;
+idVehicleVector=activeIDs(ifStopReceiving & (stationManagement.pckBuffer(activeIDs)>0));
 for iVehicle = idVehicleVector'
     if stationManagement.nSlotBackoff11p(iVehicle)==-1
-        if simParams.technology~=4 || simParams.coexMethod~=3 || ~simParams.coexCmodifiedCW
+        if simParams.technology~=constants.TECH_COEX_STD_INTERF || simParams.coexMethod~=constants.COEX_METHOD_C || ~simParams.coexCmodifiedCW
             [stationManagement.nSlotBackoff11p(iVehicle), timeManagement.timeNextTxRx11p(iVehicle)] =...
                 startNewBackoff11p(timeManagement.timeNow,stationManagement.CW_11p(iVehicle),...
                 stationManagement.tAifs_11p(iVehicle),phyParams.tSlot);
-
         else
             relativeTime = timeManagement.timeNow-simParams.coex_superFlength*floor(timeManagement.timeNow/simParams.coex_superFlength);
             subframeIndex = floor(relativeTime/phyParams.Tsf);
@@ -77,7 +77,7 @@ end
 % Coexistence with dynamic slots
 % Coexistence, calculation of CBR_11p: LTE nodes check if
 % stopping detecting 11p signal
-if simParams.technology == 4 && simParams.coexMethod~=0 && simParams.coex_slotManagement==2 && simParams.coex_cbrTotVariant==2
+if simParams.technology == constants.TECH_COEX_STD_INTERF && simParams.coexMethod~=constants.COEX_METHOD_NON && simParams.coex_slotManagement==constants.COEX_SLOT_DYNAMIC && simParams.coex_cbrTotVariant==2
     % In this case, nodes must be LTE, already
     % detecting, receiving a power level below some threshold
     % 

@@ -18,9 +18,9 @@ end
 %% Inizialization of variables from phyParams and appParams
 %
 % N_RB_tot is the total bandwidth in terms of RBs
-if simParams.mode5G==0
+if simParams.mode5G == constants.MODE_LTE
     N_RB_tot = phyParams.RBsSubframe/2;
-elseif simParams.mode5G==1
+elseif simParams.mode5G == constants.MODE_5G
     N_RB_tot = phyParams.RBsSubframe/(phyParams.Tsf/phyParams.Tslot_NR);
 else
     error("wrong selection of mode5G")
@@ -39,7 +39,7 @@ nBeaconPerSubframe = appParams.NbeaconsF;
 % Number of subchannles, adopted MCS, adjacent/non-adjacent
 % allocation
 nSubchannels = phyParams.NsubchannelsFrequency;
-if simParams.mode5G==0
+if simParams.mode5G == constants.MODE_LTE
     MCS = phyParams.MCS_LTE;
     ifAdjacent = phyParams.ifAdjacent;
 else	%5G, local variables for easier reading
@@ -51,7 +51,7 @@ end
 %%
 % Setting of the parameters
 % Parameters W,X,Y,Z
-if simParams.mode5G==0
+if simParams.mode5G == constants.MODE_LTE
     % Parameters W,X,Y,Z
 	W = 3;
 	X = 6;
@@ -84,7 +84,7 @@ else %5G
         % 64 Q-AM
         EVM = 0.08;
     else
-    error('MCS in IBEcalculation() not valid. MCS must be in 0-28');
+        error('MCS in IBEcalculation() not valid. MCS must be in 0-28');
     end
 end
 
@@ -116,7 +116,7 @@ stopRB = -1*ones(1,nBeaconPerSubframe);
 %     hold on
 % end
 %%%% END PLOT1
-if simParams.mode5G==0
+if simParams.mode5G == constants.MODE_LTE
     startRB(1) = nSubchannels*2*(1-(ifAdjacent))+2*(ifAdjacent)+1;
     %stopRB(1) = nSubchannels*2*(1-(ifAdjacent))+2*(ifAdjacent)+N_RB_beacon;
     stopRB(1) = startRB(1)+(phyParams.NsubchannelsBeacon*phyParams.sizeSubchannel)-(2*ifAdjacent)-1;
@@ -139,7 +139,7 @@ for i=2:nBeaconPerSubframe
             startRB(i) = stopRB(i-1) +1;
         end
     end
-    if simParams.mode5G==0
+    if simParams.mode5G == constants.MODE_LTE
 	    stopRB(i) = startRB(i)+(phyParams.NsubchannelsBeacon*phyParams.sizeSubchannel)-(2*ifAdjacent)-1;
     else %5G
 	    stopRB(i) = startRB(i)+(phyParams.NsubchannelsBeacon*phyParams.sizeSubchannel) -1;
@@ -251,7 +251,7 @@ end
 % end
 %%%% STOP PLOT1
 
-if simParams.mode5G == 1
+if simParams.mode5G == constants.MODE_5G
     % The IBE for the control of 5G is approximated with the one for Data
 	IBEmatrixControl = IBEmatrixData;
 	return;

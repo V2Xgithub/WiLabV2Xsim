@@ -20,8 +20,8 @@ end
 
 % If coexistence, I have also to update the average interference from 11p nodes
 % to LTE nodes
-if simParams.technology == 4
-    sinrManagement.coex_averageSFinterfFrom11pToLTE = (sinrManagement.coex_averageSFinterfFrom11pToLTE .* (sinrManagement.instantThisPstartedCV2X-sinrManagement.instantTheSINRaverageStartedCV2X) + ... 
+if simParams.technology == constants.TECH_COEX_STD_INTERF
+    sinrManagement.coex_averageTTIinterfFrom11pToLTE = (sinrManagement.coex_averageTTIinterfFrom11pToLTE .* (sinrManagement.instantThisPstartedCV2X-sinrManagement.instantTheSINRaverageStartedCV2X) + ... 
         sinrManagement.coex_currentInterfFrom11pToLTE .* (timeNow-sinrManagement.instantThisPstartedCV2X)) ./ (timeNow-sinrManagement.instantTheSINRaverageStartedCV2X);
 end
 
@@ -29,7 +29,7 @@ if ~isempty(transmittingIDsCV2X)
     % Average interference from 11p nodes, if present (otherwise will emain zero)
     neighborsInterf11p = zeros(length(transmittingIDsCV2X),length(sinrManagement.neighPowerUsefulCV2X(1,:)));
     
-    if simParams.technology == 4
+    if simParams.technology == constants.TECH_COEX_STD_INTERF
         % This part converts the coex_averageSFinterfFrom11pToLTE
         % to stationManagement.neighborsIDLTE
         % TODO - could be optimized
@@ -38,7 +38,7 @@ if ~isempty(transmittingIDsCV2X)
                 if stationManagement.neighborsIDLTE(stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(iLTEtx),iInterf)<=0
                     break;
                 end
-                neighborsInterf11p(iLTEtx,iInterf) = sinrManagement.coex_averageSFinterfFrom11pToLTE(stationManagement.neighborsIDLTE(stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(iLTEtx),iInterf));
+                neighborsInterf11p(iLTEtx,iInterf) = sinrManagement.coex_averageTTIinterfFrom11pToLTE(stationManagement.neighborsIDLTE(stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(iLTEtx),iInterf));
             end
         end
     end

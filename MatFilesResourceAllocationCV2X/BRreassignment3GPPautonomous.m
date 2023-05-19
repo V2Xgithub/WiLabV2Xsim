@@ -20,6 +20,7 @@ Nbeacons = NbeaconsT*NbeaconsF;
 % Calculate current T within the NbeaconsT
 currentT = mod(timeManagement.elapsedTime_TTIs-1,NbeaconsT)+1; 
 
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% FIRST PART is checking the stations that need reselection
 
@@ -31,36 +32,13 @@ activeIDsCV2X = stationManagement.activeIDsCV2X;
 % 2: check if (a) the reselection counter reaches one and (b) reselection is
 % commanded depending on p_keep
 
-%if timeManagement.timeNow>7.00292
-%    STOPHERE = 0;
-%end
 
 %% 1 - check reallocation commanded due to non available resource
-%% Until version 5.4.16
-% identify those vehicles having a new packet and no scheduled resource in
-% the next T1-T2 interval
-% subframeNextResource = ceil(stationManagement.BRid(:,1)/appParams.NbeaconsF);
-% subframesToNextAlloc = (subframeNextResource>currentT).*(subframeNextResource-currentT)+(subframeNextResource<=currentT).*(subframeNextResource+appParams.NbeaconsT-currentT);
-% scheduledID_PHY = activeIDsCV2X(timeManagement.timeLastPacket(activeIDsCV2X) > timeManagement.timeNow-phyParams.Tsf-1e-8 & (subframesToNextAlloc(activeIDsCV2X) < simParams.subframeT1Mode4 | subframesToNextAlloc(activeIDsCV2X)>simParams.subframeT2Mode4));
-% scheduledID_PHY(timeManagement.timeLastPacket(scheduledID_PHY)<0) = [];
-%% From version 5.4.16
-% identify those vehicles having a new packet at its first attempt and no scheduled resource in
-% the next T1-T2 interval
-% %% Focusing only on first transmission (not replicas)
-% subframeNextResource = zeros(length(stationManagement.BRid(:,1)),phyParams.cv2xNumberOfReplicasMax);
-% for j=1:phyParams.cv2xNumberOfReplicasMax
-%     subframeNextResource(:,j) = ceil(stationManagement.BRid(:,j)/appParams.NbeaconsF);
-% end
-% subframesToNextAlloc = (subframeNextResource(:,1)>currentT).*(subframeNextResource(:,1)-currentT)+(subframeNextResource(:,1)<=currentT).*(subframeNextResource(:,1)+appParams.NbeaconsT-currentT);
-% scheduledID_PHY = activeIDsCV2X(timeManagement.timeLastPacket(activeIDsCV2X) > timeManagement.timeNow-phyParams.Tsf-1e-8 ...
-%     & (subframesToNextAlloc(activeIDsCV2X,1) < simParams.subframeT1Mode4 | subframesToNextAlloc(activeIDsCV2X,1)>simParams.subframeT2Mode4));
-% 
-% scheduledID_PHY(timeManagement.timeLastPacket(scheduledID_PHY)<0) = [];
-% scheduledID_PHY(stationManagement.pckNextAttempt(scheduledID_PHY) > 1) = [];
 %% Focusing on all transmissions (including replicas)
 subframeNextResource = ceil(stationManagement.BRid/appParams.NbeaconsF);
 subframesToNextAlloc = zeros(length(stationManagement.BRid(:,1)),phyParams.cv2xNumberOfReplicasMax);
 allConditionsMet = false(length(activeIDsCV2X),phyParams.cv2xNumberOfReplicasMax); 
+resourceReEvaluationConditionMet = false(length(activeIDsCV2X),1); 
 for j=1:phyParams.cv2xNumberOfReplicasMax    
     subframesToNextAlloc(:,j) = (subframeNextResource(:,j)>currentT).*(subframeNextResource(:,j)-currentT)+(subframeNextResource(:,j)<=currentT).*(subframeNextResource(:,j)+appParams.NbeaconsT-currentT);
     % A means this replica ('j') is allowed by 'cv2xNumberOfReplicas'
@@ -69,55 +47,52 @@ for j=1:phyParams.cv2xNumberOfReplicasMax
     B = stationManagement.BRid(activeIDsCV2X,j)>0;
     % C means that the resource is ouside T1,T2
     C = (subframesToNextAlloc(activeIDsCV2X,j) < simParams.T1autonomousModeTTIs | subframesToNextAlloc(activeIDsCV2X,j)>simParams.T2autonomousModeTTIs);
-    % D means that resource of replica j comes after that of replica j-1
-    % (not allowed and reselection commanded)
+    % D means that resource of replica j comes after that of replica j-1 (not allowed and reselection commanded)
     if j>1
         D = subframesToNextAlloc(activeIDsCV2X,j) < subframesToNextAlloc(activeIDsCV2X,j-1);
     else
         D = false;
+        % E means that the user need to perform resource re-evaluation
+        % debug for coexistence scenario
+        E= subframesToNextAlloc(activeIDsCV2X,1)==3 & stationManagement.newDataIndicator(activeIDsCV2X) & stationManagement.pckBuffer(activeIDsCV2X) *(simParams.resourceReEvaluation);
+        resourceReEvaluationConditionMet = A & B & E ;
     end
-    allConditionsMet(:,j) = A & B & (C | D) ;
-    %scheduledID_PHYmatrix(:,j) = activeIDsCV2X(timeManagement.timeLastPacket(activeIDsCV2X) > timeManagement.timeNow-phyParams.Tsf-1e-8 ...
-    %    & stationManagement.cv2xNumberOfReplicas(activeIDsCV2X) >= j ...
-    %    & stationManagement.BRid(activeIDsCV2X,j)~=-1 ...
-    %    & (subframesToNextAlloc(activeIDsCV2X,j) < simParams.subframeT1Mode4 | subframesToNextAlloc(activeIDsCV2X,j)>simParams.subframeT2Mode4));
-end
-% A means one packet was generated in this slot
-hasNewPacketThisTbeacon = (timeManagement.timeLastPacket(activeIDsCV2X) > (timeManagement.timeNow-phyParams.TTI-1e-8));
 
-% The operand 'any' implies that if any replica is outside T1, T2, then a
-% reallocation is performed
+    allConditionsMet(:,j) = A & B & (C | D);
+end
+
+
+% hasNewPacketThisTbeacon checks if any new packets were generated in this slot
+hasNewPacketThisTbeacon = (timeManagement.timeLastPacket(activeIDsCV2X) > (timeManagement.timeNow-phyParams.TTI-1e-8));
+hasFirstResourceThisTbeacon = (subframeNextResource(activeIDsCV2X,1)==currentT);
+hasFirstTransmissionThisSlot= hasFirstResourceThisTbeacon & stationManagement.hasTransmissionThisSlot;
+
+% The operand 'any' implies that if any replica is outside T1, T2, then a reallocation is performed
 scheduledID_PHY = activeIDsCV2X(hasNewPacketThisTbeacon & any(allConditionsMet,2));
 scheduledID_PHY(timeManagement.timeLastPacket(scheduledID_PHY)<0) = [];
-
 % Following line for debug purposes - allows to remove PHY commanded reallocations
 %scheduledID_PHY = [];
+
+% When resource re-evaluation is active scheduledID_ReEval contains the IDs of vehicles performing the re-evaluation.
+% The re-evaluation is performed at time t-T3 before the transmission in any UN-RESERVED resource. 
+% The re-evaluation is performed before the first transmission.
+% It also evaluates if any of the future retransmissions has been reserved by another user.
+% Later possible collisions on the retransmissions are not checked.
+%% TODO: re-evaluation is always performed 3 slots before transmission: it should be parametric -> define T3 in seconds then converted in slots
+scheduledID_ReEval = activeIDsCV2X(resourceReEvaluationConditionMet);
+scheduledID_ReEval(timeManagement.timeLastPacket(scheduledID_ReEval)<0) = []; % re-evaluation initially disabled
+
+
 
 %% 2a - reselection counter to 1
 % Evaluates which vehicles have the counter reaching one
 
-%% Until version 5.4.16
-% LTE vehicles that have a resource allocated in this subframe
-%haveResourceThisTbeacon(activeIDsCV2X) = subframeNextResource(activeIDsCV2X)==currentT;
-%% From version 5.4.16
-% % LTE vehicles that have the resource allocated for the last replica in this subframe
-% haveResourceOfLastReplicaThisTbeacon = false(length(stationManagement.BRid(:,1)),1);
-% for j=1:length(activeIDsCV2X)
-%     if subframeNextResource(activeIDsCV2X(j),stationManagement.cv2xNumberOfReplicas(activeIDsCV2X(j))) == currentT
-%         haveResourceOfLastReplicaThisTbeacon(activeIDsCV2X(j)) = true;
-%     end
-% end
-%% Modified into
-hasFirstResourceThisTbeacon = (subframeNextResource(activeIDsCV2X,1)==currentT);
-hasFirstTransmissionThisSlot = hasFirstResourceThisTbeacon & stationManagement.hasTransmissionThisSlot;
-
-% timeManagement.timeOfResourceAllocationLTE is for possible future use
-%timeManagement.timeOfResourceAllocationLTE(haveResourceThisTbeacon>0) = timeManagement.timeOfResourceAllocationLTE(haveResourceThisTbeacon>0) + appParams.averageTbeacon;
-
 % Update resReselectionCounter
 % Reduce the counter by one to all UEs that have the first packet TRANSMITTED in this slot
-%stationManagement.resReselectionCounterCV2X(activeIDsCV2X) = stationManagement.resReselectionCounterCV2X(activeIDsCV2X)-haveResourceOfLastReplicaThisTbeacon(activeIDsCV2X);
 stationManagement.resReselectionCounterCV2X(activeIDsCV2X) = stationManagement.resReselectionCounterCV2X(activeIDsCV2X)-hasFirstTransmissionThisSlot;
+
+% reset newDataIndicator for user who transmitted the first initial transmission
+stationManagement.newDataIndicator(activeIDsCV2X(hasFirstTransmissionThisSlot)) = 0;
 
 %% 2b - p_keep check
 % Vehicles that have reached RC=1 need to evaluate if they will perform the reselection. 
@@ -128,8 +103,7 @@ stationManagement.resReselectionCounterCV2X(activeIDsCV2X) = stationManagement.r
 
 
 % Detects the UEs transmitting in this slot whose RC has reached 1
-keepCheck_MAC = activeIDsCV2X( hasFirstTransmissionThisSlot ...
-    & (stationManagement.resReselectionCounterCV2X(activeIDsCV2X)==1));
+keepCheck_MAC = activeIDsCV2X( hasFirstTransmissionThisSlot & (stationManagement.resReselectionCounterCV2X(activeIDsCV2X)==1));
 
 updateCounter_MAC =[];
 if simParams.probResKeep>0
@@ -137,90 +111,90 @@ if simParams.probResKeep>0
     % Update the vehicles which don't perform reselection and update the RC
     updateCounter_MAC = keepCheck_MAC(keepRand < simParams.probResKeep);
 end
-% Update the RC for those UEs that do not perform reselection due to pkeep
-stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = stationManagement.resReselectionCounterCV2X(updateCounter_MAC) + (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(updateCounter_MAC))';
-% stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = stationManagement.resReselectionCounterCV2X(updateCounter_MAC)*(~simParams.dynamicScheduling)+simParams.dynamicScheduling;
-% stationManagement.resReselectionCounterCV2X(updateCounter_MAC) = (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(updateCounter_MAC));
+
+if simParams.FDalgorithm==1
+    % Increase the nSPS counter by one to all UEs that have a packet transmitted in this slot
+    stationManagement.nSPS(activeIDsCV2X) = stationManagement.nSPS(activeIDsCV2X)+hasFirstTransmissionThisSlot;
+    % Evaluates the individual Pkeep according to FD-alg1
+    stationManagement.probResKeep(keepCheck_MAC)=1-stationManagement.FDcounter(keepCheck_MAC)./stationManagement.nSPS(keepCheck_MAC);
+%     stationManagement.probResKeep(keepCheck_MAC(stationManagement.probResKeep(keepCheck_MAC)>0.8))=0.8; % modification: sets pk adaptive to max 0.8
+    keepRand = rand(1,length(keepCheck_MAC));
+    updateCounter_MAC =[];
+    updateCounter_MAC = keepCheck_MAC(keepRand < stationManagement.probResKeep(keepCheck_MAC)');
+end
 
 
 % Sensed power by transmitting nodes in their BR
-if phyParams.Ksi < Inf && phyParams.testSelfIRemove < Inf
-    [stationManagement] = FDaidedReselection(stationManagement,phyParams,appParams,currentT);
+if phyParams.Ksi < Inf && phyParams.PDelta < Inf
+    [stationManagement] = FDaidedReselection(currentT,stationManagement,simParams.FDalgorithm,phyParams,NbeaconsF,hasNewPacketThisTbeacon);
 end
 
 % Detects the UEs that need to perform reselection
 % The reselection is triggered when RC=0 and the UE has a new packet generated
-scheduledID_MAC = activeIDsCV2X( hasNewPacketThisTbeacon ...
-    & (stationManagement.resReselectionCounterCV2X(activeIDsCV2X)<=0));
+scheduledID_MAC = activeIDsCV2X( hasNewPacketThisTbeacon & (stationManagement.resReselectionCounterCV2X(activeIDsCV2X)<=0));
 
 
-% if ~isempty(scheduledID_MAC)
-%    STOPHERE=0;
-% end
 
-% FOR DEBUG
-% fid = fopen('temp.xls','a');
-% for i=1:length(resReselectionCounter)
-%     fprintf(fid,'%d\t',resReselectionCounter(i));
-% end
-% fprintf(fid,'\n');
-% fclose(fid);
+%% Calculate and Restart the reselection counter
+% 1. For user with the counter reaching zero
+% 2. For users with enforced reselection
+% 3. For user that need to update the reselection counter instead of reselecting
+needReselectionCounterRestart = [scheduledID_PHY;scheduledID_MAC;updateCounter_MAC]; % union removed to speed up coding, there might be repetitions but it's faster
+stationManagement.resReselectionCounterCV2X(needReselectionCounterRestart) = (~simParams.dynamicScheduling)*((simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(needReselectionCounterRestart)))'++simParams.dynamicScheduling;
 
-%% For the nodes with the counter reaching zero or with enforced reselection restart the reselection counter
-% Calculate new resReselectionCounter for scheduledID
-needReselectionCounterRestart = union(scheduledID_PHY,scheduledID_MAC);
-stationManagement.resReselectionCounterCV2X(needReselectionCounterRestart) = (simParams.minRandValueMode4-1) + randi((simParams.maxRandValueMode4-simParams.minRandValueMode4)+1,1,length(needReselectionCounterRestart));
-stationManagement.resReselectionCounterCV2X(needReselectionCounterRestart) = stationManagement.resReselectionCounterCV2X(needReselectionCounterRestart)*(~simParams.dynamicScheduling)+simParams.dynamicScheduling;
+
+if simParams.FDalgorithm==1 %adaptive pKeep
+    % Reset the FD counter for vehicles who perform reselection
+    stationManagement.FDcounter(needReselectionCounterRestart) = 0;
+    stationManagement.nSPS(needReselectionCounterRestart) = 0;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% SECOND PART is performing the reselection
 % Merge the scheduled IDs
-scheduledID = union(scheduledID_PHY,scheduledID_MAC);
+scheduledID_PHY_MAC = unique(cat(2, [scheduledID_PHY;scheduledID_MAC]));
+scheduledID = unique(cat(2, [scheduledID_PHY_MAC;scheduledID_ReEval])); % replace union for improved speed
 Nscheduled = length(scheduledID);
 
 % Reset number of successfully reassigned vehicles
 Nreassign = 0;
 
 for indexSensingV = 1:Nscheduled
-    if simParams.mode5G==0 % 4G procedure
-        % Select the sensing matrix only for those vehicles that perform reallocation
-        % and calculate the average of the measured power over the sensing window
-        sensingMatrixScheduled = sum(stationManagement.sensingMatrixCV2X(:,:,scheduledID(indexSensingV)),1)/length(stationManagement.sensingMatrixCV2X(:,1,1));
+
+    % Here saves the original BR
+    BRidOriginal=stationManagement.BRid(scheduledID(indexSensingV),:);
+
+    % Select the sensing matrix only for those vehicles that perform reallocation
+    if simParams.averageSensingActive==true % 4G procedure
+        % Calculate the average of the measured power over the sensing window
+        sensingMatrixScheduled = sum(stationManagement.sensingMatrixCV2X(:,:,scheduledID(indexSensingV)),1)/size(stationManagement.sensingMatrixCV2X, 1);
         % "sensingMatrixScheduled" is a '1 x NbeaconIntervals' vector
-    else%if simParams.mode5G==1
-        % Select the sensing matrix only for those vehicles that perform reallocation
-        % Selects only the first row, which includes the slots relative to
-        % the last 'averageTbeacon'
-        % In 5G the average process is removed and the senging is
-        % performed only on the basis of the decoded SCIs.
-        if simParams.avgRSRPin5G  % only for related papers
-            sensingMatrixScheduled = sum(stationManagement.sensingMatrixCV2X(:,:,scheduledID(indexSensingV)),1)/length(stationManagement.sensingMatrixCV2X(:,1,1));
-        else  % normal condition
-            sensingMatrixScheduled = stationManagement.sensingMatrixCV2X(1,:,scheduledID(indexSensingV));
-        end
+    else %if simParams.mode5G==1 || simParams.averageSensingActive==false
+        % Selects only the first row, which includes the slots relative to the last 'averageTbeacon'
+        % In 5G the average process is removed and the senging is performed only on the basis of the decoded SCIs.
+        sensingMatrixScheduled = stationManagement.sensingMatrixCV2X(1,:,scheduledID(indexSensingV));
     end
 
     % With intrafrequency coexistence, any coexistence method
-    % (simParams.coexMethod==1,2,3,6) might forbid LTE using some subframes
-    if simParams.technology==4 && simParams.coexMethod~=0
-        %if simParams.coexMethod==1 || simParams.coexMethod==2 || simParams.coexMethod==3 || simParams.coexMethod==6
-        %MBest = ceil(Nbeacons * (sinrManagement.coex_NtsLTE(activeIDsCV2X(indexSensingV))/simParams.coex_superframeSF) * simParams.ratioSelectedMode4);
-        for block = 1:ceil(NbeaconsT/simParams.coex_superframeSF)
+    % (simParams.coexMethod==1,2,3,6) might forbid LTE using some TTI,
+    % set non LTE TTI as inf
+    if simParams.technology==constants.TECH_COEX_STD_INTERF && simParams.coexMethod~=constants.COEX_METHOD_NON
+        for block = 1:ceil(NbeaconsT/simParams.coex_superframeTTI)
             sensingMatrixScheduled(...
-                (block-1)*simParams.coex_superframeSF*NbeaconsF + ...
-                ((((sinrManagement.coex_NtsLTE(activeIDsCV2X(indexSensingV)))*NbeaconsF)+1):(simParams.coex_superframeSF*NbeaconsF))...
+                (block-1)*simParams.coex_superframeTTI*NbeaconsF + ...
+                ((sinrManagement.coex_NtotTTILTE(scheduledID(indexSensingV))*NbeaconsF+1):(simParams.coex_superframeTTI*NbeaconsF))...
                 ) = inf;
         end            
     end
 
-    % Check T1 and T2 and in case set the subframes that are not acceptable to
+
+    % Check T1 and T2 and in case set the subframes that are not acceptable to inf
     % Since the currentT can be at any point of beacon resource matrix,
     % the calculations depend on where T1 and T2 are placed
-    % Note: phyParams.TsfGap is needed in the calculation because this
-    % function is performed before the gap and not at the end of the
-    % subframe
+    % Since version 6.2 it considers startingT which is the time at which
+    % the packet is/was generated, as re-evaluation is possible
     timeStartingT = timeManagement.timeLastPacket(scheduledID(indexSensingV));
-    startingT = mod(floor((timeStartingT+phyParams.TsfGap+1e-7)/phyParams.TTI),NbeaconsT)+1; 
+    startingT = mod(floor((timeStartingT)/phyParams.TTI),NbeaconsT)+1; 
     % IF Both T1 and T2 are within this beacon period
     if (startingT+simParams.T2autonomousModeTTIs+1)<=NbeaconsT
         sensingMatrixScheduled([1:((startingT+simParams.T1autonomousModeTTIs-1)*NbeaconsF),((startingT+simParams.T2autonomousModeTTIs)*NbeaconsF+1):Nbeacons]) = inf;
@@ -232,17 +206,29 @@ for indexSensingV = 1:Nscheduled
         sensingMatrixScheduled(((startingT+simParams.T2autonomousModeTTIs-NbeaconsT)*NbeaconsF+1):((startingT+simParams.T1autonomousModeTTIs-1)*NbeaconsF)) = inf;
     end 
 
-%     figure(1)
-%     hold off
-%     bar(isinf(sensingMatrixScheduled))
-%     hold on
+    % Conditions for re-evaluation
+    % When re-evaluation is considered currentT and startingT can be different
+    % T1 and T2 must be considered with respect to the time at which the re-evaluated packet WAS generated
+    %% NB: These conditions might be compressed and included with the other
+    if currentT>startingT % Both currentT and startingT within this beacon period
+        sensingMatrixScheduled((startingT*NbeaconsF):(currentT*NbeaconsF)) = inf;
+    elseif currentT<startingT % currentT is in the next beacon period
+        sensingMatrixScheduled([1:(currentT*NbeaconsF),(startingT*NbeaconsF):Nbeacons]) = inf;
+    end
 
     % The best 20% (parameter that can be changed) is selected inside the pool as in TS 36.213
+    % The pool of available resources is obtained as those that are not set to infty
+
     % The pool of available resources is obtained as those that are not set
-    % to infty
-    nPossibleAllocations = sum(isfinite(sensingMatrixScheduled));
-    MBest = ceil(nPossibleAllocations * simParams.ratioSelectedMode4);
+    % to infty -> resources discard due to HD and due to T1,T2 costraints
+    % Then, the resource above threshold are discarded to build the selection set
+    % The remaining resources must be at least X% of the nPossibleAllocations
+    nPossibleAllocations = sum(isfinite(sensingMatrixScheduled));                   % available allocations excluding HD and resources outside T1-T2
+    MBest = ceil(nPossibleAllocations * simParams.ratioSelectedAutonomousMode);     % minimum number of resources that must be in the selection set
     if MBest<=0
+        if simParams.resourceReEvaluation == true
+            continue    % when resource re-eval is active, if the re-eval is performed on a resource at the end of the T1-T2, there is no resource available -> maintains current transmission
+        end
         error('Mbest must be a positive scalar (it is %d)',MBest);
     end
 
@@ -251,8 +237,7 @@ for indexSensingV = 1:Nscheduled
 
     % Create random permutation of the column indexes of sensingMatrix in
     % order to avoid the ascending order on the indexes of cells with the
-    % same value (sort effect) -> minimize the probability of choosing the same
-    % resource
+    % same value (sort effect) -> minimize the probability of choosing the same resource
     rpMatrix = randperm(Nbeacons);
 
     % Build matrix made of random permutations of the column indexes
@@ -260,17 +245,16 @@ for indexSensingV = 1:Nscheduled
     sensingMatrixPerm = sensingMatrixScheduled(rpMatrix);
     knownUsedMatrixPerm = knownUsedMatrixScheduled(rpMatrix);
 
-    % Now perform sorting and relocation taking into account the threshold on RSRP
+    % Remove resources from the selection set taking into account the threshold on RSRP
     % Please note that the sensed power is on a per MHz resource basis,
-    % whereas simParams.powerThresholdAutonomous is on a resource element (15 kHz) basis, 
-    % The cycle is stopped internally; a max of 100 is used to avoid
-    % infinite loops in case of bugs
-    powerThreshold = simParams.powerThresholdAutonomous;
+    % whereas simParams.powerThresholdAutonomous is on a resource element (15 kHz) basis
+    % The remaining resources must be at least X% of the nPossibleAllocations
+    % The cycle is stopped internally; a max of 100 is used to avoid infinite loops in case of bugs
+    powerThreshold = simParams.powerThresholdAutonomous;    % threshold for excluding resources
     while powerThreshold < 100
         % If the number of acceptable BRs is lower than MBest,
         % powerThreshold is increased by 3 dB
         usableBRs = ((sensingMatrixPerm*0.015)<powerThreshold) | ((sensingMatrixPerm<inf) & (knownUsedMatrixPerm<1));
-
         if sum(usableBRs) < MBest
             powerThreshold = powerThreshold * 2;
         else
@@ -287,16 +271,11 @@ for indexSensingV = 1:Nscheduled
     % Reorder bestBRid matrix
     bestBR = rpMatrix(bestBRPerm);
     
-    % 5G procedure mode2 which admits all resources that are not HD or
-    % reserved with an RSRP level above threshold
     % L2 is removed in mode2
-    if simParams.mode5G==1
-        % Find number of remaining resources
-        %
-        %testMBest_5G is left to test the possibility to reintroduce L2 
-        % if testMBest_5G is removed, set MBest to sum(usableBRs)
-        MBest = ceil(nPossibleAllocations * simParams.testMBest_5G);
-        MBest=min(MBest,sum(usableBRs));
+    % 5G mode2 admits all resources that are not HD or reserved with an
+    % RSRP level above threshold, or outside T1-T2. LTE takes the best X%
+    if simParams.L2active==false
+        MBest=sum(usableBRs);
     end
     
     % Keep the best M canditates
@@ -305,8 +284,24 @@ for indexSensingV = 1:Nscheduled
     % Reassign, selecting a random BR among the bestBR
     BRindex = randi(MBest);
     BR = bestBR(BRindex);
-    printDebugReallocation(timeManagement.timeNow,scheduledID(indexSensingV),positionManagement.XvehicleReal(stationManagement.activeIDs==scheduledID(indexSensingV)),'reall',BR,outParams);
+%     printDebugReallocation(timeManagement.timeNow,scheduledID(indexSensingV),positionManagement.XvehicleReal(stationManagement.activeIDs==scheduledID(indexSensingV)),'reall',BR,outParams);
+    
+    % if reEvaluation is active and only one resource need to be reselected, restores the other resource(s)
+    % if more than 2 retransmission get developed -> this must be changed
+    if simParams.resourceReEvaluation == true
+        if sum((scheduledID_ReEval==scheduledID(indexSensingV))==1)
+            BRtoChange=~ismember(BRidOriginal,bestBR);
+            if sum(BRtoChange)==0
+                continue   % exit as both resources are still available
+            elseif BRtoChange(1,1)==0
+                BR=BRidOriginal(1,1);   % maintains first resource
+            elseif BRtoChange(1,2)==0
+                BR=BRidOriginal(1,2);   % maintains second resource
+            end
+        end
+    end
 
+    % Assign the new selected resource
     stationManagement.BRid(scheduledID(indexSensingV),1)=BR;
     Nreassign = Nreassign + 1;
     
@@ -318,19 +313,16 @@ for indexSensingV = 1:Nscheduled
         if phyParams.cv2xNumberOfReplicasMax>2
             error('HARQ with more than 1 retransmission not implemented');
         end
+
+        if simParams.FDalgorithm==5 || simParams.FDalgorithm==6
+            continue
+        end
         % INPUT:
         % currentT is the current subframe in resource grid
         % bestBR is the set of best resources passed to MAC
         % BR is the resource selected for the first transmission
         % THEN: add Nbeacons to all resources before current
-% plot(bestBR,'.b')  
-% hold on
-% ylim([0 300]);
-% plot([0 length(bestBR)],[BR BR], '-b');
-% plot([0 length(bestBR)],[BR+15*NbeaconsF BR+15*NbeaconsF], ':k');
-% plot([0 length(bestBR)],[BR-15*NbeaconsF BR-15*NbeaconsF], ':k');
-% plot([0 length(bestBR)],[(currentT-1)*NbeaconsF+1 (currentT-1)*NbeaconsF+1], '--r');
-% plot([0 length(bestBR)],[(currentT-1)*NbeaconsF+3 (currentT-1)*NbeaconsF+3], '--r');
+
         bestSubframe = ceil(bestBR/NbeaconsF);
         bestSubframe(bestSubframe<=currentT) = bestSubframe(bestSubframe<=currentT) + NbeaconsT;
         % identify subframe of BR
@@ -338,29 +330,29 @@ for indexSensingV = 1:Nscheduled
         subframe_BR(subframe_BR<=currentT) = subframe_BR + NbeaconsT;
         % remove resources in subframe_x
         bestBR(bestSubframe==subframe_BR) = -1;
-% plot(bestBR,'*b')  
+
         % remove resources before Now+T1
         bestBR(bestSubframe<currentT+simParams.T1autonomousModeTTIs) = -1;
-% plot(bestBR,'*r')  
-        if simParams.mode5G==0
+
+        if simParams.mode5G == constants.MODE_LTE
             % remove resources before x-15
             bestBR(bestSubframe<subframe_BR-15) = -1;
-        else%if simParams.mode5G==1
+        else%if simParams.mode5G==constants.MODE_5G
             % remove resources before x-31
             bestBR(bestSubframe<subframe_BR-31) = -1;
         end
-% plot(bestBR,'pb')  
+ 
         % remove resources after Now+T2
         bestBR(bestSubframe>currentT+simParams.T2autonomousModeTTIs) = -1;
-% plot(bestBR,'pr')  
-        if simParams.mode5G==0
+
+        if simParams.mode5G==constants.MODE_LTE
             % remove resources after x+15
             bestBR(bestSubframe>subframe_BR+15) = -1;
-        else% if simParams.mode5G==1
+        else% if simParams.mode5G==constants.MODE_5G
             % remove resources after x+31
             bestBR(bestSubframe>subframe_BR+31) = -1;
         end
-% plot(bestBR,'pk') 
+
 
         bestBR(bestBR==-1) = [];
 
@@ -381,17 +373,26 @@ for indexSensingV = 1:Nscheduled
             
         stationManagement.BRid(scheduledID(indexSensingV),2) = BR2;
     end
-
-    %if scheduledID(indexSensingV)==39
-    %    fp = fopen('Temp.txt','a');
-    %    fprintf(fp,'T=%f: reselection, BR1=%d + BR2=%d\n',timeManagement.timeNow,BR,BR2);
-    %    fclose(fp);
-    %end
-    
-    printDebugBRofMode4(timeManagement,scheduledID(indexSensingV),BR,outParams);
 end
 
-
-
+%% Release 16 3GPP resource re-evaluation
+% The vehicles who selected new resources need to set the flag NEW DATA INDICATOR
+% Vehicles who performed the re-evaluation do not need to set it, as it is
+% already at 1, and it will be decremented after the first transmission
+stationManagement.newDataIndicator(activeIDsCV2X(scheduledID_PHY_MAC)) = 1;
+% the vehicles who DID NOT transmit in an allocated resource need to set the flag NEW DATA INDICATOR
+if simParams.reEvalAfterEmptyResource==true
+    % the product between hasFirstResourceThisTbeacon and ~stationManagement.hasTransmissionThisSlot returns one only as a
+    % consequence to an allocated resource without a packet to transmit
+    stationManagement.newDataIndicator(activeIDsCV2X(hasFirstResourceThisTbeacon & (~stationManagement.hasTransmissionThisSlot))) = 1;
 end
 
+% FD function call
+if simParams.FDalgorithm==4
+    [stationManagement,Nreassign] = FDsingleRetransmissionReselection(timeManagement,stationManagement,positionManagement,simParams,phyParams,outParams,Nreassign,hasNewPacketThisTbeacon,scheduledID,appParams);
+end
+% FD function call
+if simParams.FDalgorithm~= 0 && (simParams.FDalgorithm==5 || simParams.FDalgorithm==6 || simParams.FDalgorithm==7 || simParams.FDalgorithm==8)  % ismember(simParams.FDalgorithm,[5,6,7,8]) replaced for speed
+    [stationManagement] = FDtriggeredRetransmission(timeManagement,stationManagement,simParams,phyParams,outParams,appParams);
+end
+end

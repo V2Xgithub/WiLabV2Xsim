@@ -12,11 +12,13 @@ fprintf('Output settings\n');
 % Folder where the output files are recorded
 % If the folder is not present, the simulator creates it
 [outParams,varargin]= addNewParam([],'outputFolder','Output','Folder for the output files','string',fileCfg,varargin{1});
-
-fprintf('Full path of the output folder = %s\n',outParams.outputFolder);
 if exist(outParams.outputFolder,'dir')~=7
     mkdir(outParams.outputFolder);
 end
+% change the path as absolute path
+outpath = dir(outParams.outputFolder);
+outParams.outputFolder = outpath.folder;
+fprintf('Full path of the output folder = %s\n',outParams.outputFolder);
 
 % Name of the file that summarizes the inputs and outputs of the simulation
 % Each simulation adds a line in append

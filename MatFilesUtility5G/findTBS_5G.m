@@ -38,29 +38,17 @@ nPRB=RBperTBS;                % Number of PRB considered for the PSSCH for which
 
 %% IN-PUT checks
 % input check on number of DMRS per resource block
-if nDMRS==12
-elseif nDMRS==15
-elseif nDMRS==18
-elseif nDMRS==21
-elseif nDMRS==24
-else
+if ~ismember(nDMRS, [12, 15, 18, 21, 24])
     error("wrong DMRS selection")
 end
 
 % input check on number of SCI symbols per Beacon Resource
-if SCIsymbols == 3
-elseif SCIsymbols == 2
-else
+if ~ismember(SCIsymbols, [2,3])
     error("wrong selection of number of SCI-1 symbols")
 end
 
 % input check on number of RBs per SCI-1
-if nRB_SCI == 10
-elseif nRB_SCI == 12
-elseif nRB_SCI == 15
-elseif nRB_SCI == 20
-elseif nRB_SCI == 25
-else
+if ~ismember(nRB_SCI, [10, 12, 15, 20, 25])
     error("Error: wrong selection of nRB_SCI")
 end
 
@@ -83,7 +71,7 @@ nRE2 = nRE1*nPRB;   % second step, in third step the RE used for SCI1 and SCI2 a
 % Fixed parameters
 OSci2 = 48;                 % Number of the 2nd-stage SCI bits
 LSci2 = 24;                 % Number of CRC bits for the 2nd-stage SCI 
-betaOffsetSci2 = 1.125;    % Parameter indicated in the corresponding 1st-stage SCI here we consider it 1.125
+betaOffsetSci2 = 1.125;     % Parameter indicated in the corresponding 1st-stage SCI here we consider it 1.125
 gamma = 0;                  % Number of vacant resource elements in the RB to which the last coded symbol of the 2nd-stage SCI belongs. It is set to 0 since we imagine to maximize the amount of information in the Subchannel
 R =  R1024/1024;            % Coding rate as indicated by MCS field in SCI format 1-A.
 alpha = 0.5;                % Parameter configured by higher layer parameter sl-Scaling.
@@ -119,6 +107,6 @@ Ninfo = nRE*Qm*R*u;
 % if Ninfo<=3824, TBS is determined by a table
 % if Ninfo>3824, TBS is determined by  a formula
 
-[TBS,Ninfo1] = fTBS_5G(Ninfo,R);
+[TBS,~] = fTBS_5G(Ninfo,R);
 
 end

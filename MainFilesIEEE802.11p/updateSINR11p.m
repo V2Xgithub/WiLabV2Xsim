@@ -11,10 +11,10 @@ function sinrManagement = updateSINR11p(timeManagement,sinrManagement,stationMan
 % The useful power is calculated as the power received from the
 % node stored in 'idFromWhichRx'
 % The interfering power is calculated as the overall power
-% received from the nodes with State==3 minus the useful power
+% received from the nodes with State==constants.V_STATE_11P_TX minus the useful power
 % The SINR is updated each time based on the average interference
 
-for idVehicle = stationManagement.activeIDs(stationManagement.vehicleState(stationManagement.activeIDs)==9)'
+for idVehicle = stationManagement.activeIDs(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_11P_RX)'
     if sinrManagement.idFromWhichRx11p(idVehicle)==idVehicle
         sinrManagement.interfAverage11p(idVehicle) = 0;
         sinrManagement.sinrAverage11p(idVehicle) = 0;

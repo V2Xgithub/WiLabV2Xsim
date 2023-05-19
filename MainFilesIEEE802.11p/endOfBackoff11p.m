@@ -19,11 +19,11 @@ end
 
 if stationManagement.ifBeaconLarge 
     % If the vehicle transmits a large packet
-    timeManagement.timeNextTxRx11p(idEvent) = timeManagement.timeNow + phyParams.tPck11p;
+    timeManagement.timeNextTxRx11p(idEvent) = round(timeManagement.timeNow + phyParams.tPck11p, 10);
 else
     % if only 11p and variable beacons
     % If the vehicle transmits a small packet
-    timeManagement.timeNextTxRx11p(idEvent) = timeManagement.timeNow + phyParams.tPck11pSmall;
+    timeManagement.timeNextTxRx11p(idEvent) = round(timeManagement.timeNow + phyParams.tPck11pSmall, 10);
 end
 
 % The average SINR is updated
@@ -37,7 +37,7 @@ sinrManagement = updateSINR11p(timeManagement,sinrManagement,stationManagement,p
 % 'checkVehiclesStartReceiving11p', to have the correct idFromWhichtransmitting
 [sinrManagement] = updateLastPower11p(timeManagement,stationManagement,sinrManagement,phyParams,simValues);
 
-if simParams.technology == 4 % COEXISTENCE IN THE SAME BAND
+if simParams.technology == constants.TECH_COEX_STD_INTERF % COEXISTENCE IN THE SAME BAND
     % 1. The average SINR of LTE is updated
     % Compute SINR of received beacons
     % sinrManagement = updateSINRLTE(timeManagement.timeNow,stationManagement,sinrManagement,phyParams.Pnoise_MHz*phyParams.BwMHz_cv2xBR,simParams,appParams);
