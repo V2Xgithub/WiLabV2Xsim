@@ -74,9 +74,9 @@ if ~isempty(vehiclesToConsider) && timeManagement.elapsedTime_TTIs > nAllocation
         mask_lte = [true(1, simParams.coex_endOfLTE/phyParams.TTI), false(1, round((simParams.coex_superFlength-simParams.coex_endOfLTE)/phyParams.TTI))];
         mask = repmat(mask_lte, 1, mask_length/length(mask_lte));
         subchannelFree = subchannelFree(:, mask, :);
-        sinrManagement.cbrCV2X(vehiclesToConsider) = sum(~subchannelFree, [1, 2]) ./ numel(subchannelFree(:,:,1));
     end
-    
+    sinrManagement.cbrCV2X(vehiclesToConsider) = sum(~subchannelFree, [1, 2]) ./ numel(subchannelFree(:,:,1));
+
     % Dynamic setting of PDelta
     if strcmp(phyParams.duplexCV2X,'FD') && simParams.FDalgorithm~=0 && simParams.dynamicPDelta==1
         for indexV = 1:length(vehiclesToConsider)
