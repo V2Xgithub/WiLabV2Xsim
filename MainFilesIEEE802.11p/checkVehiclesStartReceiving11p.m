@@ -20,12 +20,13 @@ end
 % decode the preamble, since SINR>SINR_min) OR (D) do not receive the
 % signal with sufficient quality, but perceive the channel as
 % busy
-rxPowerTotNow_MHz = sinrManagement.P_RX_MHz * (stationManagement.vehicleState(activeIDs)==3);
+rxPowerTotNow_MHz = sinrManagement.P_RX_MHz * (stationManagement.vehicleState(activeIDs)==constants.V_STATE_11P_TX);
 
-idleOBU = ( (stationManagement.vehicleState(activeIDs)==1) + (stationManagement.vehicleState(activeIDs)==2) );
-notEndingBackoff = (timeManagement.timeNextTxRx11p(activeIDs) >= (timeManagement.timeNow+phyParams.tSlot-1e-10));
+idleOBU = (stationManagement.vehicleState(activeIDs)==constants.V_STATE_11P_IDLE) |...
+    (stationManagement.vehicleState(activeIDs)==constants.V_STATE_11P_BACKOFF);
+notEndingBackoff = timeManagement.timeNextTxRx11p(activeIDs) >= (timeManagement.timeNow+phyParams.tSlot-1e-10);
 
-alreadyReceingAnotherPreamble = ( stationManagement.vehicleState(activeIDs)==9 .* ...
+alreadyReceingAnotherPreamble = ( stationManagement.vehicleState(activeIDs)==constants.V_STATE_11P_RX & ...
     ( (timeManagement.timeNow-sinrManagement.instantThisSINRstarted11p(activeIDs)) < 4e-6 ...
     | sinrManagement.idFromWhichRx11p(activeIDs) == activeIDs ) );
 
@@ -50,12 +51,11 @@ if indexEventInActiveIDs>0
     %
     % From version 5.3.1, the channel check is added
     % If the channel is not the same, then C is set to 0
-    decodingThisPreamble = decodingThisPreamble .* sameChannel(stationManagement.activeIDs);
+    decodingThisPreamble = decodingThisPreamble & sameChannel(stationManagement.activeIDs);
 else
     % Only interference, with no real useful signal
     % In this case C is always 'false'
     decodingThisPreamble = zeros(length(sinrManagement.P_RX_MHz(:,1)),1);
-    firstTimeDecodeThisPreamble = zeros(length(sinrManagement.P_RX_MHz(:,1)),1);
 end
 % in D, an additional factor 'coex_virtualInterference' is used to block all 11p transmissions (used
 % in coexistence method A) - it could be added also in C, but adding it in D
@@ -65,9 +65,8 @@ receivingHighPower = (rxPowerTotNow_MHz*phyParams.BwMHz +...
     sinrManagement.coex_virtualInterference(activeIDs)) >= phyParams.PrxSensNotSynch;
 
 % Revised From version 5.3.2
-ifStartReceiving = alreadyReceingAnotherPreamble & decodingThisPreamble | ...
-        idleOBU & notEndingBackoff & (decodingThisPreamble | receivingHighPower);
-%%
+ifStartReceiving = (alreadyReceingAnotherPreamble & decodingThisPreamble) | ...
+                   (idleOBU & notEndingBackoff & (decodingThisPreamble | receivingHighPower));
 
 %%
 % Focusing on those that start receiving
@@ -76,7 +75,7 @@ ifStartReceiving = alreadyReceingAnotherPreamble & decodingThisPreamble | ...
 % SINR is reset and initial instant is set to now
 % 'timeNextTxRx' is set to infinity
 % The node from which receiving is set
-vehiclesFreezingList=activeIDs(logical(ifStartReceiving.*(stationManagement.vehicleState(activeIDs)==2)));
+vehiclesFreezingList=activeIDs(ifStartReceiving & (stationManagement.vehicleState(activeIDs)==constants.V_STATE_11P_BACKOFF));
 for idVehicle = vehiclesFreezingList'
     stationManagement.nSlotBackoff11p(idVehicle) =...
         freezeBackoff11p(timeManagement.timeNow,timeManagement.timeNextTxRx11p(idVehicle),...
@@ -85,27 +84,26 @@ for idVehicle = vehiclesFreezingList'
     % DEBUG BACKOFF
 %     printDebugBackoff11p(timeManagement.timeNow,'11p backoff freeze',idVehicle,stationManagement,outParams,timeManagement)
 end
-stationManagement.vehicleState(activeIDs(ifStartReceiving)) = 9;
+stationManagement.vehicleState(activeIDs(ifStartReceiving)) = constants.V_STATE_11P_RX;
 sinrManagement.sinrAverage11p(activeIDs(ifStartReceiving)) = 0;
 sinrManagement.interfAverage11p(activeIDs(ifStartReceiving)) = 0;
 sinrManagement.instantThisSINRavStarted11p(activeIDs(ifStartReceiving)) = timeManagement.timeNow;
 sinrManagement.instantThisSINRstarted11p(activeIDs(ifStartReceiving)) = timeManagement.timeNow;
 timeManagement.timeNextTxRx11p(activeIDs(ifStartReceiving)) = Inf;
-%%
 
 %% Update of idFromWhichRx11p
 if idEvent>0
     sinrManagement.idFromWhichRx11p(activeIDs(ifStartReceiving)) = idEvent * sameChannel(activeIDs(ifStartReceiving)) + activeIDs(ifStartReceiving) .* (~sameChannel(activeIDs(ifStartReceiving)));
-    %    
+   
     % Coexistence   
     % Save 11p as detected by LTE if the SINR is above the threshold
-    if simParams.technology == 4 && simParams.coexMethod==3 
-        sinrManagement.coex_lteDetecting11pTx(activeIDs) = logical( stationManagement.vehicleState(activeIDs)==100 .* decodingThisPreamble );
+    if simParams.technology == constants.TECH_COEX_STD_INTERF && simParams.coexMethod==constants.COEX_METHOD_C
+        sinrManagement.coex_lteDetecting11pTx(activeIDs) = stationManagement.vehicleState(activeIDs)==constants.V_STATE_LTE_TXRX & decodingThisPreamble;
     end
 
     % Coexistence, dynamic slots, calculation of CBR_11p: LTE nodes check if
     % starting detecting an 11p message
-    if simParams.technology == 4 && simParams.coexMethod~=0 && simParams.coex_slotManagement==2 && simParams.coex_cbrTotVariant==2
+    if simParams.technology == constants.TECH_COEX_STD_INTERF && simParams.coexMethod~=constants.COEX_METHOD_NON && simParams.coex_slotManagement==constants.COEX_SLOT_DYNAMIC && simParams.coex_cbrTotVariant==2
         % In this case, nodes must be LTE, not already
         % detecting, receiving with sufficient quality
         % 
@@ -120,18 +118,14 @@ if idEvent>0
 %                 (1-phyParams.LOS(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs)).*phyParams.sinrThreshold11p_NLOS;
         % retransmission may should be considered here
         decodingThePreamble = (sinrManagement.P_RX_MHz(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs) ./ (phyParams.Pnoise_MHz + (rxPowerTotNow_MHz(stationManagement.activeIDsCV2X)-sinrManagement.P_RX_MHz(stationManagement.indexInActiveIDs_ofLTEnodes,indexEventInActiveIDs)) + interferenceFromLTEnodesPerSubframe) > phyParams.sinrThreshold11p_preamble);
-        ifStartDetecting11p = logical( (stationManagement.vehicleState(stationManagement.activeIDsCV2X)==100)...
-            .* ~sinrManagement.coex_detecting11p(stationManagement.activeIDsCV2X)...
-            .* decodingThePreamble );
+        ifStartDetecting11p = (stationManagement.vehicleState(stationManagement.activeIDsCV2X)==constants.V_STATE_LTE_TXRX)...
+            & ~sinrManagement.coex_detecting11p(stationManagement.activeIDsCV2X)...
+            & decodingThePreamble;
         sinrManagement.coex_detecting11p(stationManagement.activeIDsCV2X(ifStartDetecting11p)) = true; 
         timeManagement.cbr11p_timeStartBusy(stationManagement.activeIDsCV2X(ifStartDetecting11p)) = timeManagement.timeNow;
-        % DEBUG
-        %fp = fopen('_Debug_LTE_CBR11p.xls','a');
-        %fprintf(fp,'%f\t%d\t\n',timeManagement.timeNow,sum(decodingThePreamble));
-        %fclose(fp);
     end    
 else
-    % if State 9 is due to interference, the idFromWhichRx must be set to
+    % if State 9(V_STATE_11P_RX) is due to interference, the idFromWhichRx must be set to
     % 'self'
     sinrManagement.idFromWhichRx11p(activeIDs(ifStartReceiving)) = activeIDs(ifStartReceiving);
 end
@@ -139,8 +133,7 @@ end
 
 %% The channel busy ratio is updated 
 % A different threshold (-85 dBm in ETSI EN 302 571) needs to be considered in this case
-% 
-if simParams.cbrActive && ~isempty(stationManagement.channelSensedBusyMatrix11p)
+if simParams.cbrActive && ~isempty(stationManagement.channelSensedBusyMatrix11p) && idEvent>0
     % The cbr11p_timeStartBusy must be set to those that were not sensing
     % the channel as busy (cbr11p_timeStartBusy=-1) and are now sensing it
     % busy

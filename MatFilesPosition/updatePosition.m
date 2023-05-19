@@ -1,10 +1,14 @@
-function [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,IDvehicleExit,positionManagement] = updatePosition(time,IDvehicle,v,direction,updateInterval,Xmax,positionManagement,appParams,simValues,outParams)
+function [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,IDvehicleExit,positionManagement] = updatePosition(time,IDvehicle,v,direction,updateInterval,Xmax,positionManagement,appParams,simValues,outParams,simParams)
 % Update vehicles position (when not using File Trace)
 % (if a vehicle moves outside the scenario, enters by the other side)
 
 Xvehicle = positionManagement.XvehicleReal;
 Yvehicle = positionManagement.YvehicleReal;
 
+if simParams.roadLength==0
+    % When testing all vehicles co-located, no position update
+    return
+end
 
 
 if ~isreal(Xmax)%ETSI-Urban

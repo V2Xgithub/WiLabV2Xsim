@@ -7,10 +7,10 @@ path(pathdef);  % Reset Matlab path
 
 path_task = fileparts(mfilename('fullpath'));
 path_sim = fileparts(fileparts(fileparts(path_task)));
-path_tot_code = fileparts(fileparts(path_task));
-addpath(genpath(path_sim));         % add simulator path
-rmpath(genpath(path_tot_code));     % remove potential path containing results
-addpath(path_task);                 % add current task path
+addpath(genpath(path_sim));
+rmpath(genpath(fullfile(path_sim, "codeForPaper")));
+addpath(path_task);
+
 path_PERcurves	= fullfile(path_sim,"PERcurves", "G5-HighwayLOS");
 path_output = fullfile(path_task, "mataData");
 

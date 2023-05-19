@@ -2,7 +2,7 @@ function [simValues,outputValues,timeManagement,stationManagement,sinrManagement
 % A transmission ends in IEEE 802.11p
 
 % The transmitting vehicle is first updated
-[timeManagement,stationManagement,sinrManagement] = updateVehicleEndingTx11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,phyParams,simParams);
+[timeManagement,stationManagement,sinrManagement] = updateVehicleEndingTx11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,phyParams,simParams,outParams);
 
 % The average SINR of all vehicles is then updated
 sinrManagement = updateSINR11p(timeManagement,sinrManagement,stationManagement,phyParams);
@@ -21,7 +21,7 @@ printDebugTx(timeManagement.timeNow,false,idEvent,stationManagement,positionMana
 % 'checkVehiclesStopReceiving11p', to have the correct idFromWhichtransmitting
 [sinrManagement] = updateLastPower11p(timeManagement,stationManagement,sinrManagement,phyParams,simValues);
 
-if simParams.technology == 4 % COEXISTENCE IN THE SAME BAND
+if simParams.technology == constants.TECH_COEX_STD_INTERF % COEXISTENCE IN THE SAME BAND
     % 1. The average SINR of LTE is updated
     % Compute SINR of received beacons
     % sinrManagement = updateSINRLTE(timeManagement.timeNow,stationManagement,sinrManagement,phyParams.Pnoise_MHz*phyParams.BwMHz_cv2xBR,simParams,appParams);

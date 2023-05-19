@@ -1,4 +1,4 @@
-function [timeManagement,stationManagement,sinrManagement] = updateVehicleEndingTx11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,phyParams,simParams)
+function [timeManagement,stationManagement,sinrManagement] = updateVehicleEndingTx11p(idEvent,indexEvent,timeManagement,stationManagement,sinrManagement,phyParams,simParams,outParams)
 % A transmission is concluded in IEEE 802.11p
 
 % If the vehicle is exiting the scenario, indexEvent is set to -1
@@ -13,29 +13,43 @@ end
 % The medium is sensed to check if it is free
 % (note: 'vState(idEvent)' is set to 9 in order not to contribute
 % to the sensed power)
-stationManagement.vehicleState(idEvent)=9; % rx
-if (sinrManagement.P_RX_MHz(indexEvent,:) * (stationManagement.vehicleState(stationManagement.activeIDs)==3)) > (phyParams.PrxSensNotSynch/phyParams.BwMHz)
+stationManagement.vehicleState(idEvent) = constants.V_STATE_11P_RX; % rx
+
+% Add virtual interference for coex scenario
+if isfield(sinrManagement, 'coex_virtualInterference')
+    P_RX_MHz = sinrManagement.P_RX_MHz(indexEvent,:) *...
+        (stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_11P_TX) +...
+        sinrManagement.coex_virtualInterference(idEvent);
+else
+    P_RX_MHz = sinrManagement.P_RX_MHz(indexEvent,:) *...
+        (stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_11P_TX);
+end
+if P_RX_MHz > (phyParams.PrxSensNotSynch/phyParams.BwMHz)
     % If it is busy, State 9 with error is entered
-    stationManagement.vehicleState(idEvent)=9; % rx
+    stationManagement.vehicleState(idEvent) = constants.V_STATE_11P_RX; % rx
     sinrManagement.idFromWhichRx11p(idEvent) = idEvent;
     sinrManagement.interfAverage11p(idEvent) = 0;
     sinrManagement.instantThisSINRavStarted11p(idEvent) = timeManagement.timeNow;
     timeManagement.timeNextTxRx11p(idEvent) = Inf;
+
+    sinrManagement.sinrAverage11p(idEvent) = 0;
+    sinrManagement.instantThisSINRstarted11p(idEvent) = timeManagement.timeNow;
 else
     % If it is free, then: the idle state is entered if the queue is empty
     % otherwise a new backoff is started
-    if stationManagement.pckBuffer(idEvent)==0
+    if stationManagement.pckBuffer(idEvent) == 0
         % If no other packets are in the queue, the node goes
         % in idle state
-        stationManagement.vehicleState(idEvent)=1; % idle
+        stationManagement.vehicleState(idEvent) = constants.V_STATE_11P_IDLE; % idle
         timeManagement.timeNextTxRx11p(idEvent) = Inf;
-    elseif stationManagement.pckBuffer(idEvent)>=1
+    elseif stationManagement.pckBuffer(idEvent) >= 1
         % If there are other packets in the queue, a new
         % backoff is initialized and started
         % in this case is retransmission, because the queue only has one
         % packet
-        stationManagement.vehicleState(idEvent)=2; % backoff
-        if simParams.technology~=4 || simParams.coexMethod~=3 || ~simParams.coexCmodifiedCW
+        stationManagement.vehicleState(idEvent)=constants.V_STATE_11P_BACKOFF; % backoff
+        if simParams.technology ~= constants.TECH_COEX_STD_INTERF || ...
+            simParams.coexMethod ~= constants.COEX_METHOD_C || ~simParams.coexCmodifiedCW
             % New NGV packet format (Tx persective), back-to-back copy, no
             % idle time [Michael Fischer, et al. Interoperable NGV PHY
             % Improvements]

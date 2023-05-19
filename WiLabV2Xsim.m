@@ -54,18 +54,12 @@ function WiLabV2Xsim(varargin)
 
 %% Initialization
 
-% Version of the simulator
-% update for plotting figures in paper:
-% V. Todisco, S. Bartoletti, C. Campolo, A. Molinaro, A. O. Berthet and A. Bazzi,
-% "Performance Analysis of Sidelink 5G-V2X Mode 2 Through an Open-Source Simulator,"
-% in IEEE Access, vol. 9, pp. 145648-145661, 2021, doi: 10.1109/ACCESS.2021.3121151.
-simVersion = 'V6.2';   
-fprintf('WiLabV2Xsim %s\n\n',simVersion);
-
 % The path of the directory of the simulator is saved in 'fullPath'
 fullPath = fileparts(mfilename('fullpath'));
 addpath(genpath(fullPath));
-
+% chdir(fullPath);
+% Version of the simulator
+fprintf('WiLabV2Xsim %s\n\n',constants.SIM_VERSION);
 
 % 'help' feature:
 % "WiLabV2Xsim('help')" allows to print the full list of parameters
@@ -78,7 +72,7 @@ if nargin == 1 && strcmp(varargin{1},'help')
 end
 
 % Simulator parameters and initial settings
-[simParams,appParams,phyParams,outParams] = initiateParameters(simVersion, varargin);
+[simParams,appParams,phyParams,outParams] = initiateParameters(varargin);
 
 % Update PHY structure with the ranges
 [phyParams] = deriveRanges(phyParams,simParams);
@@ -109,14 +103,14 @@ outputValues = struct('computationTime',-1,...
 [simParams,simValues,positionManagement,appParams] = initVehiclePositions(simParams,appParams);
 
 % Load obstacles scenario from Obstacles Map File (if selected)
-if simParams.typeOfScenario==2 && simParams.fileObstaclesMap % Only with traffic traces
+if simParams.typeOfScenario==constants.SCENARIO_TRACE && simParams.fileObstaclesMap % Only with traffic traces
     [simParams,positionManagement] = loadObstaclesMapFile(simParams,positionManagement);
 else
     [positionManagement.XminMap,positionManagement.YmaxMap,positionManagement.StepMap,positionManagement.GridMap] = deal(-1);
 end
 
 % Initialization of matrices correctlyReceivedMap and neighborsMap (for PRRmap)
-if simParams.typeOfScenario==2 && outParams.printPRRmap % Only traffic traces
+if simParams.typeOfScenario==constants.SCENARIO_TRACE && outParams.printPRRmap % Only traffic traces
     simValues.correctlyReceivedMap11p = zeros(size(positionManagement.GridMap));
     simValues.neighborsMap11p = zeros(size(positionManagement.GridMap));
     simValues.correctlyReceivedMapCV2X = zeros(size(positionManagement.GridMap));
@@ -180,8 +174,8 @@ end
 
 if outParams.printPacketReceptionRatio
     % If simulating variable beacon size (currently 802.11p only)
-    if simParams.technology~=1 % not only C-V2X 
-        if simParams.technology==2 && appParams.variableBeaconSize
+    if simParams.technology~=constants.TECH_ONLY_CV2X % not only C-V2X 
+        if simParams.technology==constants.TECH_ONLY_11P && appParams.variableBeaconSize
             % Initialize 9 columns in distanceDetailsCounter (for smaller beacons)
             % The matrix becomes:
             % [distance, #Correctly decoded beacons (big), #Errors (big), #Blocked neighbors (big), #Neighbors (big),
@@ -199,7 +193,7 @@ if outParams.printPacketReceptionRatio
         end
     end
     
-    if simParams.technology~=2 % not only 11p
+    if simParams.technology~=constants.TECH_ONLY_11P % not only 11p
         % Initialize array with the counters of Rx details vs. distance (up to RawMax)
         % [distance, #Correctly decoded beacons, #Errors, #Blocked neighbors, #Neighbors (computed in printDistanceDetailsCounter)]
         
@@ -341,10 +335,10 @@ end
 % Print to file of the CBR statistics
 if simParams.cbrActive == true
     if outParams.printCBR
-        if sum(stationManagement.vehicleState~=100)>0
+        if sum(stationManagement.vehicleState ~= constants.V_STATE_LTE_TXRX)>0
             printCBRToFileITSG5(stationManagement,simParams,outParams,phyParams);
         end
-        if sum(stationManagement.vehicleState==100)>0
+        if sum(stationManagement.vehicleState == constants.V_STATE_LTE_TXRX)>0
             printCBRToFileCV2X(stationManagement,simParams,outParams,phyParams);
         end
     end
@@ -357,17 +351,17 @@ end
 
 % Print details for distances up to the maximum awareness range (if enabled)
 if outParams.printPacketReceptionRatio
-    if sum(stationManagement.vehicleState==100)>0
+    if sum(stationManagement.vehicleState == constants.V_STATE_LTE_TXRX)>0
         printPacketReceptionRatio(simParams.stringCV2X,outputValues.distanceDetailsCounterCV2X,outParams,appParams,simParams,phyParams);
     end
-    if sum(stationManagement.vehicleState~=100)>0
+    if sum(stationManagement.vehicleState ~= constants.V_STATE_LTE_TXRX)>0
     %if simParams.technology~=1 % 11p or coexistence, not LTE
         printPacketReceptionRatio('11p',outputValues.distanceDetailsCounter11p,outParams,appParams,simParams,phyParams);
     end
 end
 
 % Print PRRmap to file (if enabled)
-if simParams.typeOfScenario==2 && outParams.printPRRmap && simParams.fileObstaclesMap
+if simParams.typeOfScenario==constants.SCENARIO_TRACE && outParams.printPRRmap && simParams.fileObstaclesMap
     printPRRmapToFile(simValues,simParams,outParams,positionManagement);
 end
 
@@ -382,7 +376,7 @@ if outParams.printHiddenNodeProb
 end
 
 % Print to XLS file
-outputToFiles(simVersion,stationManagement,simParams,appParams,phyParams,sinrManagement,outParams,outputValues);
+outputToFiles(stationManagement,simParams,appParams,phyParams,sinrManagement,outParams,outputValues);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Print To Video

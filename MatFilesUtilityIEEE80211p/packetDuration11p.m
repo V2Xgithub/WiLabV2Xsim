@@ -9,26 +9,9 @@ tPreamble = 40e-6; % overhead at PHY in us
 % If using 802.11p standard PHY
 % From version 5.0.11, the Modes are numbered from 0 to 7
 if ~pWithLTEPHY
-    % ns = bits per OFDM symbol
-    if Mode==0
-        ns = 24; % Mode 0
-    elseif Mode==1
-        ns = 36; % Mode 1
-    elseif Mode==2
-        ns = 48; % Mode 2
-    elseif Mode==3
-        ns = 72; % Mode 3
-    elseif Mode==4
-        ns = 96; % Mode 4
-    elseif Mode==5
-        ns = 144; % Mode 5
-    elseif Mode==6
-        ns = 192; % Mode 6
-    elseif Mode==7
-        ns = 216; % Mode 7
-    else
-        error('Error');
-    end
+    % MCS mode    0   1   2   3   4   5    6    7
+    bpSymbol =   [24, 36, 48, 72, 96, 144, 192, 216];       % data bits per OFDM symbol
+    ns = bpSymbol(Mode+1);  % ns = bits per OFDM symbol
     
     % Compute packet transmission duration (standard)
     tPack = tPreamble + ceil((Nbyte*8 + Nol)/ns)*tOs;

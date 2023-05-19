@@ -24,11 +24,13 @@ end
 % speed of vehicles that cause small variation in periodicity
 % In LTE this cannot apply, as in LTE the beacon interval is rigid and
 % small variability to speed does not make the periodicity to vary
+% constants.PACKET_GENERATION_ETSI_CAM == 0
+% constants.PACKET_GENERATION_PERIODICALLY == -1
 [appParams,varargin]= addNewParam(appParams,'variabilityGenerationInterval',0,'Variability of beacon period per vehicle (s) (only 11p)','double',fileCfg,varargin{1});
-if appParams.variabilityGenerationInterval~=-1 && (appParams.variabilityGenerationInterval<0 || appParams.variabilityGenerationInterval>=appParams.allocationPeriod)
+if appParams.variabilityGenerationInterval~=constants.PACKET_GENERATION_ETSI_CAM && (appParams.variabilityGenerationInterval<0 || appParams.variabilityGenerationInterval>=appParams.allocationPeriod)
     error('Error: "appParams.variabilityGenerationInterval" cannot be < 0 or >= "appParams.allocationPeriod" (except -1, automatic)');
 end
-if appParams.variabilityGenerationInterval==-1 % automatic
+if appParams.variabilityGenerationInterval==constants.PACKET_GENERATION_ETSI_CAM % automatic
     % [camDiscretizationType]
     % Type of discretization: "allSteps" or "allocationAligned" [string]
     [appParams,varargin] = addNewParam(appParams,'camDiscretizationType','null','Type of discretization - it can be "allSteps" or "allocationAligned" if not "null" (continuous)','string',fileCfg,varargin{1});
@@ -87,14 +89,15 @@ if appParams.beaconSizeBytes<=0 || appParams.beaconSizeBytes>10000
     error('Error in the setting of "appParams.beaconSizeBytes".');
 end
 
-if simParams.technology ~= 2 % not only 11p
+if simParams.technology ~= constants.TECH_ONLY_11P % not only 11p
     % [resourcesV2V]
     % Resource allocated to V2V (%)
     [appParams,varargin]= addNewParam(appParams,'resourcesV2V',100,'Resource allocated to V2V (%)','integer',fileCfg,varargin{1});
     if appParams.resourcesV2V<=0 || appParams.resourcesV2V>100
         error('Error in the setting of "appParams.resourcesV2V". Not within 1-100%.');
     end
-else % only 11p . variable size is not supported otherwise
+end
+if simParams.technology == constants.TECH_ONLY_11P % only 11p . variable size is not supported otherwise
     % [variableBeaconSize]
     % Enable to use variable beacon size
     [appParams,varargin]= addNewParam(appParams,'variableBeaconSize',false,'Varibale beacon size','bool',fileCfg,varargin{1});
@@ -136,14 +139,11 @@ if simParams.cbrActive
     if simParams.cbrSensingIntervalDesynchN <= 0
         error('Error: "outParams.cbrSensingIntervalDesynchN" cannot be <= 0');
     end
-    
-end
 
-% [dcc_active]
-% Duration of the interval for the CBR calculation [s]
-[simParams,varargin] = addNewParam(simParams,'dcc_active',true,'If DCC is enabled','bool',fileCfg,varargin{1});
-if simParams.dcc_active && ~simParams.cbrActive
-    error('Error: DCC requires "simParams.cbrActive" to be set to true');
+    % [dcc_active]
+    % Duration of the interval for the CBR calculation [s]
+    % DCC requires "simParams.cbrActive" to be set to true
+    [simParams,varargin] = addNewParam(simParams,'dcc_active',true,'If DCC is enabled','bool',fileCfg,varargin{1});
 end
 
 % Temporary parameter

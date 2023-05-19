@@ -16,7 +16,7 @@ Nvehicles = length(IDvehicle(:,1));   % Number of vehicles
 BRid = zeros(length(IDvehicle(:,1)),1);
 % A cycle over the vehicles is needed
 for idV=1:Nvehicles
-    if stationManagement.vehicleState(IDvehicle(idV))~=100
+    if stationManagement.vehicleState(IDvehicle(idV))~=constants.V_STATE_LTE_TXRX
         continue;
     end
     while BRid(idV)==0
@@ -27,32 +27,32 @@ for idV=1:Nvehicles
         
         % Case coexistence with mitigation methods - limited by
         % superframe - i.e., if in ITS-G5 slot must be changed
-        if simParams.technology==4 && simParams.coexMethod>0
-            if ((simParams.coex_slotManagement == 1) ...
-                    && mod(BRid(idV)-1,simParams.coex_superframeSF*appParams.NbeaconsF)+1 > (sinrManagement.coex_NtsLTE(1)*appParams.NbeaconsF)) || ...
-                ((simParams.coex_slotManagement == 2) ...
-                    && mod(BRid(idV)-1,simParams.coex_superframeSF*appParams.NbeaconsF)+1 > (ceil(simParams.coex_superframeSF/2)*appParams.NbeaconsF))
+        if simParams.technology==constants.TECH_COEX_STD_INTERF && simParams.coexMethod~=constants.COEX_METHOD_NON
+            % expressions for dynamic and static are same, because
+            % sinrManagement.coex_NtotTTILTE was already set based on the
+            % dynamic or static at "mainInitCoexistence.m"
+            if mod(BRid(idV)-1,simParams.coex_superframeTTI*appParams.NbeaconsF)+1 > (sinrManagement.coex_NtotTTILTE(1)*appParams.NbeaconsF)
                 BRid(idV) = 0;
             end
         end        
         
         % If it is outside the interval given by T1 and T2 it is not acceptable
         if T1>1 || T2<appParams.NbeaconsT
-            subframeLastPacket = mod(ceil(timeManagement.timeLastPacket(IDvehicle(idV))/phyParams.TTI)-1,(appParams.NbeaconsT))+1;
+            TTILastPacket = mod(ceil(timeManagement.timeLastPacket(IDvehicle(idV))/phyParams.TTI)-1,(appParams.NbeaconsT))+1;
             Tselected = ceil(BRid(idV)/appParams.NbeaconsF); 
             % IF Both T1 and T2 are within this beacon period
-            if (subframeLastPacket+T2+1)<=appParams.NbeaconsT
-                if Tselected<subframeLastPacket+T1 || Tselected>subframeLastPacket+T2
+            if (TTILastPacket+T2+1)<=appParams.NbeaconsT
+                if Tselected<TTILastPacket+T1 || Tselected>TTILastPacket+T2
                    BRid(idV) = 0;
                 end
             % IF Both are beyond this beacon period
-            elseif (subframeLastPacket+T1-1)>appParams.NbeaconsT
-                if Tselected<subframeLastPacket+T1-appParams.NbeaconsT || Tselected>subframeLastPacket+T2-appParams.NbeaconsT
+            elseif (TTILastPacket+T1-1)>appParams.NbeaconsT
+                if Tselected<TTILastPacket+T1-appParams.NbeaconsT || Tselected>TTILastPacket+T2-appParams.NbeaconsT
                    BRid(idV) = 0;
                 end
             % IF T1 within, T2 beyond
             else
-                if Tselected<subframeLastPacket+T1 && Tselected>subframeLastPacket+T2-appParams.NbeaconsT
+                if Tselected<TTILastPacket+T1 && Tselected>TTILastPacket+T2-appParams.NbeaconsT
                    BRid(idV) = 0;
                 end
             end 

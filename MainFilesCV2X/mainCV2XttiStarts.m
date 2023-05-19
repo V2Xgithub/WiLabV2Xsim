@@ -28,15 +28,15 @@ stationManagement.transmittingIDsCV2X = [];
 stationManagement.hasTransmissionThisSlot=zeros(length(stationManagement.activeIDsCV2X),1);
 iTransmitting = 1;
 currentT = (mod((timeManagement.elapsedTime_TTIs-1),appParams.NbeaconsT)+1);
-for idLte = stationManagement.activeIDsCV2X'    
-    if stationManagement.pckBuffer(idLte)<1
-        continue;
-    end
+idLteHasPck = stationManagement.activeIDsCV2X(stationManagement.pckBuffer(stationManagement.activeIDsCV2X) >= 1);
+for idLte = idLteHasPck'    
     attemptToDo = stationManagement.pckNextAttempt(idLte);
     if ceil((stationManagement.BRid(idLte,attemptToDo))/appParams.NbeaconsF)==currentT
         stationManagement.transmittingIDsCV2X(iTransmitting) = idLte;
         stationManagement.transmittingFusedLTE(iTransmitting) = mod((stationManagement.BRid(idLte,attemptToDo))-1,appParams.NbeaconsF)+1;
         iTransmitting = iTransmitting + 1;
+        % DEBUG TX-RX
+        % printDebugTxRx(timeManagement.timeNow,idLte,'NR Tx started',stationManagement,sinrManagement,outParams);
     end
 end
 % hasTransmissionThisSlot introduced from version 6.2
@@ -50,10 +50,6 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
     stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE = zeros(length(stationManagement.transmittingIDsCV2X),1);
     stationManagement.indexInActiveIDs_OfTxLTE = zeros(length(stationManagement.transmittingIDsCV2X),1);
     for ix = 1:length(stationManagement.transmittingIDsCV2X)
-        %A = find(stationManagement.activeIDsCV2X == stationManagement.transmittingIDsCV2X(ix));
-        %if length(A)~=1
-        %    error('X');
-        %end
         stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(ix) = find(stationManagement.activeIDsCV2X == stationManagement.transmittingIDsCV2X(ix));
         stationManagement.indexInActiveIDs_OfTxLTE(ix) = find(stationManagement.activeIDs == stationManagement.transmittingIDsCV2X(ix));
     end
@@ -63,7 +59,7 @@ end
 [sinrManagement] = initLastPowerCV2X(timeManagement,stationManagement,sinrManagement,simParams,appParams,phyParams);
 
 % COEXISTENCE IN THE SAME BAND
-if simParams.technology == 4      
+if simParams.technology == constants.TECH_COEX_STD_INTERF      
     [timeManagement,stationManagement,sinrManagement,outputValues] = coexistenceAtLTEsubframeStart(timeManagement,sinrManagement,stationManagement,appParams,simParams,simValues,phyParams,outParams,outputValues);    
 end
     

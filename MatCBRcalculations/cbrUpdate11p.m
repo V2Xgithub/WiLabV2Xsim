@@ -1,4 +1,4 @@
-function [timeManagement,stationManagement,CBRvalue] = cbrUpdate11p(timeManagement,vehiclesToConsider,stationManagement,simParams,phyParams)
+function [timeManagement,stationManagement,CBRvalue] = cbrUpdate11p(timeManagement,vehiclesToConsider,stationManagement,simParams,phyParams,outParams)
 
 CBRvalue = zeros(length(vehiclesToConsider),1);
 
@@ -71,7 +71,7 @@ for i = 1:length(vehiclesToConsider)
     end
     
     %% retransmission impact by CBR
-    if phyParams.retransType == 1
+    if phyParams.retransType == constants.RETRANS_DETERMINISTIC
         % with fixed threshold
         if CBRvalue(i) <= phyParams.ITSReplicasThreshold1
             stationManagement.ITSNumberOfReplicas(idCBR) = 4;
@@ -82,7 +82,7 @@ for i = 1:length(vehiclesToConsider)
         else
             stationManagement.ITSNumberOfReplicas(idCBR) = 1;
         end
-    elseif phyParams.retransType == 2
+    elseif phyParams.retransType == constants.RETRANS_PROBABILISTIC
         % with probability
         new_thre1 = 0.5*(phyParams.ITSReplicasThreshold1-phyParams.ITSReplicasThreshold2)+phyParams.ITSReplicasThreshold1;
         new_thre2 = -0.5*(phyParams.ITSReplicasThreshold1-phyParams.ITSReplicasThreshold2)+phyParams.ITSReplicasThreshold1;

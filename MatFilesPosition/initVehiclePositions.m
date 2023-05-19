@@ -1,6 +1,30 @@
 function [simParams,simValues,positionManagement,appParams] = initVehiclePositions(simParams,appParams)
 % Function to initialize the positions of vehicles
 
+
+% Whne roadLength is zero all vehicles are in the same location
+if simParams.roadLength==0
+    % Scenario
+    positionManagement.Xmin = 0;                           % Min X coordinate
+    simValues.Xmax = 0;        % Max X coordinate
+    positionManagement.Ymin = 0;                           % Min Y coordinate
+    % Max Y coordinate
+    simValues.Ymax = 0;
+    
+    Nvehicles = simParams.rho;   % Number of vehicles
+    
+    simValues.IDvehicle(:,1) = 1:Nvehicles;             % Vector of IDs
+    simValues.maxID = Nvehicles;                        % Maximum vehicle's ID
+    
+    % Generate X coordinates of vehicles (uniform distribution)
+    positionManagement.XvehicleReal = zeros(Nvehicles,1);
+    simValues.direction = rand(Nvehicles,1) > 0.5;
+    positionManagement.YvehicleReal = zeros(Nvehicles,1);
+    simValues.v=0;
+    return
+end    
+
+
 if simParams.typeOfScenario~=2 % Not traffic trace
     if simParams.typeOfScenario==4 %ETSI-Urban
         simValues.Nblocks=simParams.Nblocks;
@@ -245,5 +269,6 @@ end
 % if simParams.mco_nVehInterf>0
 %     [simParams,simValues,positionManagement] = mco_initVehiclePositionsInterfering(positionManagement,simParams,appParams,simValues);
 % end
+
 
 end

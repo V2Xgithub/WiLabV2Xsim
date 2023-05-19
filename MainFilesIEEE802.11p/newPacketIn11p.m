@@ -30,7 +30,7 @@ if stationManagement.pckBuffer(idEvent)>1
             indexEvent11p = (stationManagement.activeIDs11p == idEvent);
             allNeighbors = ismember(stationManagement.activeIDs11p,stationManagement.neighborsID11p(indexEvent11p,:));
         end
-        distance11pFromTx = positionManagement.distanceReal(stationManagement.vehicleState(stationManagement.activeIDs)~=100,indexEvent);
+        distance11pFromTx = positionManagement.distanceReal(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX,indexEvent);
         % remove self (or non "selected", if "neighborsSelection" is active)
         distance11pFromTx = distance11pFromTx(allNeighbors);
         % count 
@@ -46,11 +46,11 @@ if stationManagement.pckBuffer(idEvent)>1
     
         if outParams.printPacketReceptionRatio
             %if simParams.technology==1 % only LTE
-            if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)==0
+            if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX)==0
                 error('Not expected to arrive here...');
                 %outputValues.distanceDetailsCounterCV2X(iRaw,4) = outputValues.distanceDetailsCounterCV2X(iRaw,4) + nnz(positionManagement.distanceReal(:,indexEvent)<iRaw);
             else
-                if simParams.technology == 2 && appParams.variableBeaconSize % if ONLY 11p
+                if simParams.technology == constants.TECH_ONLY_11P && appParams.variableBeaconSize % if ONLY 11p
                     % If variable beacon size is selected, find if small or large packet is
                     % currently transmitted (1 stays for large, 0 for small)
                     error('This feature has not been tested in this version of the simulator.');
@@ -80,29 +80,31 @@ end
 
 % Part dealing with transmission start
 % If coexistence Method A during the LTE part, the vehicle must go in State 9
-if simParams.technology==4 && simParams.coexMethod==1 && ~simParams.coexA_withLegacyITSG5 && ...
+if simParams.technology == constants.TECH_COEX_STD_INTERF && ...
+        simParams.coexMethod == constants.COEX_METHOD_A && ...
+        ~simParams.coexA_withLegacyITSG5 && ...
         timeManagement.coex_superframeThisIsLTEPart(idEvent) % LTE part
-    if stationManagement.vehicleState(idEvent)==1 % idle
-        stationManagement.vehicleState(idEvent)=9; % rx
+    if stationManagement.vehicleState(idEvent) == constants.V_STATE_11P_IDLE % idle
+        stationManagement.vehicleState(idEvent) = constants.V_STATE_11P_RX; % rx
     end
 end
 
 % If the node was in IDLE (State==1)
 % NOTE: if the channel is sensed busy, the station is in State 9, so there
 % is no need to freeze here
-if stationManagement.vehicleState(idEvent)==1 % idle
+if stationManagement.vehicleState(idEvent) == constants.V_STATE_11P_IDLE % idle
     
     % % DEBUG EVENTS
     % printDebugEvents(timeEvent,'backoff starts',idEvent);
 
-    % Start the backoff (State==2)
-    stationManagement.vehicleState(idEvent)=2; % backoff
+    % Start the backoff
+    stationManagement.vehicleState(idEvent) = constants.V_STATE_11P_BACKOFF; % backoff
     % A new random backoff is set and the instant of its conclusion
     % is derived
     % if there is a new packet and the channel is sensed idle during AIFS,
     % the vehicle would transmite this packet immediatly after the AIFS,
     % and without the backoff process.
-    if simParams.technology~=4 || simParams.coexMethod~=3 || ~simParams.coexCmodifiedCW
+    if simParams.technology~=constants.TECH_COEX_STD_INTERF || simParams.coexMethod~=constants.COEX_METHOD_C || ~simParams.coexCmodifiedCW
         [stationManagement.nSlotBackoff11p(idEvent), timeManagement.timeNextTxRx11p(idEvent)] =...
             startNewBackoff11p(timeManagement.timeNow,stationManagement.CW_11p(idEvent),...
             stationManagement.tAifs_11p(idEvent),phyParams.tSlot);

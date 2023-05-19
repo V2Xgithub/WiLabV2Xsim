@@ -29,7 +29,7 @@ stationManagement.sensingMatrixCV2X(:,BRids_currentSF,:) = circshift(stationMana
 % the BRids in the current subframe are reset for all vehicles
 %sensedPowerCurrentSF = 0;
 % Refactoring in Version 5.3.1_3
-sensedPowerCurrentSF_MHz = zeros(length(BRids_currentSF),length(stationManagement.activeIDsCV2X));
+sensedPowerCurrentTTI_MHz = zeros(length(BRids_currentSF),length(stationManagement.activeIDsCV2X));
 
 %stationManagement.sensingMatrix(1,BRids_currentSF,:) = 0;
 % In case, the values will be hereafter filled with the latest measurements
@@ -39,33 +39,32 @@ sensedPowerCurrentSF_MHz = zeros(length(BRids_currentSF),length(stationManagemen
 if ~isempty(stationManagement.transmittingIDsCV2X)   
     
     if isempty(sinrManagement.sensedPowerByLteNo11p)                
-        sensedPowerCurrentSF_MHz = sensedPowerCV2X(stationManagement,sinrManagement,appParams,phyParams);
+        sensedPowerCurrentTTI_MHz = sensedPowerCV2X(stationManagement,sinrManagement,appParams,phyParams);
     else        
-        sensedPowerCurrentSF_MHz = sinrManagement.sensedPowerByLteNo11p;
+        sensedPowerCurrentTTI_MHz = sinrManagement.sensedPowerByLteNo11p;
     end
 else
     % if there are no LTE transmissions, the sensedPowerCurrentSF remains 0
 end
 
-% sensedPowerCurrentSF = sensedPowerCurrentSF + repmat((sinrManagement.coex_averageSFinterfFrom11pToLTE(stationManagement.activeIDsCV2X))',appParams.NbeaconsF,1);
 % Possible addition of 11p interfrence
-if simParams.technology~=4 || simParams.coexMethod~=3 || ~simParams.coexC_11pDetection
-    interfFrom11p = (sinrManagement.coex_averageSFinterfFrom11pToLTE(stationManagement.activeIDsCV2X));
-    sensedPowerCurrentSF_MHz = sensedPowerCurrentSF_MHz + repmat(interfFrom11p',appParams.NbeaconsF,1);
+if simParams.technology~=constants.TECH_COEX_STD_INTERF || simParams.coexMethod~=constants.COEX_METHOD_C || ~simParams.coexC_11pDetection
+    interfFrom11p = (sinrManagement.coex_averageTTIinterfFrom11pToLTE(stationManagement.activeIDsCV2X));
+    sensedPowerCurrentTTI_MHz = sensedPowerCurrentTTI_MHz + repmat(interfFrom11p',appParams.NbeaconsF,1);
 else
     % In case of method C, 11p interference is not added if an 11p
     % transmission has been detected
-    interfFrom11p = (sinrManagement.coex_averageSFinterfFrom11pToLTE(stationManagement.activeIDsCV2X)) .* ~sinrManagement.coex_lteDetecting11pTx(stationManagement.activeIDsCV2X);
-    sensedPowerCurrentSF_MHz = sensedPowerCurrentSF_MHz + repmat(interfFrom11p',appParams.NbeaconsF,1);
+    interfFrom11p = (sinrManagement.coex_averageTTIinterfFrom11pToLTE(stationManagement.activeIDsCV2X)) .* ~sinrManagement.coex_lteDetecting11pTx(stationManagement.activeIDsCV2X);
+    sensedPowerCurrentTTI_MHz = sensedPowerCurrentTTI_MHz + repmat(interfFrom11p',appParams.NbeaconsF,1);
     sinrManagement.coex_lteDetecting11pTx(:,:) = false;
 end
 
 % Small interference is changed to 0 to avoid small interference affecting
 % the allocation process
-sensedPowerCurrentSF_MHz(sensedPowerCurrentSF_MHz<phyParams.Pnoise_MHz) = 0;
+sensedPowerCurrentTTI_MHz(sensedPowerCurrentTTI_MHz<phyParams.Pnoise_MHz) = 0;
 
 % Sensign matrix updated
-stationManagement.sensingMatrixCV2X(1,BRids_currentSF,stationManagement.activeIDsCV2X) = sensedPowerCurrentSF_MHz;
+stationManagement.sensingMatrixCV2X(1,BRids_currentSF,stationManagement.activeIDsCV2X) = sensedPowerCurrentTTI_MHz;
     
 %% PART 2: Update the knownUsedMatrix (i.e., the status as read from the SCI messages)
 
@@ -75,7 +74,7 @@ stationManagement.knownUsedMatrixCV2X(BRids_currentSF,:) = 0;
 
 
 % Reset of matrix of received SCIs for the current subframe
-if simParams.technology==4 && simParams.coexMethod==6
+if simParams.technology==constants.TECH_COEX_STD_INTERF && simParams.coexMethod==constants.COEX_METHOD_F
     stationManagement.coexF_knownUsed(BRids_currentSF,:) = 0;
 end
 
@@ -104,7 +103,7 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
            % IF the SCI is transmitted in this subframe AND if it is correctly
            % received 
            if stationManagement.correctSCImatrixCV2X(i,indexNeighborsOfVtx) == 1                
-               if simParams.technology==4 && simParams.coexMethod==6
+               if simParams.technology==constants.TECH_COEX_STD_INTERF && simParams.coexMethod==constants.COEX_METHOD_F
                    % Matrix registering the received SCIs for mitigation
                    % method F
                    stationManagement.coexF_knownUsed(BRtx,idVrx) = 1;

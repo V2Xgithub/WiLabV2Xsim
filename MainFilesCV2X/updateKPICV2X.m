@@ -80,7 +80,7 @@ for iPhyRaw=1:length(phyParams.Raw)
     end
 
     % Update matrices needed for PRRmap creation in urban scenarios (if enabled)
-    if simParams.typeOfScenario==2 && outParams.printPRRmap
+    if simParams.typeOfScenario==constants.SCENARIO_TRACE && outParams.printPRRmap
         simValues = counterMap(iPhyRaw,simValues,stationManagement.activeIDsCV2X,indexInActiveIDsOnlyLTE,activeIDsTXLTE,awarenessID_LTE(:,:,iPhyRaw),errorMatrix);
     end
 

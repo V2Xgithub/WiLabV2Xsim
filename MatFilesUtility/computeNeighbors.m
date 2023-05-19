@@ -11,7 +11,7 @@ function [positionManagement,stationManagement] = computeNeighbors (stationManag
 %%
 % LTE
 %distanceReal_LTE = positionManagement.distanceReal(:,(stationManagement.vehicleState(stationManagement.activeIDs)==100));
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
+if sum(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX)>0
 %if simParams.technology~=2 % Not only 11p
     distanceReal_LTE = positionManagement.distanceReal;
     % Vehicles from which the received power is below a minimum are set to an infinite distance
@@ -63,7 +63,7 @@ end
 
 %%
 % 11p
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
+if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX)>0
 %if simParams.technology~=1 % Not only LTE    
     distanceReal_11p = positionManagement.distanceReal;
     % Vehciles that are not LTE are set to an infinite distance

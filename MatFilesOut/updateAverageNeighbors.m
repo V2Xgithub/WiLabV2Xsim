@@ -9,7 +9,7 @@ StDevNeighbours11p = zeros(1,length(phyParams.Raw));
 for iPhyRaw = 1:length(phyParams.Raw)
     % LTE
     %if simParams.technology ~= 2 % if not only 11p
-    if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0    
+    if sum(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX)>0    
         NneighborsRawLTE = zeros(length(stationManagement.activeIDsCV2X),1);
         for i = 1:length(stationManagement.activeIDsCV2X)
             if iPhyRaw==1
@@ -26,7 +26,7 @@ for iPhyRaw = 1:length(phyParams.Raw)
     end
 
     % 11p
-    if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0
+    if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX)>0
     %if simParams.technology ~= 1 % if not only LTE
         NneighborsRaw11p = zeros(length(stationManagement.activeIDs11p),1);
         for i = 1:length(stationManagement.activeIDs11p)

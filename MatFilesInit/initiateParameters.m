@@ -1,4 +1,4 @@
-function [simParams,appParams,phyParams,outParams] = initiateParameters(simVersion, varargin)
+function [simParams,appParams,phyParams,outParams] = initiateParameters(varargin)
 % Function to initialize simulator parameters
 
 nArgs = length(varargin{1});
@@ -29,7 +29,7 @@ if mod(length(varargin{1}),2)==1
 end
 
 % Initialize Simulation parameters
-[simParams,varargin] = initiateMainSimulationParameters(fileCfg,simVersion,varargin{1});
+[simParams,varargin] = initiateMainSimulationParameters(fileCfg,varargin{1});
 simParams.fileCfg = fileCfg;
 
 % Initialize Application parameters
@@ -42,7 +42,7 @@ simParams.fileCfg = fileCfg;
 [outParams,varargin] = initiateOutParameters(simParams,phyParams,fileCfg,varargin{1});
     
 % C-V2X derived parameters
-if simParams.technology ~= 2 % not only 11p
+if simParams.technology ~= constants.TECH_ONLY_11P % not only 11p
     
     % Initialize CV2X resource assignement algorithm parameters
     [simParams,phyParams,varargin] = initiateBRAssignmentAlgorithm(simParams,phyParams,appParams.allocationPeriod,fileCfg,varargin{1});

@@ -1,8 +1,8 @@
 function [sinrManagement] = initLastPowerCV2X(timeManagement,stationManagement,sinrManagement,simParams,appParams,phyParams)
 
 % If coexistence, I have to initialize the value of averageInterfFrom11pToLTE
-if simParams.technology == 4
-    sinrManagement.coex_averageSFinterfFrom11pToLTE = sinrManagement.coex_currentInterfFrom11pToLTE;
+if simParams.technology == constants.TECH_COEX_STD_INTERF
+    sinrManagement.coex_averageTTIinterfFrom11pToLTE = sinrManagement.coex_currentInterfFrom11pToLTE;
     % note: the following two parameters might be overwritten later, but with the same values 
     sinrManagement.instantThisPstartedCV2X = timeManagement.timeNow;
     sinrManagement.instantTheSINRaverageStartedCV2X = timeManagement.timeNow;
