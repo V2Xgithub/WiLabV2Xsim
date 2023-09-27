@@ -376,7 +376,9 @@ if outParams.printHiddenNodeProb
 end
 
 % Print to XLS file
-outputToFiles(stationManagement,simParams,appParams,phyParams,sinrManagement,outParams,outputValues);
+if outParams.printToXLSMainFile
+    outputToFiles(stationManagement,simParams,appParams,phyParams,sinrManagement,outParams,outputValues);
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Print To Video
