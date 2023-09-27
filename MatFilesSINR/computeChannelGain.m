@@ -27,8 +27,8 @@ if (~simParams.fileObstaclesMap)
     if simParams.typeOfScenario==constants.SCENARIO_URBAN %ETSI-Urban
         D1 = zeros(Nvehicles,Nvehicles);
         C = zeros(Nvehicles,Nvehicles);
-        horizontal=abs(real(positionManagement.direction));
-        vertical=abs(imag(positionManagement.direction));
+        horizontal=cos(positionManagement.direction);
+        vertical=sin(positionManagement.direction);
         D_corr = 10;         % Decorrelation distance for the shadowing calculation
         for i = 1:Nvehicles
             if positionManagement.XvehicleReal(i)~=Inf

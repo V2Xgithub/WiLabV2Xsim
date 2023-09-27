@@ -12,8 +12,8 @@ end
 
 
 if ~isreal(Xmax)%ETSI-Urban
-    directionX=real(direction);
-    directionY=imag(direction);
+    directionX=cos(direction);
+    directionY=sin(direction);
     maxX=real(Xmax);
     maxY=imag(Xmax);
     
@@ -141,7 +141,7 @@ else
     
     
     
-    Xvehicle = (~direction).*mod(Xvehicle + v*updateInterval,Xmax) + direction.*mod(Xvehicle - v*updateInterval,Xmax);
+    Xvehicle = mod(Xvehicle + cos(direction).*(v*updateInterval),Xmax);
     % if simParams.mco_nVehInterf>0
     %     positionManagement.mco_interfXvehicle = (~positionManagement.mco_interfDirection).*mod(positionManagement.mco_interfXvehicle + positionManagement.mco_interfVvehicle * updateInterval,Xmax) + positionManagement.mco_interfDirection.*mod(positionManagement.mco_interfXvehicle - positionManagement.mco_interfVvehicle*updateInterval,Xmax);
     % end

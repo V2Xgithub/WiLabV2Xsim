@@ -1,9 +1,9 @@
-function [XvehicleReal,YvehicleReal,IDvehicle,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,IDvehicleExit,speedNow] = updatePositionFile(time,dataTrace,oldIDvehicle,XvehiclePrevious,YvehiclePrevious,timePrevious,simValues,outParams)
+function [XvehicleReal,YvehicleReal,IDvehicle,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,IDvehicleExit,speedNow, direction] = updatePositionFile(time,dataTrace,oldIDvehicle,XvehiclePrevious,YvehiclePrevious,timePrevious,simValues,outParams)
 % Update position of vehicles from file
 
 %XvehiclePrevious = XvehicleReal;
 %YvehiclePrevious = YvehicleReal;
-%tPrevious = find(dataTrace(:,1)<time,1,'Last');
+tPrevious = find(dataTrace(:,1)<time,1,'Last');
 
 fileIndex = find(dataTrace(:,1)==time);
 IDvehicle = dataTrace(fileIndex,2);
@@ -19,7 +19,12 @@ XvehicleReal = XvehicleReal(indexOrder);
 YvehicleReal = YvehicleReal(indexOrder);
 if length(dataTrace(1,:))>4
     speedNow = speedNow(indexOrder);
+else
+    speedNow = (((YvehicleReal - YvehiclePrevious).^2 + (XvehicleReal - XvehiclePrevious).^2).^0.5) / (time-tPrevious);
 end
+
+direction = atan2((YvehicleReal - YvehiclePrevious),(XvehicleReal - XvehiclePrevious))';
+
 
 [~,indexNewVehicles] = setdiff(IDvehicle,oldIDvehicle,'stable');
 

@@ -2,28 +2,29 @@ function [simParams,simValues,positionManagement,appParams] = initVehiclePositio
 % Function to initialize the positions of vehicles
 
 
-% Whne roadLength is zero all vehicles are in the same location
-if simParams.roadLength==0
-    % Scenario
-    positionManagement.Xmin = 0;                           % Min X coordinate
-    simValues.Xmax = 0;        % Max X coordinate
-    positionManagement.Ymin = 0;                           % Min Y coordinate
-    % Max Y coordinate
-    simValues.Ymax = 0;
-    
-    Nvehicles = simParams.rho;   % Number of vehicles
-    
-    simValues.IDvehicle(:,1) = 1:Nvehicles;             % Vector of IDs
-    simValues.maxID = Nvehicles;                        % Maximum vehicle's ID
-    
-    % Generate X coordinates of vehicles (uniform distribution)
-    positionManagement.XvehicleReal = zeros(Nvehicles,1);
-    simValues.direction = rand(Nvehicles,1) > 0.5;
-    positionManagement.YvehicleReal = zeros(Nvehicles,1);
-    simValues.v=0;
-    return
-end    
-
+% When roadLength is zero all vehicles are in the same location
+if simParams.typeOfScenario == constants.SCENARIO_HIGHWAY
+    if simParams.roadLength==0
+        % Scenario
+        positionManagement.Xmin = 0;                           % Min X coordinate
+        simValues.Xmax = 0;        % Max X coordinate
+        positionManagement.Ymin = 0;                           % Min Y coordinate
+        % Max Y coordinate
+        simValues.Ymax = 0;
+        
+        Nvehicles = simParams.rho;   % Number of vehicles
+        
+        simValues.IDvehicle(:,1) = 1:Nvehicles;             % Vector of IDs
+        simValues.maxID = Nvehicles;                        % Maximum vehicle's ID
+        
+        % Generate X coordinates of vehicles (uniform distribution)
+        positionManagement.XvehicleReal = zeros(Nvehicles,1);
+        simValues.direction = (rand(Nvehicles,1) > 0.5) * pi;
+        positionManagement.YvehicleReal = zeros(Nvehicles,1);
+        simValues.v=0;
+        return
+    end    
+end
 
 if simParams.typeOfScenario~=2 % Not traffic trace
     if simParams.typeOfScenario==4 %ETSI-Urban
@@ -134,7 +135,7 @@ if simParams.typeOfScenario~=2 % Not traffic trace
         directionY =  zeros(Nvehicles,1);
         directionY((simValues.Nblocks*n_veh_h_block+1):end)=direction_v;
         
-        simValues.direction=directionX+1i*directionY;
+        simValues.direction = atan2(directionY,directionX);
         
         positionManagement.direction=simValues.direction;
     
@@ -167,7 +168,7 @@ if simParams.typeOfScenario~=2 % Not traffic trace
         % 0 -> from left to right
         % 1 -> from right to left
         if simParams.typeOfScenario == 1 % Legacy PPP
-            simValues.direction = rand(Nvehicles,1) > 0.5;
+            simValues.direction = (rand(Nvehicles,1) > 0.5) * pi;
             right = find(simValues.direction==0);
             left = find(simValues.direction);
             
@@ -188,7 +189,7 @@ if simParams.typeOfScenario~=2 % Not traffic trace
             laneSelected = laneSelected(randperm(numel(laneSelected)));
             % and then the Y and direction follow from the selected lane
             positionManagement.YvehicleReal = laneSelected'*simParams.roadWidth;
-            simValues.direction =  mod(ceil(laneSelected'/simParams.NLanes)-1,2) ;
+            simValues.direction =  mod(ceil(laneSelected'/simParams.NLanes)-1,2) * pi;
         end
     end
     
@@ -228,7 +229,7 @@ else
     simValues.maxID = max(simValues.dataTrace(:,2));    % Maximum vehicle's ID
     
     % Call function to read vehicle positions from file at time zero
-    [positionManagement.XvehicleReal, positionManagement.YvehicleReal, simValues.IDvehicle, simValues.v] = updatePositionFile(0,simValues.dataTrace,[],-1,-1,-1,simValues,[]);
+    [positionManagement.XvehicleReal, positionManagement.YvehicleReal, simValues.IDvehicle, ~,~,~,~,simValues.v,simValues.direction] = updatePositionFile(0,simValues.dataTrace,[],-1,-1,-1,simValues,[]);
     
 end
 
