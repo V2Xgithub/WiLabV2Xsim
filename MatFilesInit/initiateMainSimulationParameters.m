@@ -318,9 +318,9 @@ switch simParams.typeOfScenario
         end
         
         
-        [simParams,varargin] = addNewParam(simParams,'roadWdt',3.5,'Lane width','double',fileCfg,varargin{1});
-        if simParams.roadWdt<=0
-            error('Error: "simParams.roadWdt" cannot be <= 0');
+        [simParams,varargin] = addNewParam(simParams,'roadWidth',3.5,'Lane width','double',fileCfg,varargin{1});
+        if simParams.roadWidth<=0
+            error('Error: "simParams.roadWidth" cannot be <= 0');
         end
      
         % Density in v/km in the case of 60km/h according to the TR

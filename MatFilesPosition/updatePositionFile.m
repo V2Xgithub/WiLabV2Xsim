@@ -23,8 +23,7 @@ else
     speedNow = (((YvehicleReal - YvehiclePrevious).^2 + (XvehicleReal - XvehiclePrevious).^2).^0.5) / (time-tPrevious);
 end
 
-direction = atan2((YvehicleReal - YvehiclePrevious),(XvehicleReal - XvehiclePrevious))';
-
+direction = complex((XvehicleReal - XvehiclePrevious),(YvehicleReal - YvehiclePrevious))';
 
 [~,indexNewVehicles] = setdiff(IDvehicle,oldIDvehicle,'stable');
 

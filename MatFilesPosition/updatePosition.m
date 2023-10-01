@@ -1,19 +1,21 @@
-function [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,IDvehicleExit,positionManagement] = updatePosition(time,IDvehicle,v,direction,updateInterval,Xmax,positionManagement,appParams,simValues,outParams,simParams)
+function [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,IDvehicleExit,positionManagement] = updatePosition(time,IDvehicle,updateInterval,positionManagement,simValues,outParams,simParams)
 % Update vehicles position (when not using File Trace)
 % (if a vehicle moves outside the scenario, enters by the other side)
 
 Xvehicle = positionManagement.XvehicleReal;
 Yvehicle = positionManagement.YvehicleReal;
+direction = positionManagement.direction;
+v = positionManagement.v;
+Xmax = positionManagement.Xmax;
 
 if simParams.roadLength==0
     % When testing all vehicles co-located, no position update
     return
 end
 
-
-if ~isreal(Xmax)%ETSI-Urban
-    directionX=cos(direction);
-    directionY=sin(direction);
+if simParams.typeOfScenario == constants.SCENARIO_URBAN    % ETSI-Urban 
+    directionX=real(direction);
+    directionY=imag(direction);
     maxX=real(Xmax);
     maxY=imag(Xmax);
     
@@ -74,10 +76,6 @@ if ~isreal(Xmax)%ETSI-Urban
         F3=find((changes~=0).*vertical);
         pos_tot2(F3,1)=(pos_totI(F3,1)+direction2(F3).*(delta-(y_cross_closest(F3)-pos_totI(F3,2))));
         pos_tot2(F3,2)=(y_cross_closest(F3)-changes(F3).*(x_cross_closest(F3)-pos_totI(F3,1)));
-        % %
-        
-        %
-        %     pos_totI=pos_tot2;
     end
     horizontal(F)=(v2(F,2)==0); % flags vehicles on horizontal lanes
     vertical(F)=(v2(F,1)==0);   % flags vehicles on vertical lanes
@@ -136,24 +134,17 @@ if ~isreal(Xmax)%ETSI-Urban
     indexOldVehicles = IDvehicle;
     indexOldVehiclesToOld = IDvehicle;
     IDvehicleExit = [];
-    
 else
-    
-    
-    
-    Xvehicle = mod(Xvehicle + cos(direction).*(v*updateInterval),Xmax);
+    Xvehicle = mod(Xvehicle + real(direction).*(v*updateInterval),Xmax);
     % if simParams.mco_nVehInterf>0
     %     positionManagement.mco_interfXvehicle = (~positionManagement.mco_interfDirection).*mod(positionManagement.mco_interfXvehicle + positionManagement.mco_interfVvehicle * updateInterval,Xmax) + positionManagement.mco_interfDirection.*mod(positionManagement.mco_interfXvehicle - positionManagement.mco_interfVvehicle*updateInterval,Xmax);
     % end
-    
     
     % Return indices
     indexNewVehicles = [];
     indexOldVehicles = IDvehicle;
     indexOldVehiclesToOld = IDvehicle;
     IDvehicleExit = [];
-    
-    
 end
 positionManagement.XvehicleReal = Xvehicle;
 positionManagement.YvehicleReal = Yvehicle;

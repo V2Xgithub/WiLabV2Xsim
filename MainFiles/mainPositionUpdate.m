@@ -2,16 +2,16 @@ function [appParams,simParams,phyParams,outParams,simValues,outputValues,timeMan
     mainPositionUpdate(appParams,simParams,phyParams,outParams,simValues,outputValues,timeManagement,positionManagement,sinrManagement,stationManagement)
 % the position of all vehicles is updated
 
-if simParams.typeOfScenario~=2 % Not traffic trace
+if simParams.typeOfScenario ~= constants.SCENARIO_TRACE % Not traffic trace
     % Call function to update vehicles positions
-    [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,positionManagement] = updatePosition(timeManagement.timeNow,stationManagement.activeIDs,simValues.v,simValues.direction,simParams.positionTimeResolution,simValues.Xmax,positionManagement,appParams,simValues,outParams,simParams);
+    [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,positionManagement] = updatePosition(timeManagement.timeNow,stationManagement.activeIDs,simParams.positionTimeResolution,positionManagement,simValues,outParams,simParams);
 else
     % Store IDs of vehicles at the previous beacon period and update positions
-    [positionManagement.XvehicleReal,positionManagement.YvehicleReal,stationManagement.activeIDs,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,simValues.v,simValues.direction] = updatePositionFile( ...
-        round(timeManagement.timeNextPosUpdate*100/100), ...
+    [positionManagement.XvehicleReal,positionManagement.YvehicleReal,stationManagement.activeIDs,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,positionManagement.v,positionManagement.direction] = updatePositionFile( ...
+        round(timeManagement.timeNextPosUpdate,2), ...
         simValues.dataTrace,stationManagement.activeIDs, ...
         positionManagement.XvehicleReal,positionManagement.YvehicleReal, ...
-        round(timeManagement.timeNextPosUpdate*100)/100-simParams.positionTimeResolution,simValues,outParams);
+        round(timeManagement.timeNextPosUpdate,2)-simParams.positionTimeResolution,simValues,outParams);
     %% ONLY LTE
     if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
     %if simParams.technology ~= 2 % not only 11p
@@ -210,7 +210,7 @@ end
 % Generate time values of new vehicles entering the scenario
 timeManagement.timeNextPacket(stationManagement.activeIDs(indexNewVehicles)) = round(timeManagement.timeNow + appParams.allocationPeriod * rand(1,length(indexNewVehicles)), 10);
 if appParams.variabilityGenerationInterval == constants.PACKET_GENERATION_ETSI_CAM
-    timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDs(indexNewVehicles)) = generationPeriodFromSpeed(simValues.v(indexNewVehicles),appParams);
+    timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDs(indexNewVehicles)) = generationPeriodFromSpeed(positionManagement.v(indexNewVehicles),appParams);
 else
     timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDs(indexNewVehicles)) = appParams.generationInterval - appParams.variabilityGenerationInterval/2 + appParams.variabilityGenerationInterval*rand(length(indexNewVehicles),1);
     timeManagement.generationIntervalDeterministicPart(stationManagement.activeIDsCV2X) = appParams.generationInterval;
