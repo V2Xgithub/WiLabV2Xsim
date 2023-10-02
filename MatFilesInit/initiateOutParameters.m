@@ -30,20 +30,27 @@ if outParams.printToXLSMainFile
     % The name of the file cannot be changed
     [outParams,varargin]= addNewParam(outParams,'outMainFile','MainOut.xls','Output Main File','string',fileCfg,varargin{1});
     fprintf('Main output file = %s/%s\n',outParams.outputFolder,outParams.outMainFile);
-    % Simulation ID
+    
+    % Two ways to use the "parfor"
+    % 1. Using different output folder.
+    % 2. At the same output folder, the simID should be set one by one 
+    %    before starting simulation.
+    % Note: with the 2nd method, if not set simID before the simulation,
+    % there might be some errors multiple processes have the same
+    % simID
     [outParams,varargin]= addNewParam(outParams,'simID',0,'Sim ID - leave 0 for auto increment from main file','integer',fileCfg,varargin{1});
-    if outParams.simID == 0
-        mainFileName = sprintf('%s/%s',outParams.outputFolder,outParams.outMainFile);
-        fid = fopen(mainFileName);
-        if fid==-1
-            simID = 0;
+    if outParams.simID == 0     % fixme: auto increment does not support parallel tasks. The IDs would be a mess
+        mainFileName = fullfile(outParams.outputFolder, outParams.outMainFile);
+        if exist(mainFileName, "file") ~= 2
+            outParams.simID = 1;
         else
+            fid = fopen(mainFileName);
             % use recommended function textscan
             C = textscan(fid,'%s %*[^\n]');
             simID = str2double(C{1}{end});
+            outParams.simID = simID+1;
             fclose(fid);
         end
-        outParams.simID = simID+1;
     end
     fprintf('Simulation ID = %.0f\n',outParams.simID);
 else
