@@ -1,4 +1,4 @@
-function WiLabV2Xsim(varargin)
+function [outputValues, allParams] = WiLabV2Xsim(varargin)
 % The function WiLabV2Xsim() is the main function of the simulator
 
 % ==============
@@ -76,6 +76,13 @@ end
 
 % Update PHY structure with the ranges
 [phyParams] = deriveRanges(phyParams,simParams);
+
+% Save all the params to return later
+allParams = struct();
+allParams.simParams = simParams;
+allParams.appParams = appParams;
+allParams.phyParams = phyParams;
+allParams.outParams = outParams;
 
 % Simulator output inizialization
 outputValues = struct('computationTime',-1,...
