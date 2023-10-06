@@ -24,7 +24,7 @@ if (~simParams.fileObstaclesMap)
     D_corr = 25;         % Decorrelation distance for the shadowing calculation
     [X,Y] = convertToGrid(positionManagement.XvehicleReal,positionManagement.YvehicleReal,positionManagement.XminMap,positionManagement.YmaxMap,positionManagement.StepMap);
     
-    if simParams.typeOfScenario==constants.SCENARIO_URBAN %ETSI-Urban
+    if simParams.typeOfScenario==constants.SCENARIO_URBAN  % ETSI-Urban
         D1 = zeros(Nvehicles,Nvehicles);
         C = zeros(Nvehicles,Nvehicles);
         horizontal=abs(real(positionManagement.direction));

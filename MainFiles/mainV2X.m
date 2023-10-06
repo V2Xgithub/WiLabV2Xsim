@@ -250,11 +250,11 @@ while timeManagement.timeNow < simParams.simulationTime
             %printDebugEvents(timeEvent,'New packet, LTE',idEvent);
        
             stationManagement.pckBuffer(idEvent) = stationManagement.pckBuffer(idEvent)+1;
-%             %% From version 6.2, the following corrects a bug
-%             %The buffer may include a packet that is being transmitted
-%             %If the buffer already includes a packet, this needs to be
-%             %checked at the end of this subframe
-%             %If this is not the case, the pckNextAttempt must be reset
+            %% From version 6.2, the following corrects a bug
+            % The buffer may include a packet that is being transmitted
+            % If the buffer already includes a packet, this needs to be
+            % checked at the end of this subframe
+            % If this is not the case, the pckNextAttempt must be reset
             if stationManagement.pckBuffer(idEvent)<=1
                 stationManagement.pckNextAttempt(idEvent) = 1; 
             end
