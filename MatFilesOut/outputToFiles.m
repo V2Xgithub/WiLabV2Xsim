@@ -6,8 +6,26 @@ if isfolder(outputFolder) == false
     mkdir(outputFolder)
 end
 
-fileNameMain = sprintf('%s/%s',outputFolder,outParams.outMainFile);
-fileMainID = fopen(fileNameMain,'at');
+% Due to parfor function, it is possible that multiple tasks try to open 
+% this file at the same time. If one of them can not open it, try within 120 s
+fileNameMain = fullfile(outputFolder, outParams.outMainFile);
+fileWriteMarker = fullfile(outputFolder, "MainFileIsWriting.txt");
+startLogTime = toc;
+while true
+    currentTime = toc;
+    if currentTime - startLogTime < 120
+        if exist(fileWriteMarker, "file") == 2  % check if file is being written now
+            openFileDelay = rand();
+            pause(openFileDelay);
+        else
+            IsWritingFile = fopen(fileWriteMarker,"w");
+            fileMainID = fopen(fileNameMain,'at');
+            break;
+        end
+    else
+        error("Could not open file: %s", fileNameMain);
+    end
+end
 
 if fseek(fileMainID, 1, 'bof') == -1
     %1 Main settings
@@ -687,3 +705,8 @@ for iPhyRaw=1:length(phyParams.Raw)
     end
 end
 fprintf(fileMainID,'\n');
+
+% close file and delete fileWriteMarker
+fclose(fileMainID);
+fclose(IsWritingFile);
+delete(fileWriteMarker);

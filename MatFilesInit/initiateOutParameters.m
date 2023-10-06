@@ -20,26 +20,43 @@ s = what(outParams.outputFolder);
 outParams.outputFolder = s.path;
 fprintf('Full path of the output folder = %s\n',outParams.outputFolder);
 
-% Name of the file that summarizes the inputs and outputs of the simulation
-% Each simulation adds a line in append
-% The file is a xls file
-% The name of the file cannot be changed
-outParams.outMainFile = 'MainOut.xls';
-fprintf('Main output file = %s/%s\n',outParams.outputFolder,outParams.outMainFile);
 
-% Simulation ID
-mainFileName = sprintf('%s/%s',outParams.outputFolder,outParams.outMainFile);
-fid = fopen(mainFileName);
-if fid==-1
-    simID = 0;
+% [printToXLSMainFile]
+[outParams,varargin]= addNewParam(outParams,'printToXLSMainFile', true, 'Write some result info into a main xls file','bool',fileCfg,varargin{1});
+if outParams.printToXLSMainFile
+    % Name of the file that summarizes the inputs and outputs of the simulation
+    % Each simulation adds a line in append
+    % The file is a xls file
+    % The name of the file cannot be changed
+    [outParams,varargin]= addNewParam(outParams,'outMainFile','MainOut.xls','Output Main File','string',fileCfg,varargin{1});
+    fprintf('Main output file = %s/%s\n',outParams.outputFolder,outParams.outMainFile);
+    
+    % Two ways to use the "parfor"
+    % 1. Using different output folder.
+    % 2. At the same output folder, the simID should be set one by one 
+    %    before starting simulation.
+    % Note: with the 2nd method, if not set simID before the simulation,
+    % there might be some errors multiple processes have the same
+    % simID
+    [outParams,varargin]= addNewParam(outParams,'simID',0,'Sim ID - leave 0 for auto increment from main file','integer',fileCfg,varargin{1});
+    if outParams.simID == 0     % fixme: auto increment does not support parallel tasks. The IDs would be a mess
+        mainFileName = fullfile(outParams.outputFolder, outParams.outMainFile);
+        if exist(mainFileName, "file") ~= 2
+            outParams.simID = 1;
+        else
+            fid = fopen(mainFileName);
+            % use recommended function textscan
+            C = textscan(fid,'%s %*[^\n]');
+            simID = str2double(C{1}{end});
+            outParams.simID = simID+1;
+            fclose(fid);
+        end
+    end
+    fprintf('Simulation ID = %.0f\n',outParams.simID);
 else
-    % use recommended function textscan
-    C = textscan(fid,'%s %*[^\n]');
-    simID = str2double(C{1}{end});
-    fclose(fid);
+    % Simulation ID
+    [outParams,varargin]= addNewParam(outParams,'simID',1,'Sim ID - default 1 if printToXLSMainFile','integer',fileCfg,varargin{1});
 end
-outParams.simID = simID+1;
-fprintf('Simulation ID = %.0f\n',outParams.simID);
 
 % [printNeighbors]
 % Boolean to activate the print to file of the number of neighbors
@@ -164,4 +181,5 @@ end
 [outParams,varargin]= addNewParam(outParams,'message', 'None', 'Message during simulation','string',fileCfg,varargin{1});
 fprintf('\n');
 %
+
 %%%%%%%%%

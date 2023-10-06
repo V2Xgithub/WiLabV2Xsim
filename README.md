@@ -33,7 +33,7 @@ Alessandro Bazzi (alessandro.bazzi@unibo.it)
 
 Vittorio Todisco (vittorio.todisco@unibo.it, vittorio.todisco@ieiit.cnr.it)
 
-Wu Zhuofei, also called Felix (wu.zhuofei@unibo.it)
+Wu Zhuofei, also called Felix (wzfhrb.cn@gmail.com)
 *****
 
 *****
