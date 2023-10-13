@@ -60,7 +60,7 @@ awarenessIDLTE = [
 % 1 and 3 share the same BRT and same BRF, don't care about 2
 BRid = [9 -1 9];
 NbeaconsT = 3;
-actual = countHiddenNodeEvents(errorRxList=errorRxList, awarenessIDLTE=awarenessIDLTE, BRid=BRid, NbeaconsT=NbeaconsT, duplexCV2X="HD");
+actual = countHiddenNodeEvents(errorRxList=errorRxList, awarenessIDLTE=awarenessIDLTE, BRid=BRid, NbeaconsT=NbeaconsT, duplexCV2X="FD");
 expected = 1;
 verifyEqual(testCase, actual, expected);
 end
