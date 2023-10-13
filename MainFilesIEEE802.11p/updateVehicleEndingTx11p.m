@@ -42,7 +42,7 @@ else
         % in idle state
         stationManagement.vehicleState(idEvent) = constants.V_STATE_11P_IDLE; % idle
         timeManagement.timeNextTxRx11p(idEvent) = Inf;
-    elseif stationManagement.pckBuffer(idEvent) >= 1
+    elseif stationManagement.pckBuffer(idEvent) >= appParams.bufferLength
         % If there are other packets in the queue, a new
         % backoff is initialized and started
         % in this case is retransmission, because the queue only has one
