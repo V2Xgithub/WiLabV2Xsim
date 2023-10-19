@@ -177,9 +177,10 @@ end
 %     [outParams,varargin]= addNewParam(outParams,'mco_printInterfStatistic',true,'Print MCO interference statistic','bool',fileCfg,varargin{1});
 % end
 
+% [printHiddenNodeEvents]
+[outParams,varargin] = addNewParam(outParams,'printHiddenNodeEvents', false, 'Count the number of errors due to hidden node problem', 'bool', fileCfg, varargin{1});
+
 % [message]
 [outParams,varargin]= addNewParam(outParams,'message', 'None', 'Message during simulation','string',fileCfg,varargin{1});
 fprintf('\n');
-%
-
 %%%%%%%%%

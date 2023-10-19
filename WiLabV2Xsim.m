@@ -236,6 +236,10 @@ if outParams.printHiddenNodeProb
     %outputValues.hiddenNodeProbEvents = zeros(floor(phyParams.RawMax)+1,1);
 end
 
+if outParams.printHiddenNodeEvents
+    outputValues.hiddenNodeEvents = zeros(length(phyParams.Raw), 1);
+end
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Start Simulation
 [simValues,outputValues,appParams,simParams,phyParams,sinrManagement,outParams,stationManagement] = mainV2X(appParams,simParams,phyParams,outParams,simValues,outputValues,positionManagement);    
@@ -380,6 +384,10 @@ end
 % Print hidden node probability to file (if enabled)
 if outParams.printHiddenNodeProb
     printHiddenNodeProb(outputValues,outParams);
+end
+
+if outParams.printHiddenNodeEvents
+    printHiddenNodeEvents(outputFolder=outParams.outputFolder, simId=outParams.simID, hiddenNodeEvents=outputValues.hiddenNodeEvents);
 end
 
 % Print to XLS file

@@ -83,7 +83,11 @@ for iPhyRaw=1:length(phyParams.Raw)
     if simParams.typeOfScenario==constants.SCENARIO_TRACE && outParams.printPRRmap
         simValues = counterMap(iPhyRaw,simValues,stationManagement.activeIDsCV2X,indexInActiveIDsOnlyLTE,activeIDsTXLTE,awarenessID_LTE(:,:,iPhyRaw),errorMatrix);
     end
-
+    
+    if outParams.printHiddenNodeEvents
+        hiddenNodeEvents = countHiddenNodeEvents(errorRxList=errorRxList, awarenessIDLTE=stationManagement.awarenessIDLTE(:,:,iPhyRaw), BRid=stationManagement.BRid, NbeaconsT=appParams.NbeaconsT, duplexCV2X=phyParams.duplexCV2X);
+        outputValues.hiddenNodeEvents(iPhyRaw) = outputValues.hiddenNodeEvents(iPhyRaw) + hiddenNodeEvents;
+    end
 end
 
 % Count distance details for distances up to the maximum awareness range (if enabled)

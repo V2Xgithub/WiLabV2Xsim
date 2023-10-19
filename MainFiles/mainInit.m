@@ -116,7 +116,7 @@ stationManagement.ITSNumberOfReplicas = phyParams.ITSNumberOfReplicasMax * ones(
 timeManagement.timeGeneratedPacketInTxLTE = -1 * ones(simValues.maxID,1);
 if appParams.variabilityGenerationInterval == constants.PACKET_GENERATION_ETSI_CAM
     if simParams.typeOfScenario ~= constants.SCENARIO_TRACE % Not traffic trace
-        timeManagement.generationIntervalDeterministicPart = generationPeriodFromSpeed(simValues.v,appParams);
+        timeManagement.generationIntervalDeterministicPart = generationPeriodFromSpeed(positionManagement.v,appParams);
     else
         timeManagement.generationIntervalDeterministicPart = appParams.generationInterval * ones(simValues.maxID,1);
     end
@@ -237,6 +237,9 @@ if outParams.printUpdateDelay && outParams.printWirelessBlindSpotProb
     outputValues.enteredInRangeLTE = -1 * ones(simValues.maxID,simValues.maxID,length(phyParams.Raw));
     for iRaw = 1:length(phyParams.Raw)
         valuesEnteredInRange = outputValues.enteredInRangeLTE(:,:,iRaw);
+        % fixme: when using tracefile, there may not be consecutive
+        % activeIDs (e.g. max ID in 140 cars is 150). But distanceReal has
+        % the number of activesIDs' rows and columns
         valuesEnteredInRange(stationManagement.activeIDsCV2X,stationManagement.activeIDsCV2X) = (positionManagement.distanceReal(stationManagement.activeIDsCV2X,stationManagement.activeIDsCV2X)<=phyParams.Raw(iRaw))-1;
         outputValues.enteredInRangeLTE(:,:,iRaw) = valuesEnteredInRange - diag(diag(valuesEnteredInRange+1));        
     end
