@@ -8,7 +8,7 @@ function [phyParams,simValues,outputValues,sinrManagement,stationManagement,time
 % geneated in a subframe during which the station is transmitting is
 % not correctly managed
 for idLte = stationManagement.activeIDsCV2X'   
-    if stationManagement.pckBuffer(idLte)>1
+    if stationManagement.pckBuffer(idLte) > appParams.bufferLength
         [stationManagement,outputValues] = bufferOverflowLTE(idLte,timeManagement,positionManagement,stationManagement,phyParams,appParams,outputValues,outParams);
         stationManagement.pckNextAttempt(idLte) = 1;     
     end
@@ -48,7 +48,7 @@ elseif simParams.BRAlgorithm == constants.REASSIGN_BR_RAND_ALLOCATION
         stationManagement.BRid(stationManagement.activeIDsCV2X(hasNewPacketThisTbeacon),:) = BRidModified;
     end
     
-elseif mod(timeManagement.elapsedTime_TTIs,appParams.NbeaconsT)==0
+elseif timeManagement.elapsedTime_TTIs == 1 || mod(timeManagement.elapsedTime_TTIs,appParams.NbeaconsT) == 0
     % All other algorithms except standard Mode 4
     % TODO not checked in version 5.X
     

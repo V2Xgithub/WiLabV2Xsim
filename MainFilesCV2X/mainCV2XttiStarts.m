@@ -30,7 +30,9 @@ iTransmitting = 1;
 currentT = (mod((timeManagement.elapsedTime_TTIs-1),appParams.NbeaconsT)+1);
 idLteHasPck = stationManagement.activeIDsCV2X(stationManagement.pckBuffer(stationManagement.activeIDsCV2X) >= 1);
 for idLte = idLteHasPck'    
-    attemptToDo = stationManagement.pckNextAttempt(idLte);
+    % attemptToDo = stationManagement.pckNextAttempt(idLte);
+    % was BRid ever going to have more than one column...?
+    attemptToDo = 1;
     if ceil((stationManagement.BRid(idLte,attemptToDo))/appParams.NbeaconsF)==currentT
         stationManagement.transmittingIDsCV2X(iTransmitting) = idLte;
         stationManagement.transmittingFusedLTE(iTransmitting) = mod((stationManagement.BRid(idLte,attemptToDo))-1,appParams.NbeaconsF)+1;
@@ -71,7 +73,7 @@ end
 % This has been done to allow the possibility of allowing the possibility
 % of triggering retransmissions
 if ~isempty(stationManagement.transmittingIDsCV2X)
-    stationManagement.pckTxOccurring(stationManagement.transmittingIDsCV2X) = stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X);
+    stationManagement.pckTxOccurring(stationManagement.transmittingIDsCV2X) = logical(stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X));
  	stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X) = stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X) + 1;
     txIDlastTx = stationManagement.transmittingIDsCV2X(stationManagement.pckNextAttempt(stationManagement.transmittingIDsCV2X)>stationManagement.cv2xNumberOfReplicas(stationManagement.transmittingIDsCV2X));
     stationManagement.pckBuffer(txIDlastTx) = stationManagement.pckBuffer(txIDlastTx)-1;

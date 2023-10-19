@@ -153,7 +153,13 @@ end
 % if simParams.mco_nVehInterf<0
 %     error('Error: "simParams.mco_nVehInterf" cannot be < 0');
 % end
-    
+
+% [bufferLength]
+[appParams,varargin]= addNewParam(appParams,'bufferLength',1,'Length of the vehicle packet buffer','integer',fileCfg,varargin{1});
+if appParams.bufferLength<1
+    error('bufferLength must be >= 1');
+end
+
 fprintf('\n');
 %
 %%%%%%%%%
