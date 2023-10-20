@@ -68,15 +68,20 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
     end
     
     % Add LTE positioning delay (if selected)
-    [simValues.XvehicleEstimated,simValues.YvehicleEstimated,PosUpdateIndex] = addPosDelay(simValues.XvehicleEstimated,simValues.YvehicleEstimated,positionManagement.XvehicleReal,positionManagement.YvehicleReal,stationManagement.activeIDs,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,positionManagement.posUpdateAllVehicles,simParams.positionTimeResolution);
-
+    [positionManagement.XvehicleEstimated, positionManagement.YvehicleEstimated,...
+     positionManagement.XvehicleHistory, positionManagement.YvehicleHistory] = addPosDelay(positionManagement.XvehicleReal, positionManagement.YvehicleReal, positionManagement.XvehicleHistory, positionManagement.YvehicleHistory, timeManagement.timeNow, simParams.posDelay, simParams.posPacketLoss);
+    
     % Add LTE positioning error (if selected)
     % (Xvehicle, Yvehicle): fictitious vehicles' position seen by the eNB
-    [simValues.XvehicleEstimated(PosUpdateIndex),simValues.YvehicleEstimated(PosUpdateIndex)] = addPosError(positionManagement.XvehicleReal(PosUpdateIndex),positionManagement.YvehicleReal(PosUpdateIndex),simParams.sigmaPosError);
+    [positionManagement.XvehicleEstimated,positionManagement.YvehicleEstimated] = addPosError(positionManagement.XvehicleEstimated, positionManagement.YvehicleEstimated,simParams.sigmaPosError);
+
+    % Record the cumulative mean of positioning error
+    this_instance_error = sqrt((positionManagement.XvehicleReal - positionManagement.XvehicleEstimated).^2 + (positionManagement.YvehicleReal - positionManagement.YvehicleEstimated).^2);
+    outputValues.meanPositionError = (this_instance_error + positionManagement.NposUpdates*outputValues.meanPositionError)/(positionManagement.NposUpdates+1);
 end
 
 % Call function to compute the distances
-[positionManagement,stationManagement] = computeDistance (simParams,simValues,stationManagement,positionManagement);
+[positionManagement] = computeDistance(positionManagement);
 
 % Call function to update positionManagement.distance matrix where D(i,j) is the
 % change in positionManagement.distance of link i to j from time n-1 to time n and used
