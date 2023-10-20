@@ -157,7 +157,7 @@ classdef constants
                             constants.REASSIGN_BR_POW_CONTROL
                             constants.REASSIGN_BR_MIN_REUSE_POW
                             constants.REASSIGN_BR_ORDERED_ALLOCATION];
-    REASSIGN_BR_ALOGRITHMS_AUTONOMOUS = [constants.REASSIGN_BR_STD_MODE_4 
+    REASSIGN_BR_ALGORITHMS_AUTONOMOUS = [constants.REASSIGN_BR_STD_MODE_4 
                             constants.REASSIGN_BR_RAND_ALLOCATION];
     %% ****************************************
 	%% CHANNEL MODEL

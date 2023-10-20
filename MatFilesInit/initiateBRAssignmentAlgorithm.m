@@ -24,7 +24,7 @@ function [simParams, phyParams, varargin] = initiateBRAssignmentAlgorithm(simPar
     % 101 -> RANDOM ALLOCATION
     % 102 -> ORDERED ALLOCATION (following X coordinate)
 
-    implementedAlgorithms = [constants.REASSIGN_BR_ALGORITHMS_CONTROLLED ; constants.REASSIGN_BR_ALOGRITHMS_AUTONOMOUS];
+    implementedAlgorithms = [constants.REASSIGN_BR_ALGORITHMS_CONTROLLED ; constants.REASSIGN_BR_ALGORITHMS_AUTONOMOUS];
 
     [simParams, varargin] = addNewParam(simParams, 'BRAlgorithm', constants.REASSIGN_BR_STD_MODE_4, 'Assignment algorithm', 'integer', fileCfg, varargin{1});
     if ~ismember(simParams.BRAlgorithm, implementedAlgorithms)
