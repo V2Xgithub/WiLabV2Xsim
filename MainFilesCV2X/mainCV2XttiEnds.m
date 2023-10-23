@@ -53,7 +53,7 @@ elseif mod(timeManagement.elapsedTime_TTIs,appParams.NbeaconsT)==0
     % TODO not checked in version 5.X
     
     %% Radio Resources Reassignment
-    if ismember(simParams.BRAlgorithm, constants.CONTROLLED_ALGORITHMS)
+    if ismember(simParams.BRAlgorithm, constants.REASSIGN_BR_ALGORITHMS_CONTROLLED)
         
         if timeManagement.elapsedTime_TTIs > 0
             % Current scheduled reassign period
