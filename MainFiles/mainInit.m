@@ -68,6 +68,7 @@ outputValues.Nvehicles = length(stationManagement.activeIDs);
 outputValues.NvehiclesTOT = outputValues.NvehiclesTOT + outputValues.Nvehicles;
 outputValues.NvehiclesLTE = outputValues.NvehiclesLTE + length(stationManagement.activeIDsCV2X);
 outputValues.Nvehicles11p = outputValues.Nvehicles11p + length(stationManagement.activeIDs11p);
+outputValues.meanPositionError = zeros(outputValues.Nvehicles, 1);
 
 %% Initialization of packets management 
 % Number of packets in the queue of each node
@@ -201,15 +202,22 @@ else
 end
 
 % Copy real coordinates into estimated coordinates at eNodeB (no positioning error)
-simValues.XvehicleEstimated = positionManagement.XvehicleReal;
-simValues.YvehicleEstimated = positionManagement.YvehicleReal;
+positionManagement.XvehicleEstimated = positionManagement.XvehicleReal;
+positionManagement.YvehicleEstimated = positionManagement.YvehicleReal;
 
 % Call function to compute distances
-% computeDistance(i,j): computeDistance from vehicle with index i to vehicle with index j
-% positionManagement.distance matrix has dimensions equal to simValues.IDvehicle x simValues.IDvehicle in order to
-% speed up the computation (only vehicles present at the considered instant)
-% positionManagement.distance(i,j): positionManagement.distance from vehicle with index i to vehicle with index j
-[positionManagement,stationManagement] = computeDistance (simParams,simValues,stationManagement,positionManagement);
+[positionManagement] = computeDistance (positionManagement);
+
+% Position Delay
+% timetables of old positions
+n_vehicles = length(positionManagement.XvehicleReal);
+positionManagement.XvehicleHistory = cell(n_vehicles, 1);
+positionManagement.YvehicleHistory = cell(n_vehicles, 1);
+for i = 1:n_vehicles
+    positionManagement.XvehicleHistory{i} = timetable(Size=[0 1], VariableTypes={'double'}, TimeStep=seconds(simParams.positionTimeResolution));
+    positionManagement.YvehicleHistory{i} = timetable(Size=[0 1], VariableTypes={'double'}, TimeStep=seconds(simParams.positionTimeResolution));
+end
+
 
 % Save positionManagement.distance matrix
 positionManagement.XvehicleRealOld = positionManagement.XvehicleReal;

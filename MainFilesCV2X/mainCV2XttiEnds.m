@@ -53,7 +53,7 @@ elseif timeManagement.elapsedTime_TTIs == 1 || mod(timeManagement.elapsedTime_TT
     % TODO not checked in version 5.X
     
     %% Radio Resources Reassignment
-    if simParams.BRAlgorithm==constants.REASSIGN_BR_REUSE_DIS_SCHEDULED_VEH || simParams.BRAlgorithm==constants.REASSIGN_BR_MAX_REUSE_DIS || simParams.BRAlgorithm==constants.REASSIGN_BR_MIN_REUSE_POW
+    if ismember(simParams.BRAlgorithm, constants.CONTROLLED_ALGORITHMS)
         
         if timeManagement.elapsedTime_TTIs > 0
             % Current scheduled reassign period
@@ -79,7 +79,7 @@ elseif timeManagement.elapsedTime_TTIs == 1 || mod(timeManagement.elapsedTime_TT
 
         % BRs reassignment (CONTROLLED with MAXIMUM REUSE DISTANCE)
         %[stationManagement.BRid,Nreassign] = BRreassignmentControlledMaxReuse(stationManagement.activeIDsCV2X,stationManagement.BRid,scheduledID,stationManagement.neighborsIDLTE,appParams.NbeaconsT,appParams.NbeaconsF);
-        [stationManagement.BRid,Nreassign] = BRreassignmentControlledMaxReuse(stationManagement.activeIDsCV2X,stationManagement.BRid,scheduledID,stationManagement.allNeighborsID,appParams.NbeaconsT,appParams.NbeaconsF);
+        [stationManagement.BRid,Nreassign] = BRreassignmentControlledMaxReuse(stationManagement.activeIDsCV2X,stationManagement.BRid,scheduledID,stationManagement.allNeighborsIDEstimated,appParams.NbeaconsT,appParams.NbeaconsF);
 
     elseif simParams.BRAlgorithm == constants.REASSIGN_BR_MIN_REUSE_POW
 
@@ -113,7 +113,7 @@ elseif timeManagement.elapsedTime_TTIs == 1 || mod(timeManagement.elapsedTime_TT
     elseif simParams.BRAlgorithm==constants.REASSIGN_BR_ORDERED_ALLOCATION
 
         % Call Benchmark Algorithm 102 (ORDERED ALLOCATION)
-        [stationManagement.BRid,Nreassign] = BRreassignmentOrdered(positionManagement.XvehicleReal,stationManagement.activeIDsCV2X,stationManagement.BRid,appParams.NbeaconsT,appParams.NbeaconsF);
+        [stationManagement.BRid,Nreassign] = BRreassignmentOrdered(positionManagement.XvehicleEstimated,stationManagement.activeIDsCV2X,stationManagement.BRid,appParams.NbeaconsT,appParams.NbeaconsF);
 
     end
 

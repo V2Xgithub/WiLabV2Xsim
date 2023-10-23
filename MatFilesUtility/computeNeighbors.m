@@ -14,23 +14,29 @@ function [positionManagement,stationManagement] = computeNeighbors (stationManag
 if sum(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX)>0
 %if simParams.technology~=2 % Not only 11p
     distanceReal_LTE = positionManagement.distanceReal;
+    distanceEstimated_LTE = positionManagement.distanceEstimated;
     % Vehicles from which the received power is below a minimum are set to an infinite distance
     %distanceReal_LTE(stationManagement.activeIDs,stationManagement.activeIDs) = distanceReal_LTE(stationManagement.activeIDs,stationManagement.activeIDs)./nonNegligibleReceivedPower;
     % Vehciles that are not LTE are set to an infinite distance
     distanceReal_LTE(:,(stationManagement.vehicleState(stationManagement.activeIDs)~=100))=Inf;
+    distanceEstimated_LTE(:,(stationManagement.vehicleState(stationManagement.activeIDs)~=100))=Inf;
     % The diagonal must be set to 0
     distanceReal_LTE(1:1+length(distanceReal_LTE(1,:)):end) = 0;
+    distanceEstimated_LTE(1:1+length(distanceEstimated_LTE(1,:)):end) = 0;
     % sort
     [neighborsDistanceLTE, neighborsIndexLTE] = sort(distanceReal_LTE,2);
+    [~, neighborsIndexLTE_Estimated] = sort(distanceEstimated_LTE,2);
     % remove the first element per each raw, which is self
     neighborsDistanceLTE(:,1) = [];
-    neighborsIndexLTE(:,1) = [];    
+    neighborsIndexLTE(:,1) = [];
+    neighborsIndexLTE_Estimated(:,1) = [];
     neighborsDistanceLTE_ofLTE = neighborsDistanceLTE(stationManagement.vehicleState(stationManagement.activeIDs)==100,:);
     neighborsIndexLTE_ofLTE = neighborsIndexLTE(stationManagement.vehicleState(stationManagement.activeIDs)==100,:);
     
     % Vehicles in order of distance
     %allNeighborsID = IDvehicle(neighborsIndexLTE);
     stationManagement.allNeighborsID = stationManagement.activeIDs(neighborsIndexLTE);
+    stationManagement.allNeighborsIDEstimated = stationManagement.activeIDs(neighborsIndexLTE_Estimated);
     
     % Vehicles in the maximum awareness range
     stationManagement.neighborsIDLTE = (neighborsDistanceLTE_ofLTE < phyParams.RawMaxCV2X) .*stationManagement.activeIDs(neighborsIndexLTE_ofLTE);

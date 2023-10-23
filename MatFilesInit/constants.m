@@ -151,9 +151,14 @@ classdef constants
 
     % ORDERED ALLOCATION (following X coordinate)
     REASSIGN_BR_ORDERED_ALLOCATION = 102;
-    % ***** this two Algorithms used as benchmarks *****
-    
 
+    REASSIGN_BR_ALGORITHMS_CONTROLLED = [constants.REASSIGN_BR_REUSE_DIS_SCHEDULED_VEH
+                            constants.REASSIGN_BR_MAX_REUSE_DIS
+                            constants.REASSIGN_BR_POW_CONTROL
+                            constants.REASSIGN_BR_MIN_REUSE_POW
+                            constants.REASSIGN_BR_ORDERED_ALLOCATION];
+    REASSIGN_BR_ALGORITHMS_AUTONOMOUS = [constants.REASSIGN_BR_STD_MODE_4 
+                            constants.REASSIGN_BR_RAND_ALLOCATION];
     %% ****************************************
 	%% CHANNEL MODEL
 
