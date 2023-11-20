@@ -1,5 +1,6 @@
 classdef Coex < matlab.unittest.TestCase
     methods (Test)
+
         function testExample(testCase)
             %% params
             dens = 0.5:0.5:6; % cars per lane per km
@@ -62,7 +63,7 @@ classdef Coex < matlab.unittest.TestCase
                 end
             end
 
-             for i = 1:length(p_dens)
+            for i = 1:length(p_dens)
                 % if not complete at last time, remove files and restart
                 if exist(fullfile(p_outputF(i), sprintf("sim_%d", p_sim_ids(i))), "dir")
                     if ~exist(fullfile(p_outputF(i), sprintf("sim_%d", p_sim_ids(i)), "MainOut.xls"), "file")

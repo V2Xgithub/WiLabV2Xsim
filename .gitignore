@@ -3,3 +3,5 @@
 Output/
 code_for_papers/Vittorio2021Performance/Output/
 *fortest*
+coverageReport
+resources/**
