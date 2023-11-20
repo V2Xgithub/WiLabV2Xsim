@@ -50,7 +50,7 @@ function [simParams, phyParams, varargin] = initiateBRAssignmentAlgorithm(simPar
 
         % [posPacketLoss]
         [simParams, varargin] = addNewParam(simParams, 'posPacketLoss', 0, 'V2NB Positioning Signal Packet Loss Probability (only controlled BR algorithms)', 'double', fileCfg, varargin{1});
-        if simParams.posPacketLoss <= 0 || simParams.posPacketLoss < 1
+        if simParams.posPacketLoss < 0 || simParams.posPacketLoss > 1
             error('Error: "simParams.posPacketLoss must be 0 <= p < 1');
         end
 
