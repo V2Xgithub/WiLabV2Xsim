@@ -65,7 +65,7 @@ end
 % hasNewPacketThisTbeacon checks if any new packets were generated in this slot
 hasNewPacketThisTbeacon = (timeManagement.timeLastPacket(activeIDsCV2X) > (timeManagement.timeNow-phyParams.TTI-1e-8));
 hasFirstResourceThisTbeacon = (subframeNextResource(activeIDsCV2X,1)==currentT);
-hasFirstTransmissionThisSlot= hasFirstResourceThisTbeacon & stationManagement.hasTransmissionThisSlot;
+hasFirstTransmissionThisSlot = hasFirstResourceThisTbeacon & ismember(stationManagement.activeIDsCV2X, stationManagement.transmittingIDsCV2X);
 
 % The operand 'any' implies that if any replica is outside T1, T2, then a reallocation is performed
 scheduledID_PHY = activeIDsCV2X(hasNewPacketThisTbeacon & any(allConditionsMet,2));
@@ -117,7 +117,7 @@ if simParams.FDalgorithm==1
     stationManagement.nSPS(activeIDsCV2X) = stationManagement.nSPS(activeIDsCV2X)+hasFirstTransmissionThisSlot;
     % Evaluates the individual Pkeep according to FD-alg1
     stationManagement.probResKeep(keepCheck_MAC)=1-stationManagement.FDcounter(keepCheck_MAC)./stationManagement.nSPS(keepCheck_MAC);
-%     stationManagement.probResKeep(keepCheck_MAC(stationManagement.probResKeep(keepCheck_MAC)>0.8))=0.8; % modification: sets pk adaptive to max 0.8
+    % stationManagement.probResKeep(keepCheck_MAC(stationManagement.probResKeep(keepCheck_MAC)>0.8))=0.8; % modification: sets pk adaptive to max 0.8
     keepRand = rand(1,length(keepCheck_MAC));
     updateCounter_MAC =[];
     updateCounter_MAC = keepCheck_MAC(keepRand < stationManagement.probResKeep(keepCheck_MAC)');
@@ -379,12 +379,12 @@ end
 % The vehicles who selected new resources need to set the flag NEW DATA INDICATOR
 % Vehicles who performed the re-evaluation do not need to set it, as it is
 % already at 1, and it will be decremented after the first transmission
-stationManagement.newDataIndicator(activeIDsCV2X(scheduledID_PHY_MAC)) = 1;
+stationManagement.newDataIndicator(scheduledID_PHY_MAC) = 1;
 % the vehicles who DID NOT transmit in an allocated resource need to set the flag NEW DATA INDICATOR
 if simParams.reEvalAfterEmptyResource==true
     % the product between hasFirstResourceThisTbeacon and ~stationManagement.hasTransmissionThisSlot returns one only as a
     % consequence to an allocated resource without a packet to transmit
-    stationManagement.newDataIndicator(activeIDsCV2X(hasFirstResourceThisTbeacon & (~stationManagement.hasTransmissionThisSlot))) = 1;
+    stationManagement.newDataIndicator(activeIDsCV2X(hasFirstResourceThisTbeacon & (~ismember(stationManagement.activeIDsCV2X, stationManagement.transmittingIDsCV2X)))) = 1;
 end
 
 % FD function call

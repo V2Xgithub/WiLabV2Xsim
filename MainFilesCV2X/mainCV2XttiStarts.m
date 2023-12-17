@@ -25,7 +25,6 @@ timeManagement.elapsedTime_TTIs = floor((timeManagement.timeNow+1e-7)/phyParams.
 
 %% From v.5.4.16
 stationManagement.transmittingIDsCV2X = [];
-stationManagement.hasTransmissionThisSlot=zeros(length(stationManagement.activeIDsCV2X),1);
 iTransmitting = 1;
 currentT = (mod((timeManagement.elapsedTime_TTIs-1),appParams.NbeaconsT)+1);
 idLteHasPck = stationManagement.activeIDsCV2X(stationManagement.pckBuffer(stationManagement.activeIDsCV2X) >= 1);
@@ -39,9 +38,7 @@ for idLte = idLteHasPck'
         % printDebugTxRx(timeManagement.timeNow,idLte,'NR Tx started',stationManagement,sinrManagement,outParams);
     end
 end
-% hasTransmissionThisSlot introduced from version 6.2
-stationManagement.hasTransmissionThisSlot(stationManagement.transmittingIDsCV2X)=1;
-%%
+
 
 timeManagement.timeGeneratedPacketInTxLTE(stationManagement.transmittingIDsCV2X) = timeManagement.timeLastPacket(stationManagement.transmittingIDsCV2X);
 
