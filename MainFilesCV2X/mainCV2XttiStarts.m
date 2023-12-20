@@ -25,6 +25,7 @@ timeManagement.elapsedTime_TTIs = floor((timeManagement.timeNow+1e-7)/phyParams.
 
 %% From v.5.4.16
 stationManagement.transmittingIDsCV2X = [];
+stationManagement.hasTransmissionThisSlot=zeros(length(stationManagement.activeIDsCV2X),1);
 iTransmitting = 1;
 currentT = (mod((timeManagement.elapsedTime_TTIs-1),appParams.NbeaconsT)+1);
 idLteHasPck = stationManagement.activeIDsCV2X(stationManagement.pckBuffer(stationManagement.activeIDsCV2X) >= 1);
@@ -38,7 +39,9 @@ for idLte = idLteHasPck'
         % printDebugTxRx(timeManagement.timeNow,idLte,'NR Tx started',stationManagement,sinrManagement,outParams);
     end
 end
-
+% hasTransmissionThisSlot introduced from version 6.2
+stationManagement.hasTransmissionThisSlot(ismember(stationManagement.activeIDsCV2X,stationManagement.transmittingIDsCV2X))=1;
+%%
 
 timeManagement.timeGeneratedPacketInTxLTE(stationManagement.transmittingIDsCV2X) = timeManagement.timeLastPacket(stationManagement.transmittingIDsCV2X);
 
@@ -46,10 +49,10 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
     % Find index of vehicles that are currently transmitting
     stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE = zeros(length(stationManagement.transmittingIDsCV2X),1);
     stationManagement.indexInActiveIDs_OfTxLTE = zeros(length(stationManagement.transmittingIDsCV2X),1);
-    for ix = 1:length(stationManagement.transmittingIDsCV2X)
-        stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(ix) = find(stationManagement.activeIDsCV2X == stationManagement.transmittingIDsCV2X(ix));
-        stationManagement.indexInActiveIDs_OfTxLTE(ix) = find(stationManagement.activeIDs == stationManagement.transmittingIDsCV2X(ix));
-    end
+
+    [~, stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE] = ismember(stationManagement.transmittingIDsCV2X, stationManagement.activeIDsCV2X);
+    [~, stationManagement.indexInActiveIDs_OfTxLTE] = ismember(stationManagement.transmittingIDsCV2X, stationManagement.activeIDs);
+
 end
 
 % Initialization of the received power

@@ -65,7 +65,7 @@ end
 % hasNewPacketThisTbeacon checks if any new packets were generated in this slot
 hasNewPacketThisTbeacon = (timeManagement.timeLastPacket(activeIDsCV2X) > (timeManagement.timeNow-phyParams.TTI-1e-8));
 hasFirstResourceThisTbeacon = (subframeNextResource(activeIDsCV2X,1)==currentT);
-hasFirstTransmissionThisSlot = hasFirstResourceThisTbeacon & ismember(stationManagement.activeIDsCV2X, stationManagement.transmittingIDsCV2X);
+hasFirstTransmissionThisSlot= hasFirstResourceThisTbeacon & stationManagement.hasTransmissionThisSlot;
 
 % The operand 'any' implies that if any replica is outside T1, T2, then a reallocation is performed
 scheduledID_PHY = activeIDsCV2X(hasNewPacketThisTbeacon & any(allConditionsMet,2));
@@ -384,7 +384,7 @@ stationManagement.newDataIndicator(scheduledID_PHY_MAC) = 1;
 if simParams.reEvalAfterEmptyResource==true
     % the product between hasFirstResourceThisTbeacon and ~stationManagement.hasTransmissionThisSlot returns one only as a
     % consequence to an allocated resource without a packet to transmit
-    stationManagement.newDataIndicator(activeIDsCV2X(hasFirstResourceThisTbeacon & (~ismember(stationManagement.activeIDsCV2X, stationManagement.transmittingIDsCV2X)))) = 1;
+    stationManagement.newDataIndicator(activeIDsCV2X(hasFirstResourceThisTbeacon & (~stationManagement.hasTransmissionThisSlot))) = 1;
 end
 
 % FD function call

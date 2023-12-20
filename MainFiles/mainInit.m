@@ -96,8 +96,7 @@ stationManagement.pckTxOccurring = zeros(simValues.maxID,1);
 
 % Parameter for 11p retransmission KPI calculation, the index of active11p
 % in the range during earlier retransmission
-NactiveIDs11p = length(stationManagement.activeIDs11p);
-stationManagement.indexInRaw_earler = zeros(NactiveIDs11p, NactiveIDs11p, length(phyParams.Raw)); % (to, from, idRaw)
+stationManagement.indexInRaw_earler = zeros(simValues.maxID, simValues.maxID, length(phyParams.Raw)); % (to, from, idRaw)
 
 % HARQ init
 stationManagement.cv2xNumberOfReplicas = phyParams.cv2xNumberOfReplicasMax * ones(simValues.maxID,1);

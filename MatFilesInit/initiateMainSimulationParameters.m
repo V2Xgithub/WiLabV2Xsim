@@ -61,7 +61,7 @@ switch upper(simParams.Technology)
         simParams.mode5G = constants.MODE_5G; % 5G
         simParams.stringCV2X = '5G';
     otherwise
-        error('"simParams.Technology" must be ["LTE-V2X", "802.11p", "COEX-NO-INTERF", "COEX-STD-INTERF", ["NR-V2X","5G-V2X"], "COEX-STD-INTERF-5G]');
+        error('"simParams.Technology" must be ["LTE-V2X", "80211p", "COEX-NO-INTERF", "COEX-STD-INTERF", ["NR-V2X","5G-V2X"], "COEX-STD-INTERF-5G]');
 end
 
 % In coexistence case, set the proportion of 802.11p and C-V2X

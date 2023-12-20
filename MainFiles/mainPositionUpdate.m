@@ -12,31 +12,25 @@ else
         simValues.dataTrace,stationManagement.activeIDs, ...
         positionManagement.XvehicleReal,positionManagement.YvehicleReal, ...
         round(timeManagement.timeNextPosUpdate,2)-simParams.positionTimeResolution,simValues,outParams);
+
     %% ONLY LTE
-    if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
-    %if simParams.technology ~= 2 % not only 11p
+    if ~isempty(stationManagement.activeIDsCV2X)
         % Update stationManagement.BRid vector (variable number of vehicles in the scenario)
         [stationManagement.BRid] = updateBRidFile(stationManagement.BRid,stationManagement.activeIDs,indexNewVehicles);
     end
 end
 
 % Vectors IDvehicleLTE and IDvehicle11p are updated
-stationManagement.activeIDsCV2X = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)==100);
+stationManagement.activeIDsCV2X = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX);
 stationManagement.activeIDsCV2X = stationManagement.activeIDsCV2X(stationManagement.activeIDsCV2X>0);
-stationManagement.activeIDs11p = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)~=100);
+stationManagement.activeIDs11p = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX);
 stationManagement.activeIDs11p = stationManagement.activeIDs11p(stationManagement.activeIDs11p>0);
 [~, stationManagement.indexInActiveIDs_ofLTEnodes] = ismember(stationManagement.activeIDsCV2X, stationManagement.activeIDs);
 [~, stationManagement.indexInActiveIDs_of11pnodes] = ismember(stationManagement.activeIDs11p, stationManagement.activeIDs);
 
 
-% % For possible DEBUG
-% figure(300)
-% plot(timeManagement.timeNextPosUpdate*100*ones(1,length(positionManagement.XvehicleReal)),positionManagement.XvehicleReal,'*');
-% hold on
-
 % Update variables for resource allocation in LTE-V2V
-%if simParams.technology ~= 2 % not only 11p
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
+if ~isempty(stationManagement.activeIDsCV2X)  % if there were active CV2X
     
     % if simParams.BRAlgorithm==18 && timeManagement.timeNow > phyParams.Tsf (Vittorio 5.5.3)
     if simParams.BRAlgorithm==constants.REASSIGN_BR_STD_MODE_4 && timeManagement.timeNow > phyParams.TTI
@@ -72,6 +66,11 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
     % Add LTE positioning error (if selected)
     % (Xvehicle, Yvehicle): fictitious vehicles' position seen by the eNB
     [simValues.XvehicleEstimated(PosUpdateIndex),simValues.YvehicleEstimated(PosUpdateIndex)] = addPosError(positionManagement.XvehicleReal(PosUpdateIndex),positionManagement.YvehicleReal(PosUpdateIndex),simParams.sigmaPosError);
+
+    % update stationManagement
+    stationManagement.hasTransmissionThisSlot = ismember(stationManagement.activeIDsCV2X, stationManagement.transmittingIDsCV2X);
+    [~, stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE] = ismember(stationManagement.transmittingIDsCV2X, stationManagement.activeIDsCV2X);
+    [~, stationManagement.indexInActiveIDs_OfTxLTE] = ismember(stationManagement.transmittingIDsCV2X, stationManagement.activeIDs);
 end
 
 % Call function to compute the distances
@@ -186,14 +185,14 @@ end
 
 % Update of parameters related to transmissions in IEEE 802.11p to cope
 % with vehicles exiting the scenario
-%if simParams.technology ~= 1 % not only LTE
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=100)>0    
+if ~isempty(stationManagement.activeIDs11p)   
     
     timeManagement.timeNextTxRx11p(stationManagement.activeIDsExit) = Inf;
     sinrManagement.idFromWhichRx11p(stationManagement.activeIDsExit) = stationManagement.activeIDsExit;
     sinrManagement.instantThisSINRavStarted11p(stationManagement.activeIDsExit) = Inf;
     stationManagement.vehicleState(stationManagement.activeIDsExit(stationManagement.vehicleState(stationManagement.activeIDsExit)~=100)) =  1;
-    
+    stationManagement.indexInRaw_earler(:,stationManagement.activeIDsExit,:) = 0;
+
     % The average SINR of all vehicles is then updated
     sinrManagement = updateSINR11p(timeManagement,sinrManagement,stationManagement,phyParams);
 
