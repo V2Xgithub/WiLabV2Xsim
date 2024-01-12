@@ -115,6 +115,11 @@ if outParams.printPacketReceptionRatio
     end
 end
 
+% [printPacketReceptionStatusAll]
+% Boolean to activate the print to file of the details of the packet
+% reception status
+[outParams,varargin]= addNewParam(outParams,'printPacketReceptionStatusAll',false,'Activate the print to file of detailed packet reception status','bool',fileCfg,varargin{1});
+
 % [printPRRmap]
 if simParams.typeOfScenario==2 % Traffic traces
     % Boolean to activate the creation and print of a PRR map (only for urban scenarios)

@@ -91,3 +91,12 @@ if outParams.printPacketReceptionRatio
     %outputValues.distanceDetailsCounterCV2X = countDistanceDetails(indexInActiveIDsOnlyLTE,activeIDsTXLTE,neighborsID_LTE,stationManagement.neighborsDistanceLTE,errorMatrixRawMax,outputValues.distanceDetailsCounterCV2X,stationManagement,outParams,appParams,phyParams);
     outputValues.distanceDetailsCounterCV2X = countDistanceDetails(fateRxListRawMax(fateRxListRawMax(:,5)==1,:),fateRxListRawMax(fateRxListRawMax(:,5)==0,:),outputValues.distanceDetailsCounterCV2X,stationManagement,outParams,appParams,phyParams);
 end
+
+if outParams.printPacketReceptionStatusAll
+    % [time, TxID, RxID, BRID, distance, packet_status(1:correct, 0:error)
+    pckStatus = zeros(size(fateRxListRawMax,1), 6);
+    pckStatus(:,1) = timeManagement.timeNow;
+    pckStatus(:,2:end) = fateRxListRawMax;
+
+    outputValues.packetStatusDetailsCounterCV2X = [outputValues.packetStatusDetailsCounterCV2X;pckStatus];
+end
