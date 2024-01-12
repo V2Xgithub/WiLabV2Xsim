@@ -208,6 +208,11 @@ if outParams.printPacketReceptionRatio
     end
 end
 
+if outParams.printPacketReceptionStatusAll
+    % init
+    outputValues.packetStatusDetailsCounterCV2X = zeros(0,6);
+end
+
 if outParams.printPowerControl
     %
     error('Power control output not updated in v5');
@@ -358,6 +363,11 @@ if outParams.printPacketReceptionRatio
     %if simParams.technology~=1 % 11p or coexistence, not LTE
         printPacketReceptionRatio('11p',outputValues.distanceDetailsCounter11p,outParams,appParams,simParams,phyParams);
     end
+end
+
+if outParams.printPacketReceptionStatusAll
+    filename= sprintf('%s/packet_status_details_%.0f_LTE',outParams.outputFolder,outParams.simID);
+    writematrix(outputValues.packetStatusDetailsCounterCV2X,filename);
 end
 
 % Print PRRmap to file (if enabled)
