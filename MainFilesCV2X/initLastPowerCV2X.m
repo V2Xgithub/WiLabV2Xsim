@@ -1,5 +1,13 @@
 function [sinrManagement] = initLastPowerCV2X(timeManagement,stationManagement,sinrManagement,simParams,appParams,phyParams)
 
+if phyParams.fadingRayleigh
+    nV = length(sinrManagement.P_RX_MHz_no_fading(1,:));
+    %fadingMatrix = ones(nV,nV);
+    fadingMatrix = raylrnd(sqrt(2/pi),nV,nV);
+    fadingMatrix = triu(fadingMatrix,1)+triu(fadingMatrix)';
+    sinrManagement.P_RX_MHz(:,:) = sinrManagement.P_RX_MHz_no_fading(:,:).*fadingMatrix;
+end
+
 % If coexistence, I have to initialize the value of averageInterfFrom11pToLTE
 if simParams.technology == constants.TECH_COEX_STD_INTERF
     sinrManagement.coex_averageTTIinterfFrom11pToLTE = sinrManagement.coex_currentInterfFrom11pToLTE;

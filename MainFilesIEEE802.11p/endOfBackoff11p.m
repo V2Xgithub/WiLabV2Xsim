@@ -7,6 +7,12 @@ function [timeManagement,stationManagement,sinrManagement,outputValues] = endOfB
 stationManagement.vehicleState(idEvent) = 3; % tx
 stationManagement.nSlotBackoff11p(idEvent) = -1;
 
+if phyParams.fadingRayleigh
+    fadingVector = raylrnd(sqrt(2/pi),1,length(sinrManagement.P_RX_MHz_no_fading(1,:)));
+    sinrManagement.P_RX_MHz(indexEvent,:) = sinrManagement.P_RX_MHz_no_fading(indexEvent,:).*fadingVector;
+    sinrManagement.P_RX_MHz(:,indexEvent) = sinrManagement.P_RX_MHz_no_fading(:,indexEvent).*fadingVector;
+end
+
 if simParams.technology == 2 && appParams.variableBeaconSize % if ONLY 11p
     % If variable beacon size is selected, find if small or large packet is
     % currently transmitted (1 stays for large, 0 for small)

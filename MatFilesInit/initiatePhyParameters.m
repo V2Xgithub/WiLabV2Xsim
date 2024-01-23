@@ -452,6 +452,10 @@ end
 
 %% Channel Model parameters
 
+% [fadingRayleigh]
+[phyParams,varargin] = addNewParam(phyParams,'fadingRayleigh',false,'Activates uncorrelated Rayleigh fading','bool',fileCfg,varargin{1});
+
+
 % % [winnerModel]
 % % Boolean to activate the use of WINNER+ B1 channel model (3GPP specifications)
 % [phyParams,varargin] = addNewParam(phyParams,'winnerModel',true,'If using Winner+ channel model','bool',fileCfg,varargin{1});

@@ -156,4 +156,6 @@ sinrManagement.P_RX_MHz = ( (phyParams.P_ERP_MHz_CV2X(stationManagement.activeID
     (phyParams.P_ERP_MHz_11p(stationManagement.activeIDs).*(stationManagement.vehicleState(stationManagement.activeIDs)~=100) )' )...
     * phyParams.Gr .* (min(1,CHgain) .* sinrManagement.mcoCoefficient(stationManagement.activeIDs,stationManagement.activeIDs));
 
+sinrManagement.P_RX_MHz_no_fading = sinrManagement.P_RX_MHz;
+
 end
