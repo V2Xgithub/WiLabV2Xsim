@@ -61,7 +61,7 @@ switch upper(simParams.Technology)
         simParams.mode5G = constants.MODE_5G; % 5G
         simParams.stringCV2X = '5G';
     otherwise
-        error('"simParams.Technology" must be ["LTE-V2X", "802.11p", "COEX-NO-INTERF", "COEX-STD-INTERF", ["NR-V2X","5G-V2X"], "COEX-STD-INTERF-5G]');
+        error('"simParams.Technology" must be ["LTE-V2X", "80211p", "COEX-NO-INTERF", "COEX-STD-INTERF", ["NR-V2X","5G-V2X"], "COEX-STD-INTERF-5G]');
 end
 
 % In coexistence case, set the proportion of 802.11p and C-V2X
@@ -265,10 +265,6 @@ switch simParams.typeOfScenario
             error('Error: "simParams.rho" cannot be <= 0');
         end
 
-        % [randomXPosition]
-        % switch if vehicles are randomly or Uniformly positioned
-        [simParams, varargin] = addNewParam(simParams, 'randomXPosition', true, 'Randomly/uniformly position', 'bool',fileCfg,varargin{1});
-        
         % [randomXPosition]
         % switch if vehicles are randomly or Uniformly positioned
         [simParams, varargin] = addNewParam(simParams, 'randomXPosition', true, 'Randomly/uniformly position', 'bool',fileCfg,varargin{1});

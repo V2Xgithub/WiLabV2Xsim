@@ -8,45 +8,51 @@ function [positionManagement,stationManagement] = computeNeighbors (stationManag
 % Selection of nodes with received power below a minimum
 %nonNegligibleReceivedPower = sinrManagement.P_RX_MHz > phyParams.Pnoise_MHz/10;
 
-%%
-% LTE
-%distanceReal_LTE = positionManagement.distanceReal(:,(stationManagement.vehicleState(stationManagement.activeIDs)==100));
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX)>0
-%if simParams.technology~=2 % Not only 11p
-    distanceReal_LTE = positionManagement.distanceReal;
-    % Vehicles from which the received power is below a minimum are set to an infinite distance
-    %distanceReal_LTE(stationManagement.activeIDs,stationManagement.activeIDs) = distanceReal_LTE(stationManagement.activeIDs,stationManagement.activeIDs)./nonNegligibleReceivedPower;
-    % Vehciles that are not LTE are set to an infinite distance
-    distanceReal_LTE(:,(stationManagement.vehicleState(stationManagement.activeIDs)~=100))=Inf;
+%% preprocessing distance
+if ~isempty(stationManagement.activeIDs)
+    distanceReal = positionManagement.distanceReal;
+    
+    % vehicles with different technologies have infinite distance between each
+    % other
+    distanceReal(stationManagement.indexInActiveIDs_ofLTEnodes, stationManagement.indexInActiveIDs_of11pnodes)=Inf;
+    distanceReal(stationManagement.indexInActiveIDs_of11pnodes, stationManagement.indexInActiveIDs_ofLTEnodes)=Inf;
+    
     % The diagonal must be set to 0
-    distanceReal_LTE(1:1+length(distanceReal_LTE(1,:)):end) = 0;
-    % sort
-    [neighborsDistanceLTE, neighborsIndexLTE] = sort(distanceReal_LTE,2);
+    distanceReal(1:1+size(distanceReal, 2):end) = 0;
+    
+    % sort 
+    [neighborsDistance, neighborsIndex] = sort(distanceReal,2);
+    
     % remove the first element per each raw, which is self
-    neighborsDistanceLTE(:,1) = [];
-    neighborsIndexLTE(:,1) = [];    
-    neighborsDistanceLTE_ofLTE = neighborsDistanceLTE(stationManagement.vehicleState(stationManagement.activeIDs)==100,:);
-    neighborsIndexLTE_ofLTE = neighborsIndexLTE(stationManagement.vehicleState(stationManagement.activeIDs)==100,:);
+    neighborsDistance(:,1) = [];
+    neighborsIndex(:,1) = [];  
+end
+
+
+%% If there were active CV2X vehicles
+if ~isempty(stationManagement.activeIDsCV2X)
+    neighborsDistanceLTE2ALL = neighborsDistance(stationManagement.indexInActiveIDs_ofLTEnodes,:);
+    neighborsIndexLTE2ALL = neighborsIndex(stationManagement.indexInActiveIDs_ofLTEnodes,:);
     
     % Vehicles in order of distance
     %allNeighborsID = IDvehicle(neighborsIndexLTE);
-    stationManagement.allNeighborsID = stationManagement.activeIDs(neighborsIndexLTE);
+    stationManagement.allNeighborsID = stationManagement.activeIDs(neighborsIndex);
     
-    % Vehicles in the maximum awareness range
-    stationManagement.neighborsIDLTE = (neighborsDistanceLTE_ofLTE < phyParams.RawMaxCV2X) .*stationManagement.activeIDs(neighborsIndexLTE_ofLTE);
+    % Vehicles within the maximum awareness range
+    stationManagement.neighborsIDLTE = (neighborsDistanceLTE2ALL < phyParams.RawMaxCV2X) .* stationManagement.activeIDs(neighborsIndexLTE2ALL);
     
     % Vehicles in awareness range
     if ~isempty(stationManagement.neighborsIDLTE)
-        stationManagement.awarenessIDLTE = zeros(length(neighborsDistanceLTE_ofLTE(:,1)),length(neighborsDistanceLTE_ofLTE(1,:)),length(phyParams.Raw));
+        stationManagement.awarenessIDLTE = zeros([size(neighborsDistanceLTE2ALL), length(phyParams.Raw)]);
         for iPhyRaw=1:length(phyParams.Raw)
-            stationManagement.awarenessIDLTE(:,:,iPhyRaw) = (neighborsDistanceLTE_ofLTE < phyParams.Raw(iPhyRaw)) .* stationManagement.neighborsIDLTE;
+            stationManagement.awarenessIDLTE(:,:,iPhyRaw) = (neighborsDistanceLTE2ALL < phyParams.Raw(iPhyRaw)) .* stationManagement.neighborsIDLTE;
         end
     end
 
-    % Removal of nodes that are not active
-    stationManagement.neighborsIDLTE = stationManagement.neighborsIDLTE(:,1:length(stationManagement.activeIDsCV2X)-1);
+    % Remove nodes that are not active CV2X
+    stationManagement.neighborsIDLTE(:, length(stationManagement.activeIDsCV2X):end) = [];
     if ~isempty(stationManagement.neighborsIDLTE)
-        stationManagement.awarenessIDLTE = stationManagement.awarenessIDLTE(:,1:length(stationManagement.activeIDsCV2X)-1,:);
+        stationManagement.awarenessIDLTE(:,length(stationManagement.activeIDsCV2X):end,:) = [];
     else
         stationManagement.awarenessIDLTE = [];
     end
@@ -59,33 +65,21 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_
     %    %stationManagement.LTEinterfereingTo11p_ID = (neighborsDistanceLTE_of11p < phyParams.RawMaxCV2X) .*stationManagement.activeIDs(neighborsIndexLTE_of11p);
     %end
 end
-%%
 
-%%
-% 11p
-if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX)>0
-%if simParams.technology~=1 % Not only LTE    
-    distanceReal_11p = positionManagement.distanceReal;
-    % Vehciles that are not LTE are set to an infinite distance
-    distanceReal_11p(:,(stationManagement.vehicleState(stationManagement.activeIDs)==100))=Inf;
-    % The diagonal must be set to 0
-    distanceReal_11p(1:1+length(distanceReal_11p(1,:)):end) = 0;
-    % sort
-    [neighborsDistance11p, neighborsIndex11p] = sort(distanceReal_11p,2);
-    % remove the first element per each raw, which is self
-    neighborsDistance11p(:,1) = [];
-    neighborsIndex11p(:,1) = [];    
-    neighborsDistance11p_of11p = neighborsDistance11p(stationManagement.vehicleState(stationManagement.activeIDs)~=100,:);
-    neighborsIndex11p_of11p = neighborsIndex11p(stationManagement.vehicleState(stationManagement.activeIDs)~=100,:);
+
+%% If there were active 11p vehicles
+if ~isempty(stationManagement.activeIDs11p) 
+    neighborsDistance11p2ALL = neighborsDistance(stationManagement.indexInActiveIDs_of11pnodes,:);
+    neighborsIndex11p2ALL = neighborsIndex(stationManagement.indexInActiveIDs_of11pnodes,:);
     
     % Vehicles in the maximum awareness range
-    stationManagement.neighborsID11p = (neighborsDistance11p_of11p < phyParams.RawMax11p) .*stationManagement.activeIDs(neighborsIndex11p_of11p);
+    stationManagement.neighborsID11p = (neighborsDistance11p2ALL < phyParams.RawMax11p) .* stationManagement.activeIDs(neighborsIndex11p2ALL);
 
     % Vehicles in awareness range
     if ~isempty(stationManagement.neighborsID11p)
-        stationManagement.awarenessID11p = zeros(length(neighborsDistance11p_of11p(:,1)),length(neighborsDistance11p_of11p(1,:)),length(phyParams.Raw));
+        stationManagement.awarenessID11p = zeros([size(neighborsDistance11p2ALL), length(phyParams.Raw)]);
         for iPhyRaw=1:length(phyParams.Raw)
-            stationManagement.awarenessID11p(:,:,iPhyRaw) = (neighborsDistance11p_of11p < phyParams.Raw(iPhyRaw)) .* stationManagement.neighborsID11p;
+            stationManagement.awarenessID11p(:,:,iPhyRaw) = (neighborsDistance11p2ALL < phyParams.Raw(iPhyRaw)) .* stationManagement.neighborsID11p;
         end
     end    
 
@@ -100,6 +94,6 @@ if sum(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_
     %    %stationManagement.LTEinterfereingTo11p_ID = (neighborsDistance11p_ofLTE < phyParams.RawMaxCV2X) .*stationManagement.activeIDs(neighborsIndex11p_ofLTE);
     %end
 end
-%%
+
 
 end

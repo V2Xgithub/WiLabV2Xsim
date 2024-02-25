@@ -54,14 +54,8 @@ stationManagement.activeIDsCV2X = stationManagement.activeIDs.*(stationManagemen
 stationManagement.activeIDsCV2X = stationManagement.activeIDsCV2X(stationManagement.activeIDsCV2X>0);
 stationManagement.activeIDs11p = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX);
 stationManagement.activeIDs11p = stationManagement.activeIDs11p(stationManagement.activeIDs11p>0);
-stationManagement.indexInActiveIDs_ofLTEnodes = zeros(length(stationManagement.activeIDsCV2X),1);
-for i=1:length(stationManagement.activeIDsCV2X)
-    stationManagement.indexInActiveIDs_ofLTEnodes(i) = find(stationManagement.activeIDs==stationManagement.activeIDsCV2X(i));
-end
-stationManagement.indexInActiveIDs_of11pnodes = zeros(length(stationManagement.activeIDs11p),1);
-for i=1:length(stationManagement.activeIDs11p)
-    stationManagement.indexInActiveIDs_of11pnodes(i) = find(stationManagement.activeIDs==stationManagement.activeIDs11p(i));
-end
+[~, stationManagement.indexInActiveIDs_ofLTEnodes] = ismember(stationManagement.activeIDsCV2X, stationManagement.activeIDs);
+[~, stationManagement.indexInActiveIDs_of11pnodes] = ismember(stationManagement.activeIDs11p, stationManagement.activeIDs);
 
 %% Number of vehicles at the current time
 outputValues.Nvehicles = length(stationManagement.activeIDs);
@@ -102,8 +96,7 @@ stationManagement.pckTxOccurring = zeros(simValues.maxID,1);
 
 % Parameter for 11p retransmission KPI calculation, the index of active11p
 % in the range during earlier retransmission
-NactiveIDs11p = length(stationManagement.activeIDs11p);
-stationManagement.indexInRaw_earler = zeros(NactiveIDs11p, NactiveIDs11p, length(phyParams.Raw)); % (to, from, idRaw)
+stationManagement.indexInRaw_earler = zeros(simValues.maxID, simValues.maxID, length(phyParams.Raw)); % (to, from, idRaw)
 
 % HARQ init
 stationManagement.cv2xNumberOfReplicas = phyParams.cv2xNumberOfReplicasMax * ones(simValues.maxID,1);
@@ -237,16 +230,13 @@ if outParams.printUpdateDelay && outParams.printWirelessBlindSpotProb
     outputValues.enteredInRangeLTE = -1 * ones(simValues.maxID,simValues.maxID,length(phyParams.Raw));
     for iRaw = 1:length(phyParams.Raw)
         valuesEnteredInRange = outputValues.enteredInRangeLTE(:,:,iRaw);
-        % fixme: when using tracefile, there may not be consecutive
-        % activeIDs (e.g. max ID in 140 cars is 150). But distanceReal has
-        % the number of activesIDs' rows and columns
-        valuesEnteredInRange(stationManagement.activeIDsCV2X,stationManagement.activeIDsCV2X) = (positionManagement.distanceReal(stationManagement.activeIDsCV2X,stationManagement.activeIDsCV2X)<=phyParams.Raw(iRaw))-1;
+        valuesEnteredInRange(stationManagement.activeIDsCV2X,stationManagement.activeIDsCV2X) = (positionManagement.distanceReal(stationManagement.indexInActiveIDs_ofLTEnodes, stationManagement.indexInActiveIDs_ofLTEnodes)<=phyParams.Raw(iRaw))-1;
         outputValues.enteredInRangeLTE(:,:,iRaw) = valuesEnteredInRange - diag(diag(valuesEnteredInRange+1));        
     end
     outputValues.enteredInRange11p = -1 * ones(simValues.maxID,simValues.maxID,length(phyParams.Raw));
     for iRaw = 1:length(phyParams.Raw)
         valuesEnteredInRange = outputValues.enteredInRange11p(:,:,iRaw);
-        valuesEnteredInRange(stationManagement.activeIDs11p,stationManagement.activeIDs11p) = (positionManagement.distanceReal(stationManagement.activeIDs11p,stationManagement.activeIDs11p)<=phyParams.Raw(iRaw))-1;
+        valuesEnteredInRange(stationManagement.activeIDs11p,stationManagement.activeIDs11p) = (positionManagement.distanceReal(stationManagement.indexInActiveIDs_of11pnodes, stationManagement.indexInActiveIDs_of11pnodes)<=phyParams.Raw(iRaw))-1;
         outputValues.enteredInRange11p(:,:,iRaw) = valuesEnteredInRange - diag(diag(valuesEnteredInRange+1));        
     end
 end
