@@ -10,10 +10,10 @@ if T2==-1
 end
 % Was simParams.T1autonomousModeTTIs, simParams.T2autonomousModeTTIs
 
-Nvehicles = length(IDvehicle(:,1));   % Number of vehicles      
+Nvehicles = numel(IDvehicle);   % Number of vehicles      
 
 % This part considers various limitations
-BRid = zeros(length(IDvehicle(:,1)),1);
+BRid = zeros(Nvehicles,1);
 % A cycle over the vehicles is needed
 for idV=1:Nvehicles
     if stationManagement.vehicleState(IDvehicle(idV))~=constants.V_STATE_LTE_TXRX

@@ -188,23 +188,18 @@ else
     
     % Call function to load the traffic trace up to the selected simulation
     % time and, if selected, take only a portion of the scenario
-    [dataLoaded,simParams] = loadTrafficTrace(simParams);
+    [trafficTraceTimetable] = loadTrafficTrace(simParams.filenameTrace, "Duration", simParams.simulationTime);
     
-    % Call function to interpolate the traffic trace (if needed)
-    [simValues,simParams] = interpolateTrace(dataLoaded,simParams,appParams.allocationPeriod);
-    
-    % Round time column (representation format)
-    simValues.dataTrace(:,1) = round(simValues.dataTrace(:,1), 2);
-    
-    % Find trace details (Xmin,Xmax,Ymin,Ymax,maxID)
-    positionManagement.Xmin = min(simValues.dataTrace(:,3));     % Min X coordinate Trace
-    positionManagement.Xmax = max(simValues.dataTrace(:,3));     % Max X coordinate Trace
-    positionManagement.Ymin = min(simValues.dataTrace(:,4));     % Min Y coordinate Trace
-    positionManagement.Ymax = max(simValues.dataTrace(:,4));     % Max Y coordinate Trace
-    simValues.maxID = max(simValues.dataTrace(:,2));             % Maximum vehicle's ID
-    
+    simValues.maxID = max(trafficTraceTimetable.Vehicle);             % Maximum vehicle's ID
+    simValues.IDvehicle = (1:simValues.maxID)';
+    simValues.trafficTraceTimetable = trafficTraceTimetable;
+
     % Call function to read vehicle positions from file at time zero
-    [positionManagement.XvehicleReal, positionManagement.YvehicleReal, simValues.IDvehicle, ~,~,~,~,positionManagement.v,positionManagement.direction] = updatePositionFile(0,simValues.dataTrace,[],-1,-1,-1,simValues,[]);
+    [positions] = updatePositionFile(trafficTraceTimetable, 0, simValues.IDvehicle);
+    positionManagement.XvehicleReal = positions.X;
+    positionManagement.YvehicleReal = positions.Y;
+    positionManagement.v = positions.V;
+    positionManagement.direction = NaN(height(positions));
     
 end
 

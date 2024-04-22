@@ -51,7 +51,7 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
 
             % ID rx vehicle
             IDrx = stationManagement.neighborsIDLTE(stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(i_tx),j_neigh);
-            RxPowerIDrx = RXpower_MHz_ofLTE(stationManagement.activeIDsCV2X==IDrx,stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE);
+            RxPowerIDrx = RXpower_MHz_ofLTE(IDrx,stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE);
 
             % Find BRT in use by rx vehicle j
             %BRTrx = BRidT(IDrx);

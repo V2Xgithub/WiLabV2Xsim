@@ -50,12 +50,16 @@ end
 % Possible addition of 11p interfrence
 if simParams.technology~=constants.TECH_COEX_STD_INTERF || simParams.coexMethod~=constants.COEX_METHOD_C || ~simParams.coexC_11pDetection
     interfFrom11p = (sinrManagement.coex_averageTTIinterfFrom11pToLTE(stationManagement.activeIDsCV2X));
-    sensedPowerCurrentTTI_MHz = sensedPowerCurrentTTI_MHz + repmat(interfFrom11p',appParams.NbeaconsF,1);
+    % note: repmat refuses to produce a nFx0 matrix in the special case
+    % where there are no active vehicles, so the resize is there to force it to be
+    % of a compatible size with the nFx0 sensed power matrix. it should
+    % have no effect at all other times when there is at least one vehicle.
+    sensedPowerCurrentTTI_MHz = sensedPowerCurrentTTI_MHz + resize(repmat(interfFrom11p',appParams.NbeaconsF, any(stationManagement.activeIDsCV2X)), size(sensedPowerCurrentTTI_MHz));
 else
     % In case of method C, 11p interference is not added if an 11p
     % transmission has been detected
     interfFrom11p = (sinrManagement.coex_averageTTIinterfFrom11pToLTE(stationManagement.activeIDsCV2X)) .* ~sinrManagement.coex_lteDetecting11pTx(stationManagement.activeIDsCV2X);
-    sensedPowerCurrentTTI_MHz = sensedPowerCurrentTTI_MHz + repmat(interfFrom11p',appParams.NbeaconsF,1);
+    sensedPowerCurrentTTI_MHz = sensedPowerCurrentTTI_MHz + resize(repmat(interfFrom11p',appParams.NbeaconsF, any(stationManagement.activeIDsCV2X)), size(sensedPowerCurrentTTI_MHz));
     sinrManagement.coex_lteDetecting11pTx(:,:) = false;
 end
 

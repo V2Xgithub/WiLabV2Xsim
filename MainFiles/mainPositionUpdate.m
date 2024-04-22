@@ -6,19 +6,27 @@ if simParams.typeOfScenario ~= constants.SCENARIO_TRACE % Not traffic trace
     % Call function to update vehicles positions
     [indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,positionManagement] = updatePosition(timeManagement.timeNow,stationManagement.activeIDs,simParams.positionTimeResolution,positionManagement,simValues,outParams,simParams);
 else
-    % Store IDs of vehicles at the previous beacon period and update positions
-    [positionManagement.XvehicleReal,positionManagement.YvehicleReal,stationManagement.activeIDs,indexNewVehicles,indexOldVehicles,indexOldVehiclesToOld,stationManagement.activeIDsExit,positionManagement.v,positionManagement.direction] = updatePositionFile( ...
-        round(timeManagement.timeNextPosUpdate,2), ...
-        simValues.dataTrace,stationManagement.activeIDs, ...
-        positionManagement.XvehicleReal,positionManagement.YvehicleReal, ...
-        round(timeManagement.timeNextPosUpdate,2)-simParams.positionTimeResolution,simValues,outParams);
-    %% ONLY LTE
-    if sum(stationManagement.vehicleState(stationManagement.activeIDs)==100)>0
-    %if simParams.technology ~= 2 % not only 11p
-        % Update stationManagement.BRid vector (variable number of vehicles in the scenario)
-        [stationManagement.BRid] = updateBRidFile(stationManagement.BRid,stationManagement.activeIDs,indexNewVehicles);
-    end
+    % Interpolate position of all vehicles from current trace file
+    [positions] = updatePositionFile(simValues.trafficTraceTimetable, timeManagement.timeNow, simValues.IDvehicle);
+    positionManagement.XvehicleReal = positions.X;
+    positionManagement.YvehicleReal = positions.Y;
+    positionManagement.v = positions.V;
+    positionManagement.direction = NaN(height(positions));
+
+    old_active_ids = stationManagement.activeIDs;
+    % Mark vehicles coming in and out of bounds as active/inactive
+    [activeIds, enteredVehicles, exitedVehicles] = checkVehicleBounds(positions, stationManagement.activeIDs, ...
+                                        "XMin", simParams.XminTrace, "XMax", simParams.XmaxTrace, "YMin", simParams.YminTrace, "YMax", simParams.YmaxTrace);
+    indexNewVehicles = find(ismember(activeIds, enteredVehicles));
+    indexOldVehicles = find(~ismember(activeIds, enteredVehicles));
+    oldVehicles = activeIds(indexOldVehicles);
+    [~ , indexOldVehiclesToOld] = ismember(oldVehicles, old_active_ids);
+    stationManagement.activeIDs = activeIds;
+    stationManagement.activeIDsExit = exitedVehicles;
+    stationManagement.activeIDsEnter = enteredVehicles;
+    stationManagement.indexOldVehiclesToOld = indexOldVehiclesToOld;
 end
+
 
 % Vectors IDvehicleLTE and IDvehicle11p are updated
 stationManagement.activeIDsCV2X = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)==100);
@@ -86,7 +94,7 @@ end
 % Call function to update positionManagement.distance matrix where D(i,j) is the
 % change in positionManagement.distance of link i to j from time n-1 to time n and used
 % for updating Shadowing matrix
-[dUpdate,sinrManagement.Shadowing_dB,positionManagement.distanceRealOld] = updateDistanceChangeForShadowing(positionManagement.distanceReal,positionManagement.distanceRealOld,indexOldVehicles,indexOldVehiclesToOld,sinrManagement.Shadowing_dB,phyParams.stdDevShadowLOS_dB);
+[dUpdate,sinrManagement.Shadowing_dB,positionManagement.distanceRealOld] = updateDistanceChangeForShadowing(positionManagement.distanceReal,positionManagement.distanceRealOld,phyParams.stdDevShadowLOS_dB, activeIds, enteredVehicles, exitedVehicles);
 
 % Calculation of channel and then received power
 [sinrManagement,simValues.Xmap,simValues.Ymap,phyParams.LOS] = computeChannelGain(sinrManagement,stationManagement,positionManagement,phyParams,simParams,dUpdate);
@@ -236,6 +244,14 @@ stationManagement.alreadyStartCBR(:,stationManagement.activeIDsExit) = 0;
 
 stationManagement.pckNextAttempt(stationManagement.activeIDsExit) = 1;
 stationManagement.pckTxOccurring(stationManagement.activeIDsExit) = 0;
+
+% resize stationManagement.hasTransmissionThisSlot
+new_hasTransmissionThisSlot = zeros(numel(stationManagement.activeIDs), 1);
+new_hasTransmissionThisSlot(indexOldVehicles) = stationManagement.hasTransmissionThisSlot(indexOldVehiclesToOld);
+stationManagement.hasTransmissionThisSlot = new_hasTransmissionThisSlot;
+
+% Relinquish the BR for vehicles who exited
+stationManagement.BRid(stationManagement.activeIDsExit) = -2;
 
 %% CBR settings for the new vehicles
 if simParams.cbrActive && (outParams.printCBR || (simParams.technology==constants.TECH_COEX_STD_INTERF && simParams.coexMethod~=constants.COEX_METHOD_NON && simParams.coex_slotManagement==constants.COEX_SLOT_DYNAMIC))

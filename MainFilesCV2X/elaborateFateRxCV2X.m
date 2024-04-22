@@ -3,7 +3,10 @@ function [resultingList,stationManagement,sinrManagement] = elaborateFateRxCV2X(
 % transmissions
 % [ID TX, ID RX, BRid, distance]
 
-distance = positionManagement.distanceReal(stationManagement.vehicleState(stationManagement.activeIDs)==100,stationManagement.vehicleState(stationManagement.activeIDs)==100);
+LTEIndices = find(stationManagement.vehicleState == constants.V_STATE_LTE_TXRX);
+ActiveIndices = stationManagement.activeIDs;
+ActiveLTEIndices = intersect(LTEIndices, ActiveIndices);
+distance = positionManagement.distanceReal(ActiveLTEIndices, ActiveLTEIndices);
 
 Ntx = length(IDvehicleTXLTE);              % Number of tx vehicles
 %resultingList = zeros(Ntx*length(neighborsID(1,:)),5);        % Initialize error matrix
@@ -15,13 +18,6 @@ if phyParams.Ksic<1
 end
 
 for i = 1:Ntx
-
-    %if IDvehicleTXLTE(i)==39
-    %    fp = fopen('Temp.txt','a');
-    %    fprintf(fp,'T=%f: new tx, attemmpt %d\n',timeManagement.timeNow,stationManagement.pckTxOccurring(IDvehicleTXLTE(i)));
-    %    fclose(fp);
-    %end
-    
     % Find indexes of receiving vehicles in neighborsID
     indexNeighborsRX = find(neighborsID(indexVehicleTX(i),:));
     
@@ -53,7 +49,7 @@ for i = 1:Ntx
             resultingList(indexRaw,1) = IDvehicleTXLTE(i);
             resultingList(indexRaw,2) = IDvehicleRX;
             resultingList(indexRaw,3) = stationManagement.BRid(IDvehicleTXLTE(i),stationManagement.pckTxOccurring(IDvehicleTXLTE(i)));
-            resultingList(indexRaw,4) = distance(indexVehicleTX(i),stationManagement.activeIDsCV2X==IDvehicleRX);
+            resultingList(indexRaw,4) = distance(indexVehicleTX(i), IDvehicleRX);
             resultingList(indexRaw,5) = 1; % COLUMN 5=1 IS "CORRECT"
             % Mark that this packet has been received
             stationManagement.pckReceived(IDvehicleRX,IDvehicleTXLTE(i))=1;
@@ -67,7 +63,7 @@ for i = 1:Ntx
             resultingList(indexRaw,1) = IDvehicleTXLTE(i);
             resultingList(indexRaw,2) = IDvehicleRX;
             resultingList(indexRaw,3) = stationManagement.BRid(IDvehicleTXLTE(i),stationManagement.pckTxOccurring(IDvehicleTXLTE(i)));
-            resultingList(indexRaw,4) = distance(indexVehicleTX(i),stationManagement.activeIDsCV2X==IDvehicleRX);
+            resultingList(indexRaw,4) = distance(indexVehicleTX(i), IDvehicleRX);
             resultingList(indexRaw,5) = 0; % COLUMN 5=0 IS "ERROR"
         elseif ~isinf(phyParams.Ksi) || isempty(find(IDvehicleTXLTE == IDvehicleRX, 1))
             % ERROR IN ATTEMPT (NOT THE LAST ONE) AND THE RECEIVER IS NOT

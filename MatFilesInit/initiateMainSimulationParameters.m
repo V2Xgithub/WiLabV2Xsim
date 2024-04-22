@@ -178,30 +178,18 @@ switch simParams.typeOfScenario
         % [XminTrace]
         % Minimum X coordinate to keep in the traffic trace (m)
         [simParams,varargin] = addNewParam(simParams,'XminTrace',-1,'Minimum X coordinate to keep in the traffic trace (m)','double',fileCfg,varargin{1});
-        if simParams.XminTrace~=-1 && simParams.XminTrace<0
-            error('Error: the value set for "simParams.XminTrace" is not valid');
-        end
         
         % [XmaxTrace]
         % Maximum X coordinate to keep in the traffic trace (m)
         [simParams,varargin] = addNewParam(simParams,'XmaxTrace',-1,'Maximum X coordinate to keep in the traffic trace (m)','double',fileCfg,varargin{1});
-        if simParams.XmaxTrace~=-1 && simParams.XmaxTrace<0 && simParams.XmaxTrace<simParams.XminTrace
-            error('Error: the value set for "simParams.XmaxTrace" is not valid');
-        end
         
         % [YminTrace]
         % Minimum Y coordinate to keep in the traffic trace (m)
         [simParams,varargin] = addNewParam(simParams,'YminTrace',-1,'Minimum Y coordinate to keep in the traffic trace (m)','double',fileCfg,varargin{1});
-        if simParams.YminTrace~=-1 && simParams.YminTrace<0
-            error('Error: the value set for "simParams.YminTrace" is not valid');
-        end
         
         % [YmaxTrace]
         % Maximum Y coordinate to keep in the traffic trace (m)
         [simParams,varargin] = addNewParam(simParams,'YmaxTrace',-1,'Maximum Y coordinate to keep in the traffic trace (m)','double',fileCfg,varargin{1});
-        if simParams.YmaxTrace~=-1 && simParams.YmaxTrace<0 && simParams.XmaxTrace<simParams.YminTrace
-            error('Error: the value set for "simParams.YmaxTrace" is not valid');
-        end
         
         %     % Changed from version 5.2.10 - moved before and applied to all
         %     scenarios

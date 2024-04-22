@@ -1,9 +1,32 @@
 function [sinrManagement,X,Y,LOS] = computeChannelGain(sinrManagement,stationManagement,positionManagement,phyParams,simParams,dUpdate)
 % Compute received power and create RXpower matrix
+arguments (Input)
+    sinrManagement
+    % uses: Shadowing_dB size is max_size
+    stationManagement
+    positionManagement
+    % uses: phyParams.P_ERP_MHz_CV2X size is global
+    phyParams
+    simParams
+    dUpdate (:, :) double {mustBeReal} % size is max_size
+end
+arguments (Output)
+    sinrManagement
+    % updates: Shadowing_dB P_RX_MHz
+    X
+    Y
+    LOS % size is n_active
+end
 
 %% Initialization
-distance = positionManagement.distanceReal;
-Nvehicles = length(distance(:,1));   % Number of vehicles
+activeIds = stationManagement.activeIDs;
+distance = positionManagement.distanceReal(activeIds, activeIds);
+direction = positionManagement.direction(activeIds);
+Xreal = positionManagement.XvehicleReal(activeIds);
+Yreal = positionManagement.YvehicleReal(activeIds);
+Nvehicles = numel(activeIds);   % Number of vehicles
+oldShadowing_dB = sinrManagement.Shadowing_dB(activeIds, activeIds);
+dUpdate = dUpdate(activeIds, activeIds);
 LOS = ones(Nvehicles,Nvehicles);
 if phyParams.channelModel>0 %~phyParams.winnerModel
     A = ones(Nvehicles,Nvehicles);  
@@ -12,7 +35,7 @@ end
 %% Calculation of NLOSv
 PNLOSv=10.^(0.69); %6.9 dB are assumed for each vehicle, following ETSI TR 103 257
 if phyParams.channelModel==constants.CH_5G_NLOSV % 5G
-    NLOSv = calculateNLOSv(positionManagement.XvehicleReal, positionManagement.YvehicleReal);
+    NLOSv = calculateNLOSv(positionManagement.XvehicleReal(activeIds), positionManagement.YvehicleReal(activeIds));
 else
     NLOSv = zeros(Nvehicles,Nvehicles);  
 end
@@ -27,25 +50,23 @@ if (~simParams.fileObstaclesMap)
     if simParams.typeOfScenario==constants.SCENARIO_URBAN  % ETSI-Urban
         D1 = zeros(Nvehicles,Nvehicles);
         C = zeros(Nvehicles,Nvehicles);
-        horizontal=abs(real(positionManagement.direction));
-        vertical=abs(imag(positionManagement.direction));
+        horizontal=abs(real(direction));
+        vertical=abs(imag(direction));
         D_corr = 10;         % Decorrelation distance for the shadowing calculation
         for i = 1:Nvehicles
-            if positionManagement.XvehicleReal(i)~=Inf
+            if Xreal(i)~=Inf
                 for j = i+1:Nvehicles
-                    if positionManagement.XvehicleReal(j)~=Inf
-                        
-                        LOS(i,j)=horizontal(i)*horizontal(j)*(abs(positionManagement.YvehicleReal(i)-positionManagement.YvehicleReal(j))<20)+...
-                            vertical(i)*vertical(j)*(abs(positionManagement.XvehicleReal(i)-positionManagement.XvehicleReal(j))<20)+...
-                            horizontal(i)*vertical(j)*((abs(positionManagement.XvehicleReal(i)-positionManagement.XvehicleReal(j)))<10)*...
-                            ((abs(positionManagement.YvehicleReal(j)-positionManagement.YvehicleReal(i)))<10)+...
-                            vertical(i)*horizontal(j)*((abs(positionManagement.XvehicleReal(i)-positionManagement.XvehicleReal(j)))<10)*...
-                            ((abs(positionManagement.YvehicleReal(j)-positionManagement.YvehicleReal(i)))<10);
+                    if Xreal(j)~=Inf
+                        LOS(i,j)=horizontal(i)*horizontal(j)*(abs(Yreal(i)-Yreal(j))<20)+...
+                            vertical(i)*vertical(j)*(abs(Xreal(i)-Xreal(j))<20)+...
+                            horizontal(i)*vertical(j)*((abs(Xreal(i)-Xreal(j)))<10)*...
+                            ((abs(Yreal(j)-Yreal(i)))<10)+...
+                            vertical(i)*horizontal(j)*((abs(Xreal(i)-Xreal(j)))<10)*...
+                            ((abs(Yreal(j)-Yreal(i)))<10);
                         LOS(j,i)=LOS(i,j);
-                        D1(i,j)=horizontal(i)*(abs(positionManagement.XvehicleReal(i)-positionManagement.XvehicleReal(j)))+...
-                            vertical(i)*(abs(positionManagement.YvehicleReal(i)-positionManagement.YvehicleReal(j)));
+                        D1(i,j)=horizontal(i)*(abs(Xreal(i)-Xreal(j)))+...
+                            vertical(i)*(abs(Yreal(i)-Yreal(j)));
                         C(i,j)=vertical(i)*horizontal(j)+vertical(j)*horizontal(i); %crossing between i and j
-                        
                     end
                 end
             end
@@ -61,9 +82,9 @@ else
     
     % Compute attenuation due to walls and buildings
     for i = 1:Nvehicles
-        if positionManagement.XvehicleReal(i)~=Inf
+        if Xreal(i)~=Inf
             for j = i+1:Nvehicles
-                if positionManagement.XvehicleReal(j)~=Inf
+                if Xreal(j)~=Inf
                     [Nwalls,Nsteps,granularity] = computeGrid(X(i),Y(i),X(j),Y(j),positionManagement.StepMap,positionManagement.GridMap,phyParams.channelModel);
                     if phyParams.channelModel==0 %phyParams.winnerModel
                         LOS(i,j) = 1-(Nwalls>0);
@@ -132,7 +153,7 @@ if phyParams.stdDevShadowLOS_dB ~= 0
     newShadowing_dB = randn(Nvehicles,Nvehicles).*(LOS*phyParams.stdDevShadowLOS_dB + (~LOS)*(phyParams.stdDevShadowNLOS_dB));
     
     % Calculation of correlated shadowing matrix
-    newShadowingMatrix = exp(-dUpdate/D_corr).*sinrManagement.Shadowing_dB + sqrt( 1-exp(-2*dUpdate/D_corr) ).*newShadowing_dB;
+    newShadowingMatrix = exp(-dUpdate/D_corr).*oldShadowing_dB + sqrt( 1-exp(-2*dUpdate/D_corr) ).*newShadowing_dB;
     Shadowing_dB = triu(newShadowingMatrix,1)+triu(newShadowingMatrix)';
     
     Shadowing = 10.^(Shadowing_dB/10);
@@ -152,8 +173,8 @@ sinrManagement.Shadowing_dB = Shadowing_dB;
 
 % Compute RXpower
 % NOTE: sinrManagement.P_RX_MHz( RECEIVER, TRANSMITTER) 
-sinrManagement.P_RX_MHz = ( (phyParams.P_ERP_MHz_CV2X(stationManagement.activeIDs).*(stationManagement.vehicleState(stationManagement.activeIDs)==100))' + ...
-    (phyParams.P_ERP_MHz_11p(stationManagement.activeIDs).*(stationManagement.vehicleState(stationManagement.activeIDs)~=100) )' )...
+sinrManagement.P_RX_MHz = ( (phyParams.P_ERP_MHz_CV2X(stationManagement.activeIDs).*(stationManagement.vehicleState(stationManagement.activeIDs)==constants.V_STATE_LTE_TXRX))' + ...
+    (phyParams.P_ERP_MHz_11p(stationManagement.activeIDs).*(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX) )' )...
     * phyParams.Gr .* (min(1,CHgain) .* sinrManagement.mcoCoefficient(stationManagement.activeIDs,stationManagement.activeIDs));
 
 end

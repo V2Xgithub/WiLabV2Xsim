@@ -30,6 +30,9 @@ while timeManagement.timeNow < simParams.simulationTime
     % indexEvent is the index of the vector IDvehicle
     % idEvent is the ID of the vehicle of the current event
     [timeEvent, indexEvent] = min(timeManagement.timeNextEvent(stationManagement.activeIDs));
+    if isempty(timeEvent)
+        timeEvent = timeManagement.timeNextPosUpdate;
+    end
     idEvent = stationManagement.activeIDs(indexEvent);
 
     % If the next C-V2X event is earlier than timeEvent, set the time to the
@@ -56,7 +59,7 @@ while timeManagement.timeNow < simParams.simulationTime
     % to the position update
     % With LTE, it must necessarily be done after the end of a subframe and
     % before the next one
-    if timeEvent >= (timeManagement.timeNextPosUpdate-1e-9) && ...
+    if any(timeEvent >= (timeManagement.timeNextPosUpdate-1e-9))  && ...
         (isempty(stationManagement.activeIDsCV2X) || (isfield(timeManagement, "ttiCV2Xstarts") && timeManagement.ttiCV2Xstarts==true))
         timeEvent = timeManagement.timeNextPosUpdate;
     end
@@ -195,7 +198,7 @@ while timeManagement.timeNow < simParams.simulationTime
             %printDebugEvents(timeEvent,'LTE subframe starts',-1);
             %fprintf('Starts\n');
  
-            if timeManagement.timeNow>0
+            if timeManagement.timeNow > 0 && any(setdiff(stationManagement.activeIDsCV2X, stationManagement.activeIDsEnter)) 
                 [phyParams,simValues,outputValues,sinrManagement,stationManagement,timeManagement] = ...
                     mainCV2XttiEnds(appParams,simParams,phyParams,outParams,simValues,outputValues,timeManagement,positionManagement,sinrManagement,stationManagement);
             end

@@ -42,7 +42,7 @@ for idLte = idLteHasPck'
     end
 end
 % hasTransmissionThisSlot introduced from version 6.2
-stationManagement.hasTransmissionThisSlot(stationManagement.transmittingIDsCV2X)=1;
+stationManagement.hasTransmissionThisSlot(find(ismember(stationManagement.activeIDsCV2X, stationManagement.transmittingIDsCV2X))) = 1;
 %%
 
 timeManagement.timeGeneratedPacketInTxLTE(stationManagement.transmittingIDsCV2X) = timeManagement.timeLastPacket(stationManagement.transmittingIDsCV2X);

@@ -4,8 +4,7 @@ function [appParams,simParams,phyParams,outParams,simValues,outputValues,...
 
 %% Init of active vehicles and states
 % Move IDvehicle from simValues to station Management
-stationManagement.activeIDs = simValues.IDvehicle;
-simValues = rmfield(simValues,'IDvehicle');
+stationManagement.activeIDs = [];
 
 % The simulation starts at time '0'
 timeManagement.timeNow = 0;
@@ -54,6 +53,8 @@ stationManagement.activeIDsCV2X = stationManagement.activeIDs.*(stationManagemen
 stationManagement.activeIDsCV2X = stationManagement.activeIDsCV2X(stationManagement.activeIDsCV2X>0);
 stationManagement.activeIDs11p = stationManagement.activeIDs.*(stationManagement.vehicleState(stationManagement.activeIDs)~=constants.V_STATE_LTE_TXRX);
 stationManagement.activeIDs11p = stationManagement.activeIDs11p(stationManagement.activeIDs11p>0);
+stationManagement.activeIDsEnter = [];
+stationManagement.activeIDsExit = [];
 stationManagement.indexInActiveIDs_ofLTEnodes = zeros(length(stationManagement.activeIDsCV2X),1);
 for i=1:length(stationManagement.activeIDsCV2X)
     stationManagement.indexInActiveIDs_ofLTEnodes(i) = find(stationManagement.activeIDs==stationManagement.activeIDsCV2X(i));
@@ -64,7 +65,7 @@ for i=1:length(stationManagement.activeIDs11p)
 end
 
 %% Number of vehicles at the current time
-outputValues.Nvehicles = length(stationManagement.activeIDs);
+outputValues.Nvehicles =  simValues.maxID;
 outputValues.NvehiclesTOT = outputValues.NvehiclesTOT + outputValues.Nvehicles;
 outputValues.NvehiclesLTE = outputValues.NvehiclesLTE + length(stationManagement.activeIDsCV2X);
 outputValues.Nvehicles11p = outputValues.Nvehicles11p + length(stationManagement.activeIDs11p);
@@ -227,7 +228,7 @@ positionManagement.angleOld = zeros(length(positionManagement.XvehicleRealOld),1
 
 % Computation of the channel gain
 % 'dUpdate': vector used for the calculation of correlated shadowing
-dUpdate = zeros(outputValues.Nvehicles,outputValues.Nvehicles);
+dUpdate = zeros(0, 0);
 [sinrManagement,simValues.Xmap,simValues.Ymap,phyParams.LOS] = computeChannelGain(sinrManagement,stationManagement,positionManagement,phyParams,simParams,dUpdate);
 
 % Update of the neighbors
@@ -405,7 +406,7 @@ stationManagement.BRid(stationManagement.activeIDs,:) = -1;
 timeManagement.timeNextCV2X = inf;
 
 % if not only 11p
-if ismember(constants.V_STATE_LTE_TXRX, stationManagement.vehicleState(stationManagement.activeIDs))
+if ismember(constants.V_STATE_LTE_TXRX, stationManagement.vehicleState)
    % Initialization of resouce allocation algorithms in LTE-V2X
    if ismember(simParams.BRAlgorithm, [constants.REASSIGN_BR_REUSE_DIS_SCHEDULED_VEH,...
            constants.REASSIGN_BR_MAX_REUSE_DIS, constants.REASSIGN_BR_MIN_REUSE_POW])
@@ -453,11 +454,11 @@ if ismember(constants.V_STATE_LTE_TXRX, stationManagement.vehicleState(stationMa
         % Must be ordered with respect to the packet generation instant
         % (Vittorio 5.5.3)
         % subframeGen = ceil(timeManagement.timeNextPacket/phyParams.Tsf);
-        TTIGen = ceil(timeManagement.timeNextPacket/phyParams.TTI);
-        TTI_BR = ceil(stationManagement.BRid/appParams.NbeaconsF);
-        stationManagement.BRid = stationManagement.BRid + (TTI_BR<=TTIGen) * appParams.Nbeacons;
-        stationManagement.BRid = sort(stationManagement.BRid,2);
-        stationManagement.BRid = stationManagement.BRid - (stationManagement.BRid>appParams.Nbeacons) * appParams.Nbeacons;
+        TTIGen = ceil(timeManagement.timeNextPacket(stationManagement.activeIDs)/phyParams.TTI);
+        TTI_BR = ceil(stationManagement.BRid(stationManagement.activeIDs)/appParams.NbeaconsF);
+        stationManagement.BRid(stationManagement.activeIDs) = stationManagement.BRid(stationManagement.activeIDs) + (TTI_BR<=TTIGen) * appParams.Nbeacons;
+        stationManagement.BRid(stationManagement.activeIDs) = sort(stationManagement.BRid(stationManagement.activeIDs),2);
+        stationManagement.BRid(stationManagement.activeIDs) = stationManagement.BRid(stationManagement.activeIDs) - (stationManagement.BRid(stationManagement.activeIDs)>appParams.Nbeacons) * appParams.Nbeacons;
         
         % vector correctSCImatrixCV2X created
         stationManagement.correctSCImatrixCV2X = [];
@@ -491,7 +492,7 @@ if ismember(constants.V_STATE_LTE_TXRX, stationManagement.vehicleState(stationMa
     % of the first TTI in 0
     timeManagement.timeNextCV2X = 0;
     timeManagement.ttiCV2Xstarts = true;
-    
+
     % The channel busy ratio of C-V2X is initialized
     sinrManagement.cbrCV2X = zeros(simValues.maxID,1);
     sinrManagement.cbrLTE_coexLTEonly = zeros(simValues.maxID,1);
