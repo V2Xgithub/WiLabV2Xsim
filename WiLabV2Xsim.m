@@ -208,11 +208,6 @@ if outParams.printPacketReceptionRatio
     end
 end
 
-if outParams.printPacketReceptionStatusAll
-    % init
-    outputValues.packetStatusDetailsCounterCV2X = zeros(0,6);
-end
-
 if outParams.printPowerControl
     %
     error('Power control output not updated in v5');
@@ -233,6 +228,9 @@ if outParams.printHiddenNodeProb
     %outputValues.hiddenNodeSumProb = zeros(floor(phyParams.RawMax)+1,1);
     %outputValues.hiddenNodeProbEvents = zeros(floor(phyParams.RawMax)+1,1);
 end
+
+% Log file in LiteSQL
+outParams = connectLiteSQL(outParams);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Start Simulation
@@ -365,11 +363,6 @@ if outParams.printPacketReceptionRatio
     end
 end
 
-if outParams.printPacketReceptionStatusAll
-    filename= sprintf('%s/packet_status_details_%.0f_LTE',outParams.outputFolder,outParams.simID);
-    writematrix(outputValues.packetStatusDetailsCounterCV2X,filename);
-end
-
 % Print PRRmap to file (if enabled)
 if simParams.typeOfScenario==constants.SCENARIO_TRACE && outParams.printPRRmap && simParams.fileObstaclesMap
     printPRRmapToFile(simValues,simParams,outParams,positionManagement);
@@ -413,6 +406,7 @@ for iPhyRaw=1:length(phyParams.Raw)
 end
 
 fclose('all');
+close(outParams.conn);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
