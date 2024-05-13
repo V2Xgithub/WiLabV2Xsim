@@ -98,5 +98,7 @@ if outParams.printPacketReceptionStatusAll
     pckStatus(:,1) = timeManagement.timeNow;
     pckStatus(:,2:end) = fateRxListRawMax;
 
-    outputValues.packetStatusDetailsCounterCV2X = [outputValues.packetStatusDetailsCounterCV2X;pckStatus];
+    statusTable = array2table(pckStatus, 'VariableNames', {'time', 'TxID', 'RxID', 'BRID', 'distance', 'packet_status'});
+    tablename = "PacketStatusDetail";
+    sqlwrite(outParams.conn,tablename,statusTable);
 end

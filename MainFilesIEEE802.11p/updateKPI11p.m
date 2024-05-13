@@ -285,6 +285,31 @@ if outParams.printPacketReceptionRatio
         % printDebugKPI(fid,timeManagement.timeNow,'distanceDetailsRxErr11p',distance,idEvent,stationManagement.pckTxOccurring(idEvent), -1,outputValues.distanceDetailsCounter11p(iChannel,pckType,iRaw,3));
     end
 end
+
+if outParams.printPacketReceptionStatusAll
+    %% note!!! this function does not work right for retrainsmission
+    % [time, TxID, RxID, BRID, distance, packet_status(1:correct, 0:error)
+    RxOKIndex = AllNeighbors & rxOK_now & sameChannel(stationManagement.activeIDs11p);
+    RxOKIDs = IDvehicle11p(RxOKIndex);
+    RxOKDis = distance11p(RxOKIndex,indexEvent11p);
+
+    RxErrIndex = AllNeighbors & notRxOK_now & sameChannel(stationManagement.activeIDs11p);
+    RxErrIDs = IDvehicle11p(RxErrIndex);
+    RxErrDis = distance11p(RxErrIndex,indexEvent11p);
+
+    pckStatus = zeros(size([RxOKIDs;RxErrIDs],1), 6);
+
+    pckStatus(:,1) = timeManagement.timeNow;
+    pckStatus(:,2) = idEvent;
+    pckStatus(:,3) = [RxOKIDs;RxErrIDs];
+    pckStatus(:,4) = 1;
+    pckStatus(:,5) = [RxOKDis;RxErrDis];
+    pckStatus(:,6) = [ones(size(RxOKIDs)); zeros(size(RxErrIDs))];
+
+    statusTable = array2table(pckStatus, 'VariableNames', {'time', 'TxID', 'RxID', 'BRID', 'distance', 'packet_status'});
+    tablename = "PacketStatusDetail";
+    sqlwrite(outParams.conn,tablename,statusTable);
+end
 %% printDebugKPI
 % fclose(fid);
 %% printDebugKPI
