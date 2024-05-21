@@ -7,9 +7,9 @@ clc          % Clear the command window
 
 
 %% 部分设置
-packetSize=350;                     % packet size [KB]
+packetSize=200;                     % packet size [KB]
 BandMHz = 10;                       % [MHz]
-rho = 0.1;                          % density [vehs/m]
+rho = 0.2;                          % density [vehs/m]
 rho_km = rho * 1000;                % density [vehs/km]
 speed=(43.14-197.5*rho) * 3.6;      % Average speed [km/h]
 speedStDev= speed/10;               % Standard deviation speed [km/h]

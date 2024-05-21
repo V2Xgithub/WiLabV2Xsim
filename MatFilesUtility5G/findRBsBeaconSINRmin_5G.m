@@ -70,9 +70,9 @@ end
 % the second option uses the actual code rate
 % the third option evaluates the code rate by only considering the RB
 % necessary for the transmission instead of the whole subchannel(s)
-%CR = TBS/(nRE*Qm);
-%CR = R;
-CR = TBSmin/(nREmin*Qm);
+CR = TBS/(nRE*Qm);
+% CR = R;
+% CR = TBSmin/(nREmin*Qm);
 
 % Compute spectral efficiency (bits/s·Hz)
 % Tslot in s
@@ -80,9 +80,18 @@ CR = TBSmin/(nREmin*Qm);
 
 NbitsHz = (12*14*Qm*CR)/(phyParams.Tslot_NR*phyParams.RBbandwidth);
 
-% Compute the minimum required SINR
-% (alfa is taken from 3GPP)
-alfa = 0.4;
-gammaMin_dB = pow2db(2^(NbitsHz/alfa)-1);
+%% Compute the minimum required SINR
+% Find minimum SINR for LTE-V2X automaticly, only for 10 MHz now 
+%  related method could be found in paper:
+%  Wu Z, Bartoletti S, Martinez V, Bazzi A. A Methodology for Abstracting 
+%  the Physical Layer of Direct V2X Communications Technologies. Sensors. 2022;
+%  22(23):9330. https://doi.org/10.3390/s22239330
+effective_throughput = packetSizeBits * (phyParams.RBsFrequency / RBsBeacon) /...
+    (phyParams.BwMHz * 1e6) / phyParams.Tslot_NR;
+
+shannon_throughput = effective_throughput / constants.IMPLEMENTLOSS_CV2X;
+sinr_linear = 2^(shannon_throughput)-1;
+gammaMin_dB = pow2db(sinr_linear);
+
 
 end
