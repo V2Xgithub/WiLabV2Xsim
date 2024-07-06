@@ -27,6 +27,22 @@ G. Cecchini, A. Bazzi, B. M. Masini, A. Zanella, “LTEV2Vsim: An LTE-V2V Simula
 A. Bazzi, G. Cecchini, M. Menarini, B. M. Masini, A. Zanella, “Survey and Perspectives of Vehicular Wi-Fi Versus Sidelink Cellular-V2X in the 5G Era,” invited paper in Future Internet, 29 May 2019, 11(6), 122. DOI: 10.3390/fi11060122 (Results obtained with version 3.5)
 
 *****
+Some references to papers where WiLabV2Xsim was used:
+
+A. Bazzi, C. Campolo, V. Todisco, S. Bartoletti, N. De Carli, A. Molinaro, A.O. Berthet, R.A. Stirling-Gallacher, “Towards 6G-V2X Sidelink: Non-Orthogonal Multiple Access in the Autonomous Mode”, IEEE Vehicular Technology Magazine, vol. 18, n. 2, pp. 50-59, 2023.
+
+V. Todisco, C. Campolo, A. Molinaro, A. Berthet, R.A. Stirling-Gallacher, A. Bazzi, “On the Performance of SIC-based NOMA in the C-V2X Sidelink Autonomous Mode”, IEEE CSCN 2023.
+
+V. Todisco, C. Campolo, A. Molinaro, A. Berthet, R.A. Stirling-Gallacher, A. Bazzi, “Joint use of Self and Successive Interference Cancellation in V2X Sidelink with Autonomous Resource Allocation”, IEEE VTC-Spring 2023.
+
+C. Campolo, A. Bazzi, V. Todisco, S. Bartoletti, N. De Carli, A. Molinaro, A. Berthet, R.A. Stirling-Gallacher, “Enhancing the 5G-V2X Sidelink Autonomous Mode through Full-Duplex capabilities”, IEEE VTC-Spring 2022.
+
+C. Campolo, V. Todisco, S. Bartoletti, A. Molinaro, A. Berthet, A. Bazzi, “Improving Resource Allocation for beyond 5G V2X Sidelink Connectivity”, ASILOMAR Conference on Signals, Systems and Computers 2021
+
+A. Bazzi, C. Campolo, A. Molinaro, A. Berthet, B. Masini, A. Zanella, “On Wireless Blind Spots in C-V2X Sidelink”. IEEE Transactions on Vehicular Technology, vol. 69, n. 8, pp. 9239-9243, 2020.
+*****
+
+*****
 List of main current contributors (those to whom you can ask)
 
 Alessandro Bazzi (alessandro.bazzi@unibo.it)
