@@ -40,7 +40,7 @@ for idLte = idLteHasPck'
     end
 end
 % hasTransmissionThisSlot introduced from version 6.2
-stationManagement.hasTransmissionThisSlot(stationManagement.transmittingIDsCV2X)=1;
+stationManagement.hasTransmissionThisSlot(ismember(stationManagement.activeIDsCV2X,stationManagement.transmittingIDsCV2X))=1;
 %%
 
 timeManagement.timeGeneratedPacketInTxLTE(stationManagement.transmittingIDsCV2X) = timeManagement.timeLastPacket(stationManagement.transmittingIDsCV2X);
@@ -49,10 +49,10 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
     % Find index of vehicles that are currently transmitting
     stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE = zeros(length(stationManagement.transmittingIDsCV2X),1);
     stationManagement.indexInActiveIDs_OfTxLTE = zeros(length(stationManagement.transmittingIDsCV2X),1);
-    for ix = 1:length(stationManagement.transmittingIDsCV2X)
-        stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE(ix) = find(stationManagement.activeIDsCV2X == stationManagement.transmittingIDsCV2X(ix));
-        stationManagement.indexInActiveIDs_OfTxLTE(ix) = find(stationManagement.activeIDs == stationManagement.transmittingIDsCV2X(ix));
-    end
+
+    [~, stationManagement.indexInActiveIDsOnlyLTE_OfTxLTE] = ismember(stationManagement.transmittingIDsCV2X, stationManagement.activeIDsCV2X);
+    [~, stationManagement.indexInActiveIDs_OfTxLTE] = ismember(stationManagement.transmittingIDsCV2X, stationManagement.activeIDs);
+
 end
 
 % Initialization of the received power
