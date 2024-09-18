@@ -35,7 +35,7 @@ end
 % [Technology]
 % Choose if simulate C-V2X (lte or 5G) or 802.11p
 % String: "CV2V" or "80211p"
-[simParams,varargin] = addNewParam(simParams,'Technology','LTE-V2X','Choose radio access technology to simulate: "LTE-V2X", "802.11p", "COEX-NO-INTERF", "COEX-STD-INTERF", "NR-V2X"/"5G-V2X", "COEX-STD-INTERF-5G"','string',fileCfg,varargin{1});
+[simParams,varargin] = addNewParam(simParams,'Technology','LTE-V2X','Choose radio access technology to simulate: "LTE-V2X", "80211p", "COEX-NO-INTERF", "COEX-STD-INTERF", "NR-V2X"/"5G-V2X", "COEX-STD-INTERF-5G"','string',fileCfg,varargin{1});
 % Check that the string is correct
 switch upper(simParams.Technology)
     case 'LTE-V2X'
@@ -61,7 +61,7 @@ switch upper(simParams.Technology)
         simParams.mode5G = constants.MODE_5G; % 5G
         simParams.stringCV2X = '5G';
     otherwise
-        error('"simParams.Technology" must be ["LTE-V2X", "802.11p", "COEX-NO-INTERF", "COEX-STD-INTERF", ["NR-V2X","5G-V2X"], "COEX-STD-INTERF-5G]');
+        error('"simParams.Technology" must be ["LTE-V2X", "80211p", "COEX-NO-INTERF", "COEX-STD-INTERF", ["NR-V2X","5G-V2X"], "COEX-STD-INTERF-5G]');
 end
 
 % In coexistence case, set the proportion of 802.11p and C-V2X
