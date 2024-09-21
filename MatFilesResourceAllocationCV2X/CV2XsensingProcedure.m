@@ -122,7 +122,7 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
                     stationManagement.knownUsedMatrixCV2X(BRtx,idVrx) = 0;
                end
 
-%                % if HARQ is active in 5G -> reserve the next retransmission
+               % if HARQ is active in 5G -> reserve the next retransmission
                if phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && BRnextReservedTransmission~=-1 && simParams.mode5G
                     % BR of the next reserved resource (blind retransmission)
                     stationManagement.knownUsedMatrixCV2X(BRnextReservedTransmission,idVrx) = 1;
@@ -151,13 +151,13 @@ if ~isempty(stationManagement.transmittingIDsCV2X)
                     end
                end
 
-%                % If overlap of beacon resources is allowed, the SCI
-%                % information is used to update partially overlapping beacon
-%                % resources when reserving resources for retransmissions
+               % If overlap of beacon resources is allowed, the SCI
+               % information is used to update partially overlapping beacon
+               % resources when reserving resources for retransmissions
                if phyParams.BRoverlapAllowed && phyParams.cv2xNumberOfReplicasMax>1 && hasFirstResourceThisTbeacon && BRnextReservedTransmission~=-1 && simParams.mode5G
-%                    % identify subframe of BR
-%                    % Array of BRids in the slot of the retransmission
-%                    % Slot at which the retransmission occurs
+                   % identify subframe of BR
+                   % Array of BRids in the slot of the retransmission
+                   % Slot at which the retransmission occurs
                    retransmitT = ceil(BRnextReservedTransmission/appParams.NbeaconsF);
                    BRids_retransmitSF = ((retransmitT-1)*appParams.NbeaconsF+1):(retransmitT*appParams.NbeaconsF);                  
 
