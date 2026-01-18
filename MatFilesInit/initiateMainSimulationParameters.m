@@ -268,10 +268,6 @@ switch simParams.typeOfScenario
         % [randomXPosition]
         % switch if vehicles are randomly or Uniformly positioned
         [simParams, varargin] = addNewParam(simParams, 'randomXPosition', true, 'Randomly/uniformly position', 'bool',fileCfg,varargin{1});
-        
-        % [randomXPosition]
-        % switch if vehicles are randomly or Uniformly positioned
-        [simParams, varargin] = addNewParam(simParams, 'randomXPosition', true, 'Randomly/uniformly position', 'bool',fileCfg,varargin{1});
 
         % [NLanes]
         % Number of lanes per direction
